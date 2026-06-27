@@ -144,6 +144,12 @@ class PipelineAccountingTests(unittest.TestCase):
         alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "diverse_self_ranked_induction")
 
+        normal = build_pipeline_examples("sample_aware_self_ranked_induction", split.train, world.rules)
+        alternate = build_pipeline_examples("sample_aware_self_ranked_induction", split.train, alternate_rules)
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
+        self.assertEqual(normal_signature, alternate_signature, "sample_aware_self_ranked_induction")
+
     def test_mdl_rule_expansion_requires_explicit_validation_split(self) -> None:
         world = build_world(seed=44, material_count=40)
         split = split_observations(world.observations)
@@ -231,6 +237,26 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertGreater(diverse.ranked_diversity_penalty, 0.0)
         self.assertLessEqual(diverse.ranked_max_modifier_count, self_ranked.ranked_max_modifier_count)
         self.assertIn("diverse_self_ranked_induced", {example.source_kind for example in diverse.examples})
+
+    def test_sample_aware_self_ranked_induction_adapts_budget_without_calibration(self) -> None:
+        small_world = build_world(seed=59, material_count=16)
+        small_split = split_observations(small_world.observations)
+        small_self_ranked = build_pipeline_examples("self_ranked_induction", small_split.train, small_world.rules)
+        small_sample_aware = build_pipeline_examples("sample_aware_self_ranked_induction", small_split.train, small_world.rules)
+
+        self.assertEqual(small_sample_aware.external_event_count, small_self_ranked.external_event_count)
+        self.assertEqual(small_sample_aware.train_calibration_event_count, 0)
+        self.assertEqual(small_sample_aware.validation_calibration_event_count, 0)
+        self.assertLess(small_sample_aware.ranked_synthetic_budget_ratio, small_self_ranked.ranked_synthetic_budget_ratio)
+        self.assertLess(small_sample_aware.ranked_kept_candidate_count, small_self_ranked.ranked_kept_candidate_count)
+        self.assertEqual(small_sample_aware.ranked_induction_min_support, 2)
+        self.assertIn("sample_aware_self_ranked_induced", {example.source_kind for example in small_sample_aware.examples})
+
+        large_world = build_world(seed=59, material_count=64)
+        large_split = split_observations(large_world.observations)
+        large_sample_aware = build_pipeline_examples("sample_aware_self_ranked_induction", large_split.train, large_world.rules)
+        self.assertEqual(large_sample_aware.ranked_synthetic_budget_ratio, 1.0)
+        self.assertEqual(large_sample_aware.ranked_induction_min_support, 3)
 
 
 if __name__ == "__main__":

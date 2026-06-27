@@ -20,6 +20,9 @@ Status: implemented in this first slice.
 - Add train-calibrated and self-ranked induction ablations to isolate whether
   validation reliability estimates, train-only calibration, or confidence/support
   ranking drive the gain.
+- Add sample-aware self-ranked induction to test whether train-size-aware
+  synthetic budgets reduce low-sample generated-label noise without validation
+  or oracle labels.
 - Add diverse self-ranked induction to test whether balancing feature coverage
   improves or harms the fixed ranked budget.
 - Add MDL-style rule compression to test whether compact transform policies can

@@ -43,6 +43,9 @@ The current pilot is intentionally modest:
   necessary for candidate ranking.
 - `self_ranked_induction` removes calibration entirely and ranks induced
   candidates by train-only confidence, support, and salience signals.
+- `sample_aware_self_ranked_induction` uses the same train-only ranking, but
+  adapts the synthetic budget and minimum support to the size of the train
+  split so scarce external data is not overwhelmed by generated labels.
 - `diverse_self_ranked_induction` applies a diversity penalty to the same
   train-only ranking to test whether balancing modifier/stimulus/family coverage
   improves the fixed synthetic budget.
@@ -136,6 +139,9 @@ The repo reports three families of measurements:
 - Train-calibrated and self-ranked induction ablate whether validation
   reliability estimates are actually needed, or whether confidence/support
   ranking already captures most of the useful signal.
+- Sample-aware self-ranked induction tests whether the fixed ranked budget
+  should be reduced at tiny sample counts and made stricter when support is
+  plentiful, without using validation, heldout, calibration, or oracle labels.
 - Diverse self-ranked induction tests whether the ranked budget should be
   spread across feature regions, rather than concentrated where induced
   confidence/support is strongest.
@@ -155,10 +161,16 @@ The current artifacts show a useful split:
 - Validation-gated induction improves accuracy, but full per-candidate
   retraining is too expensive under charged learning-signal density.
 - Direct validation gating keeps much of that accuracy lift at lower cost.
-- Self-ranked induction is the strongest current non-oracle density result:
-  it improves over unconstrained induced rules at the 48-material pilot, beats
-  the validation-ranked variants at 48 and 64 materials, and uses no validation
-  labels for transform selection. It is still weak at very low sample budgets.
+- Self-ranked induction improves over unconstrained induced rules at the
+  48-material pilot, beats the validation-ranked variants at 48 and 64
+  materials, and uses no validation labels for transform selection. It is still
+  weak at very low sample budgets.
+- Sample-aware self-ranked induction is the strongest current non-oracle sweep
+  result: it ties self-ranked induction at the 48-material pilot, improves the
+  16-material budget from -0.011 to 0.032 signed gain, and improves the
+  64-material budget from 0.140 to 0.151 signed gain while reducing charged
+  compute from 48520.8 to 45806.4. It remains negative at 24 and 32 materials,
+  so the result is a budget-sensitive frontier improvement, not a universal fix.
 - Diverse self-ranked induction is a negative ablation: it lowers modifier
   concentration, but loses heldout gain at the medium/high budgets where
   self-ranked induction works. In the 48-material pilot, max modifier

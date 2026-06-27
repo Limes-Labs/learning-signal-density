@@ -40,6 +40,9 @@ internal processing cost.
 - `self_ranked_induction`: induced counterfactual candidates are ranked only by
   train-only confidence, support, and salience signals, with no calibration
   labels.
+- `sample_aware_self_ranked_induction`: the self-ranked candidate list uses
+  train-size-only rules to lower the synthetic budget for tiny train splits and
+  raise minimum support when the train split is large.
 - `diverse_self_ranked_induction`: the self-ranked candidate list is selected
   with an explicit diversity penalty over modifier, stimulus, and family
   coverage.
@@ -93,6 +96,9 @@ is allowed only for train pairs.
   model and scoring pass.
 - Self-ranked induction must not use validation or calibration labels for
   transform selection, and must still charge candidate-ranking overhead.
+- Sample-aware self-ranked induction must record its effective budget ratio,
+  minimum support, and minimum confidence, and must use only train split size to
+  choose those policy knobs.
 - Diverse self-ranked induction must record its diversity penalty and modifier
   concentration metrics, and must not use validation, calibration, heldout, or
   oracle labels for transform selection.

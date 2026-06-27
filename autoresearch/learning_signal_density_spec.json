@@ -26,6 +26,8 @@
     "ranked_candidate_count",
     "ranked_kept_candidate_count",
     "ranked_synthetic_budget_ratio",
+    "ranked_induction_min_support",
+    "ranked_induction_min_confidence",
     "train_calibration_event_count",
     "validation_calibration_event_count",
     "ranked_diversity_penalty",

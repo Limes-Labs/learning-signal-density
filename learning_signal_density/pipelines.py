@@ -19,6 +19,7 @@ AVAILABLE_CONDITIONS = (
     "validation_ranked_induction",
     "train_calibrated_ranked_induction",
     "self_ranked_induction",
+    "sample_aware_self_ranked_induction",
     "diverse_self_ranked_induction",
     "mdl_rule_expansion",
     "counterfactual_expansion",
@@ -84,6 +85,13 @@ CONDITION_SCOPE = {
         "validation_used_for_transform_selection": False,
     },
     "self_ranked_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": True,
+        "train_only_induction": True,
+        "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
+    },
+    "sample_aware_self_ranked_induction": {
         "oracle_generated_labels": False,
         "train_only_selection": True,
         "train_only_induction": True,
@@ -158,6 +166,8 @@ class PipelineExamples:
     ranked_kept_candidate_count: int
     ranked_validation_precision: float
     ranked_synthetic_budget_ratio: float
+    ranked_induction_min_support: int
+    ranked_induction_min_confidence: float
     train_calibration_event_count: int
     validation_calibration_event_count: int
     ranked_diversity_penalty: float
@@ -508,6 +518,18 @@ def _add_train_calibrated_ranked_induced_examples(
     )
 
 
+def _sample_aware_ranked_policy(observations: tuple[Observation, ...]) -> tuple[int, float, float]:
+    external_events = len(observations)
+    if external_events < 72:
+        budget_ratio = 0.25
+    elif external_events < 144:
+        budget_ratio = 0.75
+    else:
+        budget_ratio = 1.0
+    min_support = 3 if external_events >= 224 else 2
+    return min_support, 0.55, budget_ratio
+
+
 def _add_mdl_examples(
     examples: list[TrainingExample],
     observations: tuple[Observation, ...],
@@ -575,6 +597,8 @@ def build_pipeline_examples(
     ranked_kept_candidate_count = 0
     ranked_validation_precision = 0.0
     exported_ranked_synthetic_budget_ratio = 0.0
+    ranked_induction_min_support = 0
+    ranked_induction_min_confidence = 0.0
     train_calibration_event_count = 0
     validation_calibration_event_count = 0
     ranked_diversity_penalty = 0.0
@@ -613,6 +637,8 @@ def build_pipeline_examples(
         validation_calibration_event_count = len(validation_observations)
         modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
         exported_ranked_synthetic_budget_ratio = ranked_synthetic_budget_ratio
+        ranked_induction_min_support = induction_min_support
+        ranked_induction_min_confidence = induction_min_confidence
         (
             transform_cost_tokens,
             candidate_ranking_cost_tokens,
@@ -635,6 +661,8 @@ def build_pipeline_examples(
     elif condition == "train_calibrated_ranked_induction":
         modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
         exported_ranked_synthetic_budget_ratio = ranked_synthetic_budget_ratio
+        ranked_induction_min_support = induction_min_support
+        ranked_induction_min_confidence = induction_min_confidence
         (
             transform_cost_tokens,
             candidate_ranking_cost_tokens,
@@ -657,6 +685,8 @@ def build_pipeline_examples(
     elif condition == "self_ranked_induction":
         modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
         exported_ranked_synthetic_budget_ratio = ranked_synthetic_budget_ratio
+        ranked_induction_min_support = induction_min_support
+        ranked_induction_min_confidence = induction_min_confidence
         (
             transform_cost_tokens,
             candidate_ranking_cost_tokens,
@@ -679,9 +709,43 @@ def build_pipeline_examples(
             diversity_penalty=0.0,
         )
 
+    elif condition == "sample_aware_self_ranked_induction":
+        (
+            effective_min_support,
+            effective_min_confidence,
+            effective_budget_ratio,
+        ) = _sample_aware_ranked_policy(observations)
+        modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
+        exported_ranked_synthetic_budget_ratio = effective_budget_ratio
+        ranked_induction_min_support = effective_min_support
+        ranked_induction_min_confidence = effective_min_confidence
+        (
+            transform_cost_tokens,
+            candidate_ranking_cost_tokens,
+            ranked_candidate_count,
+            ranked_kept_candidate_count,
+            ranked_validation_precision,
+            ranked_unique_modifier_count,
+            ranked_max_modifier_count,
+            ranked_diversity_penalty,
+        ) = _add_ranked_induced_examples(
+            examples=examples,
+            observations=observations,
+            salience_model=salience_model,
+            induction_min_support=effective_min_support,
+            induction_min_confidence=effective_min_confidence,
+            synthetic_budget_ratio=effective_budget_ratio,
+            source_reliability={},
+            base_ranking_cost_tokens=0,
+            source_kind="sample_aware_self_ranked_induced",
+            diversity_penalty=0.0,
+        )
+
     elif condition == "diverse_self_ranked_induction":
         modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
         exported_ranked_synthetic_budget_ratio = ranked_synthetic_budget_ratio
+        ranked_induction_min_support = induction_min_support
+        ranked_induction_min_confidence = induction_min_confidence
         (
             transform_cost_tokens,
             candidate_ranking_cost_tokens,
@@ -768,6 +832,8 @@ def build_pipeline_examples(
         ranked_kept_candidate_count=ranked_kept_candidate_count,
         ranked_validation_precision=ranked_validation_precision,
         ranked_synthetic_budget_ratio=exported_ranked_synthetic_budget_ratio,
+        ranked_induction_min_support=ranked_induction_min_support,
+        ranked_induction_min_confidence=ranked_induction_min_confidence,
         train_calibration_event_count=train_calibration_event_count,
         validation_calibration_event_count=validation_calibration_event_count,
         ranked_diversity_penalty=ranked_diversity_penalty,
