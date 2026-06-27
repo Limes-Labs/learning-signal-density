@@ -2,7 +2,7 @@
   "name": "learning-signal-density-causal-pilot",
   "objective": "Measure external-sample efficiency, compute efficiency, and learning-signal density across train-only processing pipelines.",
   "hypothesis": "Transform and replay conditions can improve external sample efficiency relative to raw observations, but may lose on charged compute efficiency.",
-  "method": "Generate synthetic causal domains, freeze train/validation/heldout splits by material-stimulus pair, train a deterministic online learner, and report costed heldout metrics.",
+  "method": "Generate synthetic causal domains, freeze train/validation/heldout splits by material-stimulus pair, train deterministic online and tiny neural learners, and report costed heldout metrics.",
   "baselines": [
     "raw_text",
     "majority_label"
@@ -32,11 +32,14 @@
     "validation_calibration_event_count",
     "ranked_diversity_penalty",
     "ranked_unique_modifier_count",
-    "ranked_max_modifier_count"
+    "ranked_max_modifier_count",
+    "neural_parameter_count",
+    "neural_training_step_count",
+    "estimated_neural_training_multiply_adds"
   ],
   "costs": {
     "external_events": "Original train observations only.",
-    "internal_compute": "Training tokens over epochs plus train-only selection, train-only rule induction, validation threshold search, ranked candidate scoring, train-calibration scoring, validation-scored MDL rule search and description length, and transform token costs."
+    "internal_compute": "Training tokens over epochs plus train-only selection, train-only rule induction, validation threshold search, ranked candidate scoring, train-calibration scoring, validation-scored MDL rule search and description length, transform token costs, and separately reported neural training operations."
   },
   "splits": {
     "unit": "material-stimulus pair",
@@ -46,6 +49,7 @@
     "tests_pass": true,
     "artifact_regenerated": true,
     "scope_flags_present": true,
-    "neural_model": false
+    "neural_model": false,
+    "neural_replication_required_for_paper_claim": true
   }
 }
