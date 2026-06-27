@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "learning-signal-density"
+version = "0.1.0"
+description = "Controlled experiments for external-sample efficiency, internal processing cost, and learning-signal density."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+  { name = "Francesco Giannicola" },
+  { name = "Limes Labs" }
+]
+dependencies = []
+
+[project.scripts]
+learning-signal-density = "learning_signal_density.experiment:main"
+
+[tool.setuptools]
+packages = ["learning_signal_density"]

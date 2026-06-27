@@ -1,0 +1,27 @@
+{
+  "name": "learning-signal-density-causal-pilot",
+  "command": [
+    "python3",
+    "-m",
+    "learning_signal_density",
+    "--output-json",
+    "results/causal_world_pilot_seedset.json",
+    "--output-md",
+    "results/causal_world_pilot_seedset.md",
+    "--seeds",
+    "3",
+    "5",
+    "7",
+    "11",
+    "13",
+    "--material-count",
+    "48",
+    "--epochs",
+    "5"
+  ],
+  "metric_keys": [
+    "heldout_accuracy",
+    "learning_signal_density"
+  ],
+  "timeout_seconds": 60
+}

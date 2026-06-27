@@ -1,0 +1,31 @@
+{
+  "name": "learning-signal-density-causal-pilot",
+  "objective": "Measure external-sample efficiency, compute efficiency, and learning-signal density across train-only processing pipelines.",
+  "hypothesis": "Transform and replay conditions can improve external sample efficiency relative to raw observations, but may lose on charged compute efficiency.",
+  "method": "Generate synthetic causal domains, freeze train/validation/heldout splits by material-stimulus pair, train a deterministic online learner, and report costed heldout metrics.",
+  "baselines": [
+    "raw_text",
+    "majority_label"
+  ],
+  "metrics": [
+    "heldout_accuracy",
+    "accuracy_improvement_over_majority",
+    "external_sample_efficiency",
+    "compute_efficiency_per_10k_units",
+    "learning_signal_density_per_1m_event_compute"
+  ],
+  "costs": {
+    "external_events": "Original train observations only.",
+    "internal_compute": "Training tokens over epochs plus train-only selection and transform token costs."
+  },
+  "splits": {
+    "unit": "material-stimulus pair",
+    "heldout_policy": "Heldout pairs are never used by selection, transformation, replay, or training."
+  },
+  "promotion_gate": {
+    "tests_pass": true,
+    "artifact_regenerated": true,
+    "scope_flags_present": true,
+    "neural_model": false
+  }
+}

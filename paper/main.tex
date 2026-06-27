@@ -1,0 +1,71 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\title{Learning Signal Density: Measuring External-Sample and Internal-Compute Efficiency in Learning Loops}
+\author{Francesco Giannicola \\ Limes Labs}
+\date{2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This paper studies whether apparent sample efficiency is better attributed to a
+whole learning loop than to a neural network in isolation. We define external
+sample efficiency, compute efficiency, and learning-signal density, then use
+controlled synthetic domains to compare raw training examples with selected,
+transformed, replayed, and feedback-enriched training loops. The current
+repository contains a pilot audit and a preregistered path toward tiny neural
+replications. The pilot is not a claim about frontier language models.
+\end{abstract}
+
+\section{Motivation}
+
+Comparisons between human learning and language-model pretraining often count
+raw tokens or approximate brain compute. This can hide the central mechanism:
+biological and engineered systems do not merely receive data. They select,
+transform, replay, reward, and consolidate it.
+
+\section{Definitions}
+
+Let a learning system be
+\[
+S = (\theta, M, \pi_{\mathrm{collect}}, \pi_{\mathrm{select}},
+\pi_{\mathrm{transform}}, \pi_{\mathrm{train}}, R, E).
+\]
+
+We measure:
+\[
+\mathrm{external\ sample\ efficiency} =
+\frac{\Delta Q}{N_{\mathrm{external\ events}}},
+\]
+\[
+\mathrm{compute\ efficiency} =
+\frac{\Delta Q}{C_{\mathrm{internal}}},
+\]
+and
+\[
+\mathrm{learning\ signal\ density} =
+\frac{\Delta Q}{N_{\mathrm{external\ events}} C_{\mathrm{internal}}}.
+\]
+
+\section{Pilot Experiment}
+
+The first experiment uses a synthetic causal-text domain with hidden rules,
+fixed train/validation/heldout splits, and several train-only processing
+pipelines. It records heldout accuracy, majority-baseline improvement,
+external-event count, internal-token count, and charged transform costs.
+
+\section{Limitations}
+
+The current pilot uses an online linear learner, not a neural language model.
+Counterfactual labels are oracle-generated inside the synthetic world. These
+limitations are intentional for the first audit and must be removed or bracketed
+before a stronger paper claim.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
