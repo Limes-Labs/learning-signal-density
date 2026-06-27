@@ -105,6 +105,8 @@ is allowed only for train pairs.
 - MDL rule expansion must charge rule-search cost, validation-scoring cost,
   and selected-rule description length.
 - Negative or mixed results remain publishable.
+- Any post-hoc frontier improvement should receive a fresh-seed confirmation
+  sweep before being promoted beyond exploratory status.
 - The current pilot must mark `neural_model=false`.
 - The current pilot must mark `oracle_transform=true` because the synthetic
   world supplies ground-truth counterfactual labels for at least one condition.

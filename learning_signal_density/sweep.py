@@ -19,6 +19,8 @@ def run_sample_budget_sweep(
     output_markdown: Path | None = None,
     epochs: int = 5,
     target_signed_gain: float = 0.03,
+    confirmation_of: str | None = None,
+    fresh_seed_confirmation: bool = False,
 ) -> dict:
     budget_results: dict[str, dict] = {}
     for material_count in material_counts:
@@ -49,10 +51,13 @@ def run_sample_budget_sweep(
             "neural_model": False,
             "heldout_used_for_selection": False,
             "paper_ready_claim": False,
+            "fresh_seed_confirmation": fresh_seed_confirmation,
         },
         "thresholds": thresholds,
         "budgets": budget_results,
     }
+    if confirmation_of is not None:
+        result["confirmation_of"] = confirmation_of
 
     if output_json:
         output_json.parent.mkdir(parents=True, exist_ok=True)
@@ -99,11 +104,23 @@ def render_sweep_markdown(result: dict) -> str:
         "This sweep reruns the pilot across multiple external sample budgets.",
         "It is still synthetic and non-neural; it is meant to test whether a mechanism is stable across data budgets.",
         "",
-        f"Target signed gain over majority: `{result['target_signed_gain']}`",
-        "",
-        "| Condition | First budget reaching target | Best budget | Best signed gain |",
-        "| --- | ---: | ---: | ---: |",
     ]
+    if result["claim_scope"].get("fresh_seed_confirmation"):
+        lines.extend(
+            [
+                "This is a fresh-seed confirmation sweep.",
+                f"Confirmation target: `{result.get('confirmation_of', 'unspecified')}`",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            f"Target signed gain over majority: `{result['target_signed_gain']}`",
+            "",
+            "| Condition | First budget reaching target | Best budget | Best signed gain |",
+            "| --- | ---: | ---: | ---: |",
+        ]
+    )
     for condition in result["conditions"]:
         summary = result["thresholds"][condition]
         first = summary["first_material_count_reaching_target"]
@@ -158,6 +175,8 @@ def main() -> None:
     parser.add_argument("--conditions", nargs="+", default=list(DEFAULT_CONDITIONS))
     parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--target-signed-gain", type=float, default=0.03)
+    parser.add_argument("--confirmation-of", default=None)
+    parser.add_argument("--fresh-seed-confirmation", action="store_true")
     args = parser.parse_args()
     run_sample_budget_sweep(
         material_counts=args.material_counts,
@@ -167,6 +186,8 @@ def main() -> None:
         output_markdown=args.output_md,
         epochs=args.epochs,
         target_signed_gain=args.target_signed_gain,
+        confirmation_of=args.confirmation_of,
+        fresh_seed_confirmation=args.fresh_seed_confirmation,
     )
     print(f"wrote {args.output_json}")
     print(f"wrote {args.output_md}")
