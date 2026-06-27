@@ -22,7 +22,32 @@
         "signed_external_sample_efficiency_mean": -0.001996,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.08987,
         "transform_cost_tokens_mean": 2784,
-        "validation_accuracy_mean": 0.6
+        "validation_accuracy_mean": 0.6,
+        "validation_tuning_cost_tokens_mean": 0
+      },
+      "direct_validation_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.010526,
+        "charged_compute_units_mean": 24682,
+        "clipped_compute_efficiency_per_10k_units_mean": 0.016482,
+        "clipped_external_sample_efficiency_mean": 0.000726,
+        "clipped_learning_signal_density_per_1m_event_compute_mean": 0.028417,
+        "compute_efficiency_per_10k_units_mean": 0.016482,
+        "external_events_mean": 58,
+        "external_sample_efficiency_mean": 0.000726,
+        "heldout_accuracy_mean": 0.536842,
+        "internal_examples_mean": 336,
+        "internal_tokens_mean": 3742,
+        "learning_signal_density_per_1m_event_compute_mean": 0.028417,
+        "majority_baseline_accuracy_mean": 0.526316,
+        "modeling_cost_tokens_mean": 406,
+        "perceptron_updates_mean": 295.6,
+        "selection_cost_tokens_mean": 0,
+        "signed_compute_efficiency_per_10k_units_mean": 0.003655,
+        "signed_external_sample_efficiency_mean": 0.000182,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.006302,
+        "transform_cost_tokens_mean": 3336,
+        "validation_accuracy_mean": 0.610526,
+        "validation_tuning_cost_tokens_mean": 2230
       },
       "induced_rule_expansion": {
         "accuracy_improvement_over_majority_mean": -0.063158,
@@ -45,7 +70,8 @@
         "signed_external_sample_efficiency_mean": -0.001089,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.089166,
         "transform_cost_tokens_mean": 1588.8,
-        "validation_accuracy_mean": 0.536842
+        "validation_accuracy_mean": 0.536842,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "prioritized_replay": {
         "accuracy_improvement_over_majority_mean": -0.178947,
@@ -68,7 +94,8 @@
         "signed_external_sample_efficiency_mean": -0.003085,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.232943,
         "transform_cost_tokens_mean": 1809.6,
-        "validation_accuracy_mean": 0.663158
+        "validation_accuracy_mean": 0.663158,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "qa_expansion": {
         "accuracy_improvement_over_majority_mean": -0.094737,
@@ -91,7 +118,8 @@
         "signed_external_sample_efficiency_mean": -0.001633,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.263196,
         "transform_cost_tokens_mean": 696,
-        "validation_accuracy_mean": 0.578947
+        "validation_accuracy_mean": 0.578947,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "raw_text": {
         "accuracy_improvement_over_majority_mean": -0.157895,
@@ -114,7 +142,8 @@
         "signed_external_sample_efficiency_mean": -0.002722,
         "signed_learning_signal_density_per_1m_event_compute_mean": -1.341046,
         "transform_cost_tokens_mean": 0,
-        "validation_accuracy_mean": 0.547368
+        "validation_accuracy_mean": 0.547368,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "selected_counterfactual_replay": {
         "accuracy_improvement_over_majority_mean": 0.031579,
@@ -137,7 +166,8 @@
         "signed_external_sample_efficiency_mean": 0.000544,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.033079,
         "transform_cost_tokens_mean": 2227.2,
-        "validation_accuracy_mean": 0.6
+        "validation_accuracy_mean": 0.6,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "selected_text": {
         "accuracy_improvement_over_majority_mean": -0.052632,
@@ -160,7 +190,32 @@
         "signed_external_sample_efficiency_mean": -0.000907,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.412881,
         "transform_cost_tokens_mean": 0,
-        "validation_accuracy_mean": 0.589474
+        "validation_accuracy_mean": 0.589474,
+        "validation_tuning_cost_tokens_mean": 0
+      },
+      "validation_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.021053,
+        "charged_compute_units_mean": 112624.8,
+        "clipped_compute_efficiency_per_10k_units_mean": 0.00474,
+        "clipped_external_sample_efficiency_mean": 0.000907,
+        "clipped_learning_signal_density_per_1m_event_compute_mean": 0.008172,
+        "compute_efficiency_per_10k_units_mean": 0.00474,
+        "external_events_mean": 58,
+        "external_sample_efficiency_mean": 0.000907,
+        "heldout_accuracy_mean": 0.547368,
+        "internal_examples_mean": 255.2,
+        "internal_tokens_mean": 2772.4,
+        "learning_signal_density_per_1m_event_compute_mean": 0.008172,
+        "majority_baseline_accuracy_mean": 0.526316,
+        "modeling_cost_tokens_mean": 406,
+        "perceptron_updates_mean": 211.6,
+        "selection_cost_tokens_mean": 0,
+        "signed_compute_efficiency_per_10k_units_mean": 0.001821,
+        "signed_external_sample_efficiency_mean": 0.000363,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003139,
+        "transform_cost_tokens_mean": 2366.4,
+        "validation_accuracy_mean": 0.684211,
+        "validation_tuning_cost_tokens_mean": 95990.4
       }
     },
     "24": {
@@ -185,7 +240,32 @@
         "signed_external_sample_efficiency_mean": 0.000561,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.017043,
         "transform_cost_tokens_mean": 4128,
-        "validation_accuracy_mean": 0.641379
+        "validation_accuracy_mean": 0.641379,
+        "validation_tuning_cost_tokens_mean": 0
+      },
+      "direct_validation_gated_induction": {
+        "accuracy_improvement_over_majority_mean": -0.062069,
+        "charged_compute_units_mean": 36748.4,
+        "clipped_compute_efficiency_per_10k_units_mean": 0.003634,
+        "clipped_external_sample_efficiency_mean": 0.00016,
+        "clipped_learning_signal_density_per_1m_event_compute_mean": 0.004225,
+        "compute_efficiency_per_10k_units_mean": 0.003634,
+        "external_events_mean": 86,
+        "external_sample_efficiency_mean": 0.00016,
+        "heldout_accuracy_mean": 0.531035,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 5560.4,
+        "learning_signal_density_per_1m_event_compute_mean": 0.004225,
+        "majority_baseline_accuracy_mean": 0.593103,
+        "modeling_cost_tokens_mean": 602,
+        "perceptron_updates_mean": 478.8,
+        "selection_cost_tokens_mean": 0,
+        "signed_compute_efficiency_per_10k_units_mean": -0.016352,
+        "signed_external_sample_efficiency_mean": -0.000722,
+        "signed_learning_signal_density_per_1m_event_compute_mean": -0.019014,
+        "transform_cost_tokens_mean": 4958.4,
+        "validation_accuracy_mean": 0.627586,
+        "validation_tuning_cost_tokens_mean": 3386
       },
       "induced_rule_expansion": {
         "accuracy_improvement_over_majority_mean": -0.158621,
@@ -208,7 +288,8 @@
         "signed_external_sample_efficiency_mean": -0.001845,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.095186,
         "transform_cost_tokens_mean": 2630.4,
-        "validation_accuracy_mean": 0.62069
+        "validation_accuracy_mean": 0.62069,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "prioritized_replay": {
         "accuracy_improvement_over_majority_mean": -0.034483,
@@ -231,7 +312,8 @@
         "signed_external_sample_efficiency_mean": -0.000401,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.020339,
         "transform_cost_tokens_mean": 2712,
-        "validation_accuracy_mean": 0.531035
+        "validation_accuracy_mean": 0.531035,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "qa_expansion": {
         "accuracy_improvement_over_majority_mean": -0.110345,
@@ -254,7 +336,8 @@
         "signed_external_sample_efficiency_mean": -0.001283,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.139435,
         "transform_cost_tokens_mean": 1032,
-        "validation_accuracy_mean": 0.496552
+        "validation_accuracy_mean": 0.496552,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "raw_text": {
         "accuracy_improvement_over_majority_mean": -0.131035,
@@ -277,7 +360,8 @@
         "signed_external_sample_efficiency_mean": -0.001524,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.506198,
         "transform_cost_tokens_mean": 0,
-        "validation_accuracy_mean": 0.572414
+        "validation_accuracy_mean": 0.572414,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "selected_counterfactual_replay": {
         "accuracy_improvement_over_majority_mean": 0.075862,
@@ -300,7 +384,8 @@
         "signed_external_sample_efficiency_mean": 0.000882,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.0325,
         "transform_cost_tokens_mean": 3360,
-        "validation_accuracy_mean": 0.689655
+        "validation_accuracy_mean": 0.689655,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "selected_text": {
         "accuracy_improvement_over_majority_mean": -0.158621,
@@ -323,7 +408,32 @@
         "signed_external_sample_efficiency_mean": -0.001845,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.605104,
         "transform_cost_tokens_mean": 0,
-        "validation_accuracy_mean": 0.496552
+        "validation_accuracy_mean": 0.496552,
+        "validation_tuning_cost_tokens_mean": 0
+      },
+      "validation_gated_induction": {
+        "accuracy_improvement_over_majority_mean": -0.082759,
+        "charged_compute_units_mean": 173330.4,
+        "clipped_compute_efficiency_per_10k_units_mean": 0.000381,
+        "clipped_external_sample_efficiency_mean": 8e-05,
+        "clipped_learning_signal_density_per_1m_event_compute_mean": 0.000443,
+        "compute_efficiency_per_10k_units_mean": 0.000381,
+        "external_events_mean": 86,
+        "external_sample_efficiency_mean": 8e-05,
+        "heldout_accuracy_mean": 0.510345,
+        "internal_examples_mean": 437.6,
+        "internal_tokens_mean": 4821.2,
+        "learning_signal_density_per_1m_event_compute_mean": 0.000443,
+        "majority_baseline_accuracy_mean": 0.593103,
+        "modeling_cost_tokens_mean": 602,
+        "perceptron_updates_mean": 410,
+        "selection_cost_tokens_mean": 0,
+        "signed_compute_efficiency_per_10k_units_mean": -0.00486,
+        "signed_external_sample_efficiency_mean": -0.000962,
+        "signed_learning_signal_density_per_1m_event_compute_mean": -0.005651,
+        "transform_cost_tokens_mean": 4219.2,
+        "validation_accuracy_mean": 0.668966,
+        "validation_tuning_cost_tokens_mean": 144403.2
       }
     },
     "32": {
@@ -348,7 +458,32 @@
         "signed_external_sample_efficiency_mean": 0.000408,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.009191,
         "transform_cost_tokens_mean": 5568,
-        "validation_accuracy_mean": 0.742105
+        "validation_accuracy_mean": 0.742105,
+        "validation_tuning_cost_tokens_mean": 0
+      },
+      "direct_validation_gated_induction": {
+        "accuracy_improvement_over_majority_mean": -0.073684,
+        "charged_compute_units_mean": 51092,
+        "clipped_compute_efficiency_per_10k_units_mean": 0.00206,
+        "clipped_external_sample_efficiency_mean": 9.1e-05,
+        "clipped_learning_signal_density_per_1m_event_compute_mean": 0.001776,
+        "compute_efficiency_per_10k_units_mean": 0.00206,
+        "external_events_mean": 116,
+        "external_sample_efficiency_mean": 9.1e-05,
+        "heldout_accuracy_mean": 0.563158,
+        "internal_examples_mean": 696,
+        "internal_tokens_mean": 7772,
+        "learning_signal_density_per_1m_event_compute_mean": 0.001776,
+        "majority_baseline_accuracy_mean": 0.636842,
+        "modeling_cost_tokens_mean": 812,
+        "perceptron_updates_mean": 705.4,
+        "selection_cost_tokens_mean": 0,
+        "signed_compute_efficiency_per_10k_units_mean": -0.014422,
+        "signed_external_sample_efficiency_mean": -0.000635,
+        "signed_learning_signal_density_per_1m_event_compute_mean": -0.012433,
+        "transform_cost_tokens_mean": 6960,
+        "validation_accuracy_mean": 0.673684,
+        "validation_tuning_cost_tokens_mean": 4460
       },
       "induced_rule_expansion": {
         "accuracy_improvement_over_majority_mean": -0.08421,
@@ -371,7 +506,8 @@
         "signed_external_sample_efficiency_mean": -0.000726,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.026563,
         "transform_cost_tokens_mean": 3888,
-        "validation_accuracy_mean": 0.636842
+        "validation_accuracy_mean": 0.636842,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "prioritized_replay": {
         "accuracy_improvement_over_majority_mean": -0.142105,
@@ -394,7 +530,8 @@
         "signed_external_sample_efficiency_mean": -0.001225,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.047963,
         "transform_cost_tokens_mean": 3585.6,
-        "validation_accuracy_mean": 0.531579
+        "validation_accuracy_mean": 0.531579,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "qa_expansion": {
         "accuracy_improvement_over_majority_mean": -0.163158,
@@ -417,7 +554,8 @@
         "signed_external_sample_efficiency_mean": -0.001406,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.11332,
         "transform_cost_tokens_mean": 1392,
-        "validation_accuracy_mean": 0.552632
+        "validation_accuracy_mean": 0.552632,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "raw_text": {
         "accuracy_improvement_over_majority_mean": -0.178947,
@@ -440,7 +578,8 @@
         "signed_external_sample_efficiency_mean": -0.001543,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.379963,
         "transform_cost_tokens_mean": 0,
-        "validation_accuracy_mean": 0.589474
+        "validation_accuracy_mean": 0.589474,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "selected_counterfactual_replay": {
         "accuracy_improvement_over_majority_mean": 0.084211,
@@ -463,7 +602,8 @@
         "signed_external_sample_efficiency_mean": 0.000726,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.020087,
         "transform_cost_tokens_mean": 4387.2,
-        "validation_accuracy_mean": 0.731579
+        "validation_accuracy_mean": 0.731579,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "selected_text": {
         "accuracy_improvement_over_majority_mean": -0.105263,
@@ -486,7 +626,32 @@
         "signed_external_sample_efficiency_mean": -0.000907,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.226676,
         "transform_cost_tokens_mean": 0,
-        "validation_accuracy_mean": 0.478947
+        "validation_accuracy_mean": 0.478947,
+        "validation_tuning_cost_tokens_mean": 0
+      },
+      "validation_gated_induction": {
+        "accuracy_improvement_over_majority_mean": -0.105263,
+        "charged_compute_units_mean": 235416,
+        "clipped_compute_efficiency_per_10k_units_mean": 0.000469,
+        "clipped_external_sample_efficiency_mean": 9.1e-05,
+        "clipped_learning_signal_density_per_1m_event_compute_mean": 0.000405,
+        "compute_efficiency_per_10k_units_mean": 0.000469,
+        "external_events_mean": 116,
+        "external_sample_efficiency_mean": 9.1e-05,
+        "heldout_accuracy_mean": 0.531579,
+        "internal_examples_mean": 445.2,
+        "internal_tokens_mean": 4762.4,
+        "learning_signal_density_per_1m_event_compute_mean": 0.000405,
+        "majority_baseline_accuracy_mean": 0.636842,
+        "modeling_cost_tokens_mean": 812,
+        "perceptron_updates_mean": 483.8,
+        "selection_cost_tokens_mean": 0,
+        "signed_compute_efficiency_per_10k_units_mean": -0.004251,
+        "signed_external_sample_efficiency_mean": -0.000907,
+        "signed_learning_signal_density_per_1m_event_compute_mean": -0.003664,
+        "transform_cost_tokens_mean": 3950.4,
+        "validation_accuracy_mean": 0.705263,
+        "validation_tuning_cost_tokens_mean": 206841.6
       }
     },
     "48": {
@@ -511,7 +676,32 @@
         "signed_external_sample_efficiency_mean": 0.000681,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.010347,
         "transform_cost_tokens_mean": 8256,
-        "validation_accuracy_mean": 0.8
+        "validation_accuracy_mean": 0.8,
+        "validation_tuning_cost_tokens_mean": 0
+      },
+      "direct_validation_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.062069,
+        "charged_compute_units_mean": 75916,
+        "clipped_compute_efficiency_per_10k_units_mean": 0.00863,
+        "clipped_external_sample_efficiency_mean": 0.000381,
+        "clipped_learning_signal_density_per_1m_event_compute_mean": 0.005018,
+        "compute_efficiency_per_10k_units_mean": 0.00863,
+        "external_events_mean": 172,
+        "external_sample_efficiency_mean": 0.000381,
+        "heldout_accuracy_mean": 0.672414,
+        "internal_examples_mean": 1032,
+        "internal_tokens_mean": 11524,
+        "learning_signal_density_per_1m_event_compute_mean": 0.005018,
+        "majority_baseline_accuracy_mean": 0.610345,
+        "modeling_cost_tokens_mean": 1204,
+        "perceptron_updates_mean": 1025,
+        "selection_cost_tokens_mean": 0,
+        "signed_compute_efficiency_per_10k_units_mean": 0.008176,
+        "signed_external_sample_efficiency_mean": 0.000361,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004754,
+        "transform_cost_tokens_mean": 10320,
+        "validation_accuracy_mean": 0.741379,
+        "validation_tuning_cost_tokens_mean": 6772
       },
       "induced_rule_expansion": {
         "accuracy_improvement_over_majority_mean": 0.044828,
@@ -534,7 +724,8 @@
         "signed_external_sample_efficiency_mean": 0.000261,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.006787,
         "transform_cost_tokens_mean": 5251.2,
-        "validation_accuracy_mean": 0.706897
+        "validation_accuracy_mean": 0.706897,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "prioritized_replay": {
         "accuracy_improvement_over_majority_mean": 0.0,
@@ -557,7 +748,8 @@
         "signed_external_sample_efficiency_mean": 0.0,
         "signed_learning_signal_density_per_1m_event_compute_mean": -4.7e-05,
         "transform_cost_tokens_mean": 5361.6,
-        "validation_accuracy_mean": 0.627586
+        "validation_accuracy_mean": 0.627586,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "qa_expansion": {
         "accuracy_improvement_over_majority_mean": -0.006897,
@@ -580,7 +772,8 @@
         "signed_external_sample_efficiency_mean": -4e-05,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.002179,
         "transform_cost_tokens_mean": 2064,
-        "validation_accuracy_mean": 0.624138
+        "validation_accuracy_mean": 0.624138,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "raw_text": {
         "accuracy_improvement_over_majority_mean": -0.003448,
@@ -603,7 +796,8 @@
         "signed_external_sample_efficiency_mean": -2e-05,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.00333,
         "transform_cost_tokens_mean": 0,
-        "validation_accuracy_mean": 0.606897
+        "validation_accuracy_mean": 0.606897,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "selected_counterfactual_replay": {
         "accuracy_improvement_over_majority_mean": 0.055172,
@@ -626,7 +820,8 @@
         "signed_external_sample_efficiency_mean": 0.000321,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.006045,
         "transform_cost_tokens_mean": 6595.2,
-        "validation_accuracy_mean": 0.7
+        "validation_accuracy_mean": 0.7,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "selected_text": {
         "accuracy_improvement_over_majority_mean": -0.006897,
@@ -649,7 +844,32 @@
         "signed_external_sample_efficiency_mean": -4e-05,
         "signed_learning_signal_density_per_1m_event_compute_mean": -0.008087,
         "transform_cost_tokens_mean": 0,
-        "validation_accuracy_mean": 0.596552
+        "validation_accuracy_mean": 0.596552,
+        "validation_tuning_cost_tokens_mean": 0
+      },
+      "validation_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.072414,
+        "charged_compute_units_mean": 389788.8,
+        "clipped_compute_efficiency_per_10k_units_mean": 0.00184,
+        "clipped_external_sample_efficiency_mean": 0.000421,
+        "clipped_learning_signal_density_per_1m_event_compute_mean": 0.00107,
+        "compute_efficiency_per_10k_units_mean": 0.00184,
+        "external_events_mean": 172,
+        "external_sample_efficiency_mean": 0.000421,
+        "heldout_accuracy_mean": 0.682758,
+        "internal_examples_mean": 884.2,
+        "internal_tokens_mean": 9750.4,
+        "learning_signal_density_per_1m_event_compute_mean": 0.00107,
+        "majority_baseline_accuracy_mean": 0.610345,
+        "modeling_cost_tokens_mean": 1204,
+        "perceptron_updates_mean": 839.8,
+        "selection_cost_tokens_mean": 0,
+        "signed_compute_efficiency_per_10k_units_mean": 0.00184,
+        "signed_external_sample_efficiency_mean": 0.000421,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.00107,
+        "transform_cost_tokens_mean": 8546.4,
+        "validation_accuracy_mean": 0.751724,
+        "validation_tuning_cost_tokens_mean": 331286.4
       }
     },
     "64": {
@@ -674,7 +894,32 @@
         "signed_external_sample_efficiency_mean": 0.000554,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.006282,
         "transform_cost_tokens_mean": 11040,
-        "validation_accuracy_mean": 0.81039
+        "validation_accuracy_mean": 0.81039,
+        "validation_tuning_cost_tokens_mean": 0
+      },
+      "direct_validation_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.11948,
+        "charged_compute_units_mean": 101462,
+        "clipped_compute_efficiency_per_10k_units_mean": 0.011776,
+        "clipped_external_sample_efficiency_mean": 0.00052,
+        "clipped_learning_signal_density_per_1m_event_compute_mean": 0.00512,
+        "compute_efficiency_per_10k_units_mean": 0.011776,
+        "external_events_mean": 230,
+        "external_sample_efficiency_mean": 0.00052,
+        "heldout_accuracy_mean": 0.735065,
+        "internal_examples_mean": 1380,
+        "internal_tokens_mean": 15410,
+        "learning_signal_density_per_1m_event_compute_mean": 0.00512,
+        "majority_baseline_accuracy_mean": 0.615585,
+        "modeling_cost_tokens_mean": 1610,
+        "perceptron_updates_mean": 1363.8,
+        "selection_cost_tokens_mean": 0,
+        "signed_compute_efficiency_per_10k_units_mean": 0.011776,
+        "signed_external_sample_efficiency_mean": 0.00052,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.00512,
+        "transform_cost_tokens_mean": 13800,
+        "validation_accuracy_mean": 0.74026,
+        "validation_tuning_cost_tokens_mean": 9002
       },
       "induced_rule_expansion": {
         "accuracy_improvement_over_majority_mean": 0.096104,
@@ -697,7 +942,8 @@
         "signed_external_sample_efficiency_mean": 0.000418,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.006901,
         "transform_cost_tokens_mean": 8500.8,
-        "validation_accuracy_mean": 0.709091
+        "validation_accuracy_mean": 0.709091,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "prioritized_replay": {
         "accuracy_improvement_over_majority_mean": 0.067532,
@@ -720,7 +966,8 @@
         "signed_external_sample_efficiency_mean": 0.000293,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.005701,
         "transform_cost_tokens_mean": 7180.8,
-        "validation_accuracy_mean": 0.664935
+        "validation_accuracy_mean": 0.664935,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "qa_expansion": {
         "accuracy_improvement_over_majority_mean": 0.020779,
@@ -743,7 +990,8 @@
         "signed_external_sample_efficiency_mean": 9e-05,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.003671,
         "transform_cost_tokens_mean": 2760,
-        "validation_accuracy_mean": 0.594805
+        "validation_accuracy_mean": 0.594805,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "raw_text": {
         "accuracy_improvement_over_majority_mean": 0.015584,
@@ -766,7 +1014,8 @@
         "signed_external_sample_efficiency_mean": 6.8e-05,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.008417,
         "transform_cost_tokens_mean": 0,
-        "validation_accuracy_mean": 0.664935
+        "validation_accuracy_mean": 0.664935,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "selected_counterfactual_replay": {
         "accuracy_improvement_over_majority_mean": 0.181818,
@@ -789,7 +1038,8 @@
         "signed_external_sample_efficiency_mean": 0.000791,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.010911,
         "transform_cost_tokens_mean": 8841.6,
-        "validation_accuracy_mean": 0.794805
+        "validation_accuracy_mean": 0.794805,
+        "validation_tuning_cost_tokens_mean": 0
       },
       "selected_text": {
         "accuracy_improvement_over_majority_mean": 0.01039,
@@ -812,7 +1062,32 @@
         "signed_external_sample_efficiency_mean": 4.5e-05,
         "signed_learning_signal_density_per_1m_event_compute_mean": 0.004982,
         "transform_cost_tokens_mean": 0,
-        "validation_accuracy_mean": 0.657143
+        "validation_accuracy_mean": 0.657143,
+        "validation_tuning_cost_tokens_mean": 0
+      },
+      "validation_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.124675,
+        "charged_compute_units_mean": 534424.8,
+        "clipped_compute_efficiency_per_10k_units_mean": 0.002319,
+        "clipped_external_sample_efficiency_mean": 0.000542,
+        "clipped_learning_signal_density_per_1m_event_compute_mean": 0.001009,
+        "compute_efficiency_per_10k_units_mean": 0.002319,
+        "external_events_mean": 230,
+        "external_sample_efficiency_mean": 0.000542,
+        "heldout_accuracy_mean": 0.74026,
+        "internal_examples_mean": 1261.4,
+        "internal_tokens_mean": 13986.8,
+        "learning_signal_density_per_1m_event_compute_mean": 0.001009,
+        "majority_baseline_accuracy_mean": 0.615585,
+        "modeling_cost_tokens_mean": 1610,
+        "perceptron_updates_mean": 1224.8,
+        "selection_cost_tokens_mean": 0,
+        "signed_compute_efficiency_per_10k_units_mean": 0.002319,
+        "signed_external_sample_efficiency_mean": 0.000542,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.001009,
+        "transform_cost_tokens_mean": 12376.8,
+        "validation_accuracy_mean": 0.761039,
+        "validation_tuning_cost_tokens_mean": 450504
       }
     }
   },
@@ -827,12 +1102,14 @@
     "selected_text",
     "qa_expansion",
     "induced_rule_expansion",
+    "validation_gated_induction",
+    "direct_validation_gated_induction",
     "counterfactual_expansion",
     "prioritized_replay",
     "selected_counterfactual_replay"
   ],
   "epochs": 5,
-  "generated_at": "2026-06-27T16:23:48Z",
+  "generated_at": "2026-06-27T16:37:04Z",
   "material_counts": [
     16,
     24,
@@ -853,6 +1130,11 @@
       "best_material_count": 64,
       "best_signed_gain": 0.127273,
       "first_material_count_reaching_target": 24
+    },
+    "direct_validation_gated_induction": {
+      "best_material_count": 64,
+      "best_signed_gain": 0.11948,
+      "first_material_count_reaching_target": 48
     },
     "induced_rule_expansion": {
       "best_material_count": 64,
@@ -883,6 +1165,11 @@
       "best_material_count": 64,
       "best_signed_gain": 0.01039,
       "first_material_count_reaching_target": null
+    },
+    "validation_gated_induction": {
+      "best_material_count": 64,
+      "best_signed_gain": 0.124675,
+      "first_material_count_reaching_target": 48
     }
   },
   "title": "Learning Signal Density Sample Budget Sweep"

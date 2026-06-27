@@ -7,16 +7,31 @@ from pathlib import Path
 from statistics import mean
 
 from .domain import build_world, split_observations
+from .induction import fit_induced_rule_model
 from .learner import PerceptronClassifier, majority_baseline
-from .pipelines import AVAILABLE_CONDITIONS, CONDITION_SCOPE, build_evaluation_examples, build_pipeline_examples
+from .pipelines import AVAILABLE_CONDITIONS, CONDITION_SCOPE, build_evaluation_examples, build_pipeline_examples, raw_observation_example
 
 
 DEFAULT_SEEDS = (3, 5, 7, 11, 13)
+VALIDATION_GATED_INDUCTION = "validation_gated_induction"
+DIRECT_VALIDATION_GATED_INDUCTION = "direct_validation_gated_induction"
+INDUCTION_GATE_GRID = (
+    (1, 0.50),
+    (1, 0.67),
+    (2, 0.55),
+    (2, 0.67),
+    (3, 0.67),
+    (3, 0.75),
+    (4, 0.75),
+    (4, 0.85),
+)
 DEFAULT_CONDITIONS = (
     "raw_text",
     "selected_text",
     "qa_expansion",
     "induced_rule_expansion",
+    VALIDATION_GATED_INDUCTION,
+    DIRECT_VALIDATION_GATED_INDUCTION,
     "counterfactual_expansion",
     "prioritized_replay",
     "selected_counterfactual_replay",
@@ -27,12 +42,140 @@ def _round(value: float) -> float:
     return round(value, 6)
 
 
+def _pipeline_compute_units(pipeline, epochs: int, validation_tuning_cost_tokens: int = 0) -> int:
+    return (
+        pipeline.internal_token_count * epochs
+        + pipeline.selection_cost_tokens
+        + pipeline.modeling_cost_tokens
+        + pipeline.transform_cost_tokens
+        + validation_tuning_cost_tokens
+    )
+
+
+def _select_validation_gate(split, rules, validation_examples, epochs: int, seed: int) -> dict:
+    best: dict | None = None
+    validation_token_count = sum(example.token_count for example in validation_examples)
+    total_tuning_cost = 0
+    for min_support, min_confidence in INDUCTION_GATE_GRID:
+        candidate = build_pipeline_examples(
+            VALIDATION_GATED_INDUCTION,
+            split.train,
+            rules,
+            induction_min_support=min_support,
+            induction_min_confidence=min_confidence,
+        )
+        learner = PerceptronClassifier()
+        learner.fit(candidate.examples, epochs=epochs, seed=seed)
+        validation = learner.evaluate(validation_examples)
+        baseline = majority_baseline(candidate.examples, validation_examples)
+        compute_units = _pipeline_compute_units(candidate, epochs)
+        total_tuning_cost += compute_units + validation_token_count
+        score = validation.accuracy - baseline.accuracy
+        record = {
+            "induction_min_support": min_support,
+            "induction_min_confidence": min_confidence,
+            "validation_gate_score": _round(score),
+            "validation_gate_accuracy": _round(validation.accuracy),
+            "validation_gate_compute_units": compute_units,
+        }
+        if best is None:
+            best = record
+            continue
+        better_score = score > best["validation_gate_score"]
+        equal_score_lower_cost = score == best["validation_gate_score"] and compute_units < best["validation_gate_compute_units"]
+        if better_score or equal_score_lower_cost:
+            best = record
+    if best is None:
+        raise ValueError("empty induction gate grid")
+    best["validation_tuning_cost_tokens"] = total_tuning_cost
+    best["validation_gate_candidates"] = len(INDUCTION_GATE_GRID)
+    return best
+
+
+def _select_direct_validation_gate(split, validation_examples) -> dict:
+    model = fit_induced_rule_model(split.train)
+    validation_token_count = sum(example.token_count for example in validation_examples)
+    train_modeling_cost = sum(raw_observation_example(item).token_count for item in split.train)
+    total_tuning_cost = train_modeling_cost + len(INDUCTION_GATE_GRID) * validation_token_count
+    best: dict | None = None
+    validation_total = max(1, len(split.validation))
+    for min_support, min_confidence in INDUCTION_GATE_GRID:
+        covered = 0
+        correct = 0
+        for item in split.validation:
+            prediction = model.predict(item.family, item.stimulus, item.modifier)
+            if prediction.support < min_support or prediction.confidence < min_confidence:
+                continue
+            covered += 1
+            if prediction.label == item.label:
+                correct += 1
+        precision = correct / covered if covered else 0.0
+        coverage = covered / validation_total
+        score = precision * (coverage ** 0.5)
+        record = {
+            "induction_min_support": min_support,
+            "induction_min_confidence": min_confidence,
+            "validation_gate_score": _round(score),
+            "validation_gate_accuracy": _round(precision),
+            "validation_gate_compute_units": covered,
+        }
+        if best is None:
+            best = record
+            continue
+        better_score = score > best["validation_gate_score"]
+        equal_score_more_coverage = score == best["validation_gate_score"] and covered > best["validation_gate_compute_units"]
+        if better_score or equal_score_more_coverage:
+            best = record
+    if best is None:
+        raise ValueError("empty induction gate grid")
+    best["validation_tuning_cost_tokens"] = total_tuning_cost
+    best["validation_gate_candidates"] = len(INDUCTION_GATE_GRID)
+    return best
+
+
 def run_condition(seed: int, condition: str, material_count: int, epochs: int) -> dict:
     world = build_world(seed=seed, material_count=material_count)
     split = split_observations(world.observations)
-    pipeline = build_pipeline_examples(condition, split.train, world.rules)
     heldout_examples = build_evaluation_examples(split.heldout)
     validation_examples = build_evaluation_examples(split.validation)
+    gate = {
+        "induction_min_support": None,
+        "induction_min_confidence": None,
+        "validation_gate_score": None,
+        "validation_gate_accuracy": None,
+        "validation_gate_compute_units": 0,
+        "validation_tuning_cost_tokens": 0,
+        "validation_gate_candidates": 0,
+    }
+    if condition == VALIDATION_GATED_INDUCTION:
+        gate = _select_validation_gate(
+            split=split,
+            rules=world.rules,
+            validation_examples=validation_examples,
+            epochs=epochs,
+            seed=seed,
+        )
+        pipeline = build_pipeline_examples(
+            condition,
+            split.train,
+            world.rules,
+            induction_min_support=gate["induction_min_support"],
+            induction_min_confidence=gate["induction_min_confidence"],
+        )
+    elif condition == DIRECT_VALIDATION_GATED_INDUCTION:
+        gate = _select_direct_validation_gate(
+            split=split,
+            validation_examples=validation_examples,
+        )
+        pipeline = build_pipeline_examples(
+            condition,
+            split.train,
+            world.rules,
+            induction_min_support=gate["induction_min_support"],
+            induction_min_confidence=gate["induction_min_confidence"],
+        )
+    else:
+        pipeline = build_pipeline_examples(condition, split.train, world.rules)
 
     learner = PerceptronClassifier()
     update_count = learner.fit(pipeline.examples, epochs=epochs, seed=seed)
@@ -40,11 +183,10 @@ def run_condition(seed: int, condition: str, material_count: int, epochs: int) -
     validation = learner.evaluate(validation_examples)
     baseline = majority_baseline(pipeline.examples, heldout_examples)
 
-    charged_compute_units = (
-        pipeline.internal_token_count * epochs
-        + pipeline.selection_cost_tokens
-        + pipeline.modeling_cost_tokens
-        + pipeline.transform_cost_tokens
+    charged_compute_units = _pipeline_compute_units(
+        pipeline=pipeline,
+        epochs=epochs,
+        validation_tuning_cost_tokens=gate["validation_tuning_cost_tokens"],
     )
     improvement = heldout.accuracy - baseline.accuracy
     positive_improvement = max(0.0, improvement)
@@ -64,8 +206,15 @@ def run_condition(seed: int, condition: str, material_count: int, epochs: int) -
         "selection_cost_tokens": pipeline.selection_cost_tokens,
         "modeling_cost_tokens": pipeline.modeling_cost_tokens,
         "transform_cost_tokens": pipeline.transform_cost_tokens,
+        "validation_tuning_cost_tokens": gate["validation_tuning_cost_tokens"],
         "charged_compute_units": charged_compute_units,
         "perceptron_updates": update_count,
+        "induction_min_support": gate["induction_min_support"],
+        "induction_min_confidence": gate["induction_min_confidence"],
+        "validation_gate_score": gate["validation_gate_score"],
+        "validation_gate_accuracy": gate["validation_gate_accuracy"],
+        "validation_gate_compute_units": gate["validation_gate_compute_units"],
+        "validation_gate_candidates": gate["validation_gate_candidates"],
         "heldout_accuracy": _round(heldout.accuracy),
         "validation_accuracy": _round(validation.accuracy),
         "majority_baseline_accuracy": _round(baseline.accuracy),
@@ -90,6 +239,7 @@ def _aggregate(rows: list[dict]) -> dict:
         "selection_cost_tokens",
         "modeling_cost_tokens",
         "transform_cost_tokens",
+        "validation_tuning_cost_tokens",
         "charged_compute_units",
         "perceptron_updates",
         "heldout_accuracy",
@@ -227,8 +377,8 @@ def render_markdown(result: dict) -> str:
             "",
             "## Condition Scope",
             "",
-            "| Condition | Oracle labels | Train-only selection | Train-only induction |",
-            "| --- | ---: | ---: | ---: |",
+            "| Condition | Oracle labels | Train-only selection | Train-only induction | Validation-gated threshold |",
+            "| --- | ---: | ---: | ---: | ---: |",
         ]
     )
     for condition in result["conditions"]:
@@ -241,6 +391,7 @@ def render_markdown(result: dict) -> str:
                     str(scope["oracle_generated_labels"]).lower(),
                     str(scope["train_only_selection"]).lower(),
                     str(scope["train_only_induction"]).lower(),
+                    str(scope["validation_used_for_threshold"]).lower(),
                 ]
             )
             + " |"
@@ -252,6 +403,7 @@ def render_markdown(result: dict) -> str:
             "",
             "- External sample efficiency charges the original observations only.",
             "- Compute efficiency charges training tokens, train-only selection cost, and synthetic transform tokens.",
+            "- Validation-gated conditions also charge threshold-search overhead.",
             "- Signed metrics preserve negative results; clipped metrics count only per-seed positive improvements.",
             "- Learning-signal density is reported as heldout improvement per external event per charged internal unit, scaled by 1M.",
             "- The first useful scientific question is the Pareto frontier, not a single winning condition.",

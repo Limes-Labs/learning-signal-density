@@ -18,11 +18,12 @@
     "signed_external_sample_efficiency",
     "signed_compute_efficiency_per_10k_units",
     "signed_learning_signal_density_per_1m_event_compute",
-    "sample_budget_threshold"
+    "sample_budget_threshold",
+    "validation_tuning_cost_tokens"
   ],
   "costs": {
     "external_events": "Original train observations only.",
-    "internal_compute": "Training tokens over epochs plus train-only selection, train-only rule induction, and transform token costs."
+    "internal_compute": "Training tokens over epochs plus train-only selection, train-only rule induction, validation threshold search, and transform token costs."
   },
   "splits": {
     "unit": "material-stimulus pair",

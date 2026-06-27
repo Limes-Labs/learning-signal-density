@@ -35,6 +35,44 @@ class ExperimentArtifactTests(unittest.TestCase):
             self.assertTrue(saved["pareto_frontier_conditions"])
             self.assertIn("Learning Signal Density Pilot", out_md.read_text())
 
+    def test_validation_gated_induction_records_thresholds_and_tuning_cost(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_json = Path(temp_dir) / "result.json"
+            result = run_seedset(
+                seeds=[3],
+                conditions=["validation_gated_induction"],
+                output_json=out_json,
+                material_count=24,
+                epochs=2,
+            )
+
+            saved = json.loads(out_json.read_text())
+            row = saved["per_seed"][0]
+            self.assertEqual(result["claim_scope"]["heldout_used_for_selection"], False)
+            self.assertEqual(saved["condition_scope"]["validation_gated_induction"]["oracle_generated_labels"], False)
+            self.assertEqual(saved["condition_scope"]["validation_gated_induction"]["validation_used_for_threshold"], True)
+            self.assertGreater(row["validation_tuning_cost_tokens"], 0)
+            self.assertGreater(row["validation_gate_candidates"], 1)
+            self.assertIn(row["induction_min_support"], [1, 2, 3, 4])
+            self.assertGreaterEqual(row["induction_min_confidence"], 0.5)
+            self.assertIn("validation_tuning_cost_tokens_mean", saved["conditions"]["validation_gated_induction"])
+
+    def test_direct_validation_gate_is_charged_less_than_retraining_gate(self) -> None:
+        result = run_seedset(
+            seeds=[3],
+            conditions=["validation_gated_induction", "direct_validation_gated_induction"],
+            material_count=24,
+            epochs=2,
+        )
+
+        rows = {row["condition"]: row for row in result["per_seed"]}
+        direct = rows["direct_validation_gated_induction"]
+        retrained = rows["validation_gated_induction"]
+        self.assertEqual(result["condition_scope"]["direct_validation_gated_induction"]["validation_used_for_threshold"], True)
+        self.assertLess(direct["validation_tuning_cost_tokens"], retrained["validation_tuning_cost_tokens"])
+        self.assertGreater(direct["validation_gate_candidates"], 1)
+        self.assertIsNotNone(direct["validation_gate_score"])
+
 
 if __name__ == "__main__":
     unittest.main()

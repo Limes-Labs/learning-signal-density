@@ -26,6 +26,12 @@ internal processing cost.
   training view.
 - `induced_rule_expansion`: train-only empirical rule induction generates
   counterfactual labels without querying the hidden synthetic rulebook.
+- `validation_gated_induction`: train-only empirical rule induction with
+  confidence/support thresholds selected on validation, then charged as tuning
+  overhead.
+- `direct_validation_gated_induction`: threshold selection by direct
+  induced-rule precision/coverage on validation, without retraining a learner
+  for each threshold candidate.
 - `counterfactual_expansion`: each train observation generates same-pair
   modifier counterfactuals using the synthetic world's rules.
 - `prioritized_replay`: high-value train observations are replayed more often.
@@ -60,13 +66,18 @@ is allowed only for train pairs.
 
 - No heldout example may be used to select examples, fit transforms, tune
   conditions, or set replay weights.
+- Validation examples may select induction thresholds only in explicitly marked
+  validation-gated conditions.
 - All transform and replay overhead must be charged in the artifact.
+- Validation-gated conditions must charge threshold-search overhead.
+- Direct validation gating must still charge train-modeling and validation
+  scoring overhead, even though it avoids per-candidate learner retraining.
 - Negative or mixed results remain publishable.
 - The current pilot must mark `neural_model=false`.
 - The current pilot must mark `oracle_transform=true` because the synthetic
   world supplies ground-truth counterfactual labels for at least one condition.
 - Condition-level scope must identify which transforms use oracle-generated
-  labels.
+  labels and which transforms use validation-gated threshold selection.
 - A paper-level claim requires a neural replication and at least one non-oracle
   transformation condition.
 
