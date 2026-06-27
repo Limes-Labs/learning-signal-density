@@ -169,6 +169,46 @@ class CommittedResultArtifactTests(unittest.TestCase):
         )
         self.assertEqual(ops_ratio, 0.5)
 
+    def test_f1024_8x8_budget_artifact_records_low_epoch_ablation(self) -> None:
+        budget_16x8 = json.loads(Path("results/tiny_neural_budget_sweep_16x8_f1024.json").read_text())
+        budget_8x8 = json.loads(Path("results/tiny_neural_budget_sweep_8x8_f1024.json").read_text())
+
+        self.assertEqual(budget_8x8["feature_dimension"], 1024)
+        self.assertEqual(budget_8x8["profile_label"], "epochs=8_hidden=8_features=1024")
+        self.assertEqual(budget_8x8["comparison_of"], "results/tiny_neural_budget_sweep_16x8_f1024.json")
+        self.assertEqual(budget_8x8["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(budget_8x8["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIsNone(budget_8x8["thresholds"]["self_ranked_induction"]["first_material_count_reaching_target"])
+        self.assertEqual(
+            budget_8x8["thresholds"]["sample_aware_self_ranked_induction"]["first_material_count_reaching_target"],
+            64,
+        )
+        self.assertGreater(
+            budget_8x8["budgets"]["16"]["sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0,
+        )
+        self.assertGreater(
+            budget_8x8["budgets"]["24"]["sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0,
+        )
+        self.assertLess(
+            budget_8x8["thresholds"]["self_ranked_induction"]["best_signed_gain"],
+            budget_16x8["thresholds"]["self_ranked_induction"]["best_signed_gain"],
+        )
+        self.assertLess(
+            budget_8x8["budgets"]["64"]["self_ranked_induction"]["estimated_neural_training_multiply_adds_mean"],
+            budget_16x8["budgets"]["64"]["self_ranked_induction"]["estimated_neural_training_multiply_adds_mean"],
+        )
+        ops_ratio = (
+            budget_8x8["budgets"]["64"]["self_ranked_induction"]["estimated_neural_training_multiply_adds_mean"]
+            / budget_16x8["budgets"]["64"]["self_ranked_induction"]["estimated_neural_training_multiply_adds_mean"]
+        )
+        self.assertEqual(ops_ratio, 0.5)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -98,6 +98,9 @@ using the same split and accounting discipline.
 - `results/tiny_neural_budget_sweep_16x8_f1024.*` - full sample-budget rerun
   of the lower-epoch `16x8` profile with 1024 hashed features, compared
   against the `32x8_features=1024` artifact.
+- `results/tiny_neural_budget_sweep_8x8_f1024.*` - full sample-budget
+  ablation of an even lower-epoch `8x8` profile with 1024 hashed features,
+  compared against the `16x8_features=1024` artifact.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - paper skeleton and BibTeX file for the eventual technical report.
@@ -341,6 +344,25 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024
 ```
 
+Run the 8x8 1024-feature low-epoch ablation:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_8x8_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_8x8_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --epochs 8 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_profile_sweep_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_16x8_f1024.json \
+  --profile-label epochs=8_hidden=8_features=1024
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -491,6 +513,14 @@ The current artifacts show a useful split:
   from `0.101` to `0.052`, oracle counterfactual best gain falls from `0.252`
   to `0.239`, and ranked train-only conditions are still negative at 24 and 32
   materials.
+- The `8x8` low-epoch ablation shows where undertraining starts to bite. It
+  halves neural train ops again and improves sample-aware self-ranked induction
+  at the very smallest budgets (`-0.084` to `0.011` at 16 materials and
+  `-0.041` to `0.007` at 24), but it loses the self-ranked target entirely:
+  best self-ranked gain falls from `0.153` to `0.021`, and sample-aware first
+  reaches target only at 64 materials. This suggests the 24/32-material failure
+  is not solved by simply reducing training steps; it likely needs a better
+  generated-label policy or reliability gate.
 
 ## Research Thesis
 

@@ -123,6 +123,11 @@ while using half the neural training operations of the 32-epoch profile. A full
 that condition's best signed gain, but it weakens raw text, question-answer
 expansion, and oracle counterfactual best gain. Thus profile efficiency is
 condition-dependent rather than globally monotone.
+An 8x8 low-epoch ablation halves training operations again and slightly
+improves sample-aware self-ranked induction at 16 and 24 materials, but loses
+the self-ranked target entirely and leaves the 32-material ranked failure
+intact. This points away from pure optimizer-size reduction as the solution to
+scarce-sample generated-label noise.
 
 \section{Limitations}
 
