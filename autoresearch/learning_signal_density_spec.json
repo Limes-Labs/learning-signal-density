@@ -19,11 +19,13 @@
     "signed_compute_efficiency_per_10k_units",
     "signed_learning_signal_density_per_1m_event_compute",
     "sample_budget_threshold",
-    "validation_tuning_cost_tokens"
+    "validation_tuning_cost_tokens",
+    "mdl_description_length_tokens",
+    "mdl_selected_rule_count"
   ],
   "costs": {
     "external_events": "Original train observations only.",
-    "internal_compute": "Training tokens over epochs plus train-only selection, train-only rule induction, validation threshold search, and transform token costs."
+    "internal_compute": "Training tokens over epochs plus train-only selection, train-only rule induction, validation threshold search, validation-scored MDL rule search and description length, and transform token costs."
   },
   "splits": {
     "unit": "material-stimulus pair",

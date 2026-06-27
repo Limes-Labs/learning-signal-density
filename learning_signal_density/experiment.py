@@ -32,6 +32,7 @@ DEFAULT_CONDITIONS = (
     "induced_rule_expansion",
     VALIDATION_GATED_INDUCTION,
     DIRECT_VALIDATION_GATED_INDUCTION,
+    "mdl_rule_expansion",
     "counterfactual_expansion",
     "prioritized_replay",
     "selected_counterfactual_replay",
@@ -48,6 +49,8 @@ def _pipeline_compute_units(pipeline, epochs: int, validation_tuning_cost_tokens
         + pipeline.selection_cost_tokens
         + pipeline.modeling_cost_tokens
         + pipeline.transform_cost_tokens
+        + pipeline.rule_search_cost_tokens
+        + pipeline.mdl_description_length_tokens
         + validation_tuning_cost_tokens
     )
 
@@ -174,6 +177,13 @@ def run_condition(seed: int, condition: str, material_count: int, epochs: int) -
             induction_min_support=gate["induction_min_support"],
             induction_min_confidence=gate["induction_min_confidence"],
         )
+    elif condition == "mdl_rule_expansion":
+        pipeline = build_pipeline_examples(
+            condition,
+            split.train,
+            world.rules,
+            validation_observations=split.validation,
+        )
     else:
         pipeline = build_pipeline_examples(condition, split.train, world.rules)
 
@@ -206,6 +216,10 @@ def run_condition(seed: int, condition: str, material_count: int, epochs: int) -
         "selection_cost_tokens": pipeline.selection_cost_tokens,
         "modeling_cost_tokens": pipeline.modeling_cost_tokens,
         "transform_cost_tokens": pipeline.transform_cost_tokens,
+        "rule_search_cost_tokens": pipeline.rule_search_cost_tokens,
+        "mdl_description_length_tokens": pipeline.mdl_description_length_tokens,
+        "mdl_selected_rule_count": pipeline.mdl_selected_rule_count,
+        "mdl_validation_score": _round(pipeline.mdl_validation_score),
         "validation_tuning_cost_tokens": gate["validation_tuning_cost_tokens"],
         "charged_compute_units": charged_compute_units,
         "perceptron_updates": update_count,
@@ -239,6 +253,10 @@ def _aggregate(rows: list[dict]) -> dict:
         "selection_cost_tokens",
         "modeling_cost_tokens",
         "transform_cost_tokens",
+        "rule_search_cost_tokens",
+        "mdl_description_length_tokens",
+        "mdl_selected_rule_count",
+        "mdl_validation_score",
         "validation_tuning_cost_tokens",
         "charged_compute_units",
         "perceptron_updates",
@@ -404,6 +422,7 @@ def render_markdown(result: dict) -> str:
             "- External sample efficiency charges the original observations only.",
             "- Compute efficiency charges training tokens, train-only selection cost, and synthetic transform tokens.",
             "- Validation-gated conditions also charge threshold-search overhead.",
+            "- MDL conditions charge rule-search, validation scoring, and selected-rule description length.",
             "- Signed metrics preserve negative results; clipped metrics count only per-seed positive improvements.",
             "- Learning-signal density is reported as heldout improvement per external event per charged internal unit, scaled by 1M.",
             "- The first useful scientific question is the Pareto frontier, not a single winning condition.",

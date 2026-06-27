@@ -35,6 +35,9 @@ The current pilot is intentionally modest:
 - `direct_validation_gated_induction` chooses the same thresholds by direct
   induced-rule precision/coverage on validation, avoiding per-candidate learner
   retraining and charging the cheaper gate search.
+- `mdl_rule_expansion` learns a compact set of train-only empirical rules,
+  selects them on validation with a description-length penalty, and charges
+  rule search, validation scoring, and rule-description costs.
 - Heldout examples are not used for selection, transformation, or replay.
 - The artifact reports cost and scope flags so readers do not mistake the pilot
   for the final paper claim.
@@ -116,8 +119,25 @@ The repo reports three families of measurements:
   choice, never heldout labels, and their search overhead is charged.
 - Direct validation gating is an explicit attempt to trade a slightly weaker
   selection signal for much lower tuning cost.
+- MDL rule expansion tests whether compressing the transform policy itself can
+  reduce synthetic-example cost without quietly using the hidden rulebook.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
+
+## Current Empirical Readout
+
+The current artifacts show a useful split:
+
+- Oracle counterfactuals and selected oracle replay are still the strongest
+  external-sample interventions.
+- Train-only induced rules improve heldout accuracy once the external sample
+  budget is large enough.
+- Validation-gated induction improves accuracy, but full per-candidate
+  retraining is too expensive under charged learning-signal density.
+- Direct validation gating keeps much of that accuracy lift at lower cost.
+- MDL rule compression recovers some heldout signal while reducing synthetic
+  examples, but its validation-scored rule search is too expensive to reach
+  the current sample-budget target or dominate the frontier.
 
 ## Research Thesis
 
