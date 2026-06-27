@@ -27,7 +27,10 @@
     "ranked_kept_candidate_count",
     "ranked_synthetic_budget_ratio",
     "train_calibration_event_count",
-    "validation_calibration_event_count"
+    "validation_calibration_event_count",
+    "ranked_diversity_penalty",
+    "ranked_unique_modifier_count",
+    "ranked_max_modifier_count"
   ],
   "costs": {
     "external_events": "Original train observations only.",

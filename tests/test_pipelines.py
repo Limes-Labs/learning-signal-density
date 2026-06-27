@@ -5,6 +5,18 @@ from learning_signal_density.pipelines import build_pipeline_examples
 
 
 class PipelineAccountingTests(unittest.TestCase):
+    def _example_signature(self, examples):
+        return [
+            (
+                example.source_observation_id,
+                example.source_kind,
+                example.pair_key,
+                example.text,
+                example.label,
+            )
+            for example in examples.examples
+        ]
+
     def test_transforms_keep_external_event_count_fixed(self) -> None:
         world = build_world(seed=31, material_count=24)
         split = split_observations(world.observations)
@@ -78,8 +90,8 @@ class PipelineAccountingTests(unittest.TestCase):
         ):
             normal = build_pipeline_examples(condition, split.train, world.rules)
             alternate = build_pipeline_examples(condition, split.train, alternate_rules)
-            normal_signature = [(example.source_observation_id, example.source_kind) for example in normal.examples]
-            alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
+            normal_signature = self._example_signature(normal)
+            alternate_signature = self._example_signature(alternate)
             self.assertEqual(normal_signature, alternate_signature, condition)
 
         normal = build_pipeline_examples(
@@ -94,8 +106,8 @@ class PipelineAccountingTests(unittest.TestCase):
             alternate_rules,
             validation_observations=split.validation,
         )
-        normal_signature = [(example.source_observation_id, example.source_kind) for example in normal.examples]
-        alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "mdl_rule_expansion")
 
         normal = build_pipeline_examples(
@@ -110,21 +122,27 @@ class PipelineAccountingTests(unittest.TestCase):
             alternate_rules,
             validation_observations=split.validation,
         )
-        normal_signature = [(example.source_observation_id, example.source_kind) for example in normal.examples]
-        alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "validation_ranked_induction")
 
         normal = build_pipeline_examples("train_calibrated_ranked_induction", split.train, world.rules)
         alternate = build_pipeline_examples("train_calibrated_ranked_induction", split.train, alternate_rules)
-        normal_signature = [(example.source_observation_id, example.source_kind) for example in normal.examples]
-        alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "train_calibrated_ranked_induction")
 
         normal = build_pipeline_examples("self_ranked_induction", split.train, world.rules)
         alternate = build_pipeline_examples("self_ranked_induction", split.train, alternate_rules)
-        normal_signature = [(example.source_observation_id, example.source_kind) for example in normal.examples]
-        alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "self_ranked_induction")
+
+        normal = build_pipeline_examples("diverse_self_ranked_induction", split.train, world.rules)
+        alternate = build_pipeline_examples("diverse_self_ranked_induction", split.train, alternate_rules)
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
+        self.assertEqual(normal_signature, alternate_signature, "diverse_self_ranked_induction")
 
     def test_mdl_rule_expansion_requires_explicit_validation_split(self) -> None:
         world = build_world(seed=44, material_count=40)
@@ -199,6 +217,20 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertEqual(self_ranked.validation_calibration_event_count, 0)
         self.assertLess(self_ranked.candidate_ranking_cost_tokens, train_calibrated.candidate_ranking_cost_tokens)
         self.assertIn("self_ranked_induced", {example.source_kind for example in self_ranked.examples})
+
+    def test_diverse_self_ranked_induction_reduces_modifier_concentration(self) -> None:
+        world = build_world(seed=59, material_count=48)
+        split = split_observations(world.observations)
+        self_ranked = build_pipeline_examples("self_ranked_induction", split.train, world.rules)
+        diverse = build_pipeline_examples("diverse_self_ranked_induction", split.train, world.rules)
+
+        self.assertEqual(diverse.external_event_count, self_ranked.external_event_count)
+        self.assertEqual(diverse.ranked_kept_candidate_count, self_ranked.ranked_kept_candidate_count)
+        self.assertEqual(diverse.train_calibration_event_count, 0)
+        self.assertEqual(diverse.validation_calibration_event_count, 0)
+        self.assertGreater(diverse.ranked_diversity_penalty, 0.0)
+        self.assertLessEqual(diverse.ranked_max_modifier_count, self_ranked.ranked_max_modifier_count)
+        self.assertIn("diverse_self_ranked_induced", {example.source_kind for example in diverse.examples})
 
 
 if __name__ == "__main__":

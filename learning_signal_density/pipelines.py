@@ -19,6 +19,7 @@ AVAILABLE_CONDITIONS = (
     "validation_ranked_induction",
     "train_calibrated_ranked_induction",
     "self_ranked_induction",
+    "diverse_self_ranked_induction",
     "mdl_rule_expansion",
     "counterfactual_expansion",
     "prioritized_replay",
@@ -89,6 +90,13 @@ CONDITION_SCOPE = {
         "validation_used_for_threshold": False,
         "validation_used_for_transform_selection": False,
     },
+    "diverse_self_ranked_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": True,
+        "train_only_induction": True,
+        "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
+    },
     "mdl_rule_expansion": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
@@ -152,6 +160,9 @@ class PipelineExamples:
     ranked_synthetic_budget_ratio: float
     train_calibration_event_count: int
     validation_calibration_event_count: int
+    ranked_diversity_penalty: float
+    ranked_unique_modifier_count: int
+    ranked_max_modifier_count: int
 
     @property
     def internal_example_count(self) -> int:
@@ -168,6 +179,9 @@ class _RankedInducedCandidate:
     prediction: InducedPrediction
     score: float
     validation_precision: float
+    family: str
+    stimulus: str
+    modifier: str
 
 
 def raw_observation_example(observation: Observation, source_kind: str = "raw") -> TrainingExample:
@@ -295,7 +309,8 @@ def _add_ranked_induced_examples(
     source_reliability: dict[str, float],
     base_ranking_cost_tokens: int,
     source_kind: str,
-) -> tuple[int, int, int, int, float]:
+    diversity_penalty: float,
+) -> tuple[int, int, int, int, float, int, int, float]:
     transform_cost_tokens = 0
     candidate_ranking_cost_tokens = base_ranking_cost_tokens
     candidates: list[_RankedInducedCandidate] = []
@@ -331,6 +346,9 @@ def _add_ranked_induced_examples(
                     prediction=prediction,
                     score=score,
                     validation_precision=validation_precision,
+                    family=synthetic.family,
+                    stimulus=synthetic.stimulus,
+                    modifier=synthetic.modifier,
                 )
             )
 
@@ -345,7 +363,37 @@ def _add_ranked_induced_examples(
         )
     )
     synthetic_budget = max(1, int(len(observations) * synthetic_budget_ratio))
-    kept = candidates[:synthetic_budget]
+    if diversity_penalty <= 0:
+        kept = candidates[:synthetic_budget]
+    else:
+        kept = []
+        modifier_counts: Counter[str] = Counter()
+        stimulus_counts: Counter[str] = Counter()
+        family_counts: Counter[str] = Counter()
+        remaining = list(candidates)
+        while remaining and len(kept) < synthetic_budget:
+            best_index = max(
+                range(len(remaining)),
+                key=lambda index: (
+                    remaining[index].score
+                    - diversity_penalty
+                    * (
+                        modifier_counts[remaining[index].modifier]
+                        + 0.4 * stimulus_counts[remaining[index].stimulus]
+                        + 0.25 * family_counts[remaining[index].family]
+                    ),
+                    remaining[index].validation_precision,
+                    remaining[index].prediction.confidence,
+                    remaining[index].prediction.support,
+                    remaining[index].example.source_observation_id,
+                    remaining[index].example.text,
+                ),
+            )
+            candidate = remaining.pop(best_index)
+            kept.append(candidate)
+            modifier_counts[candidate.modifier] += 1
+            stimulus_counts[candidate.stimulus] += 1
+            family_counts[candidate.family] += 1
     examples.extend(candidate.example for candidate in kept)
     transform_cost_tokens += sum(candidate.example.token_count for candidate in kept)
     ranked_validation_precision = (
@@ -353,12 +401,16 @@ def _add_ranked_induced_examples(
         if kept
         else 0.0
     )
+    kept_modifier_counts = Counter(candidate.modifier for candidate in kept)
     return (
         transform_cost_tokens,
         candidate_ranking_cost_tokens,
         len(candidates),
         len(kept),
         ranked_validation_precision,
+        len(kept_modifier_counts),
+        max(kept_modifier_counts.values(), default=0),
+        diversity_penalty,
     )
 
 
@@ -370,7 +422,7 @@ def _add_validation_ranked_induced_examples(
     induction_min_support: int,
     induction_min_confidence: float,
     synthetic_budget_ratio: float,
-) -> tuple[int, int, int, int, float]:
+) -> tuple[int, int, int, int, float, int, int, float]:
     source_reliability, validation_scoring_cost = _source_reliability(
         salience_model=salience_model,
         calibration_observations=validation_observations,
@@ -387,6 +439,7 @@ def _add_validation_ranked_induced_examples(
         source_reliability=source_reliability,
         base_ranking_cost_tokens=validation_scoring_cost,
         source_kind="validation_ranked_induced",
+        diversity_penalty=0.0,
     )
 
 
@@ -411,7 +464,7 @@ def _add_train_calibrated_ranked_induced_examples(
     induction_min_support: int,
     induction_min_confidence: float,
     synthetic_budget_ratio: float,
-) -> tuple[int, int, int, int, float, int]:
+) -> tuple[int, int, int, int, float, int, int, float, int]:
     induction_observations, calibration_observations = _train_calibration_split(observations)
     calibration_model = fit_induced_rule_model(induction_observations)
     calibration_modeling_cost = sum(raw_observation_example(item).token_count for item in induction_observations)
@@ -427,6 +480,9 @@ def _add_train_calibrated_ranked_induced_examples(
         ranked_candidate_count,
         ranked_kept_candidate_count,
         ranked_validation_precision,
+        ranked_unique_modifier_count,
+        ranked_max_modifier_count,
+        ranked_diversity_penalty,
     ) = _add_ranked_induced_examples(
         examples=examples,
         observations=observations,
@@ -437,6 +493,7 @@ def _add_train_calibrated_ranked_induced_examples(
         source_reliability=source_reliability,
         base_ranking_cost_tokens=calibration_modeling_cost + calibration_scoring_cost,
         source_kind="train_calibrated_ranked_induced",
+        diversity_penalty=0.0,
     )
     return (
         transform_cost_tokens,
@@ -444,6 +501,9 @@ def _add_train_calibrated_ranked_induced_examples(
         ranked_candidate_count,
         ranked_kept_candidate_count,
         ranked_validation_precision,
+        ranked_unique_modifier_count,
+        ranked_max_modifier_count,
+        ranked_diversity_penalty,
         len(calibration_observations),
     )
 
@@ -517,6 +577,9 @@ def build_pipeline_examples(
     exported_ranked_synthetic_budget_ratio = 0.0
     train_calibration_event_count = 0
     validation_calibration_event_count = 0
+    ranked_diversity_penalty = 0.0
+    ranked_unique_modifier_count = 0
+    ranked_max_modifier_count = 0
     examples: list[TrainingExample] = []
 
     if condition == "raw_text":
@@ -556,6 +619,9 @@ def build_pipeline_examples(
             ranked_candidate_count,
             ranked_kept_candidate_count,
             ranked_validation_precision,
+            ranked_unique_modifier_count,
+            ranked_max_modifier_count,
+            ranked_diversity_penalty,
         ) = _add_validation_ranked_induced_examples(
             examples=examples,
             observations=observations,
@@ -575,6 +641,9 @@ def build_pipeline_examples(
             ranked_candidate_count,
             ranked_kept_candidate_count,
             ranked_validation_precision,
+            ranked_unique_modifier_count,
+            ranked_max_modifier_count,
+            ranked_diversity_penalty,
             train_calibration_event_count,
         ) = _add_train_calibrated_ranked_induced_examples(
             examples=examples,
@@ -594,6 +663,9 @@ def build_pipeline_examples(
             ranked_candidate_count,
             ranked_kept_candidate_count,
             ranked_validation_precision,
+            ranked_unique_modifier_count,
+            ranked_max_modifier_count,
+            ranked_diversity_penalty,
         ) = _add_ranked_induced_examples(
             examples=examples,
             observations=observations,
@@ -604,6 +676,32 @@ def build_pipeline_examples(
             source_reliability={},
             base_ranking_cost_tokens=0,
             source_kind="self_ranked_induced",
+            diversity_penalty=0.0,
+        )
+
+    elif condition == "diverse_self_ranked_induction":
+        modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
+        exported_ranked_synthetic_budget_ratio = ranked_synthetic_budget_ratio
+        (
+            transform_cost_tokens,
+            candidate_ranking_cost_tokens,
+            ranked_candidate_count,
+            ranked_kept_candidate_count,
+            ranked_validation_precision,
+            ranked_unique_modifier_count,
+            ranked_max_modifier_count,
+            ranked_diversity_penalty,
+        ) = _add_ranked_induced_examples(
+            examples=examples,
+            observations=observations,
+            salience_model=salience_model,
+            induction_min_support=induction_min_support,
+            induction_min_confidence=induction_min_confidence,
+            synthetic_budget_ratio=ranked_synthetic_budget_ratio,
+            source_reliability={},
+            base_ranking_cost_tokens=0,
+            source_kind="diverse_self_ranked_induced",
+            diversity_penalty=0.18,
         )
 
     elif condition == "mdl_rule_expansion":
@@ -672,6 +770,9 @@ def build_pipeline_examples(
         ranked_synthetic_budget_ratio=exported_ranked_synthetic_budget_ratio,
         train_calibration_event_count=train_calibration_event_count,
         validation_calibration_event_count=validation_calibration_event_count,
+        ranked_diversity_penalty=ranked_diversity_penalty,
+        ranked_unique_modifier_count=ranked_unique_modifier_count,
+        ranked_max_modifier_count=ranked_max_modifier_count,
     )
 
 

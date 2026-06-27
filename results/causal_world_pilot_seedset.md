@@ -1,6 +1,6 @@
 # Learning Signal Density Pilot
 
-Generated: `2026-06-27T17:21:39Z`
+Generated: `2026-06-27T17:41:34Z`
 
 This is a controlled pilot on a synthetic causal-text domain. It is not a neural-language-model result.
 The heldout split is not used for selection or transformation. Counterfactual expansion is oracle-generated inside the synthetic world.
@@ -16,6 +16,7 @@ The heldout split is not used for selection or transformation. Counterfactual ex
 | validation_ranked_induction | 0.659 | 0.610 | 0.048 | 172.0 | 5332.0 | 35585.2 | 0.007878 | 0.008442 |
 | train_calibrated_ranked_induction | 0.659 | 0.610 | 0.048 | 172.0 | 5332.0 | 36383.2 | 0.007705 | 0.008257 |
 | self_ranked_induction | 0.666 | 0.610 | 0.055 | 172.0 | 5332.0 | 35179.2 | 0.009108 | 0.009108 |
+| diverse_self_ranked_induction | 0.652 | 0.610 | 0.041 | 172.0 | 5332.0 | 35179.2 | 0.006832 | 0.006832 |
 | mdl_rule_expansion | 0.631 | 0.610 | 0.021 | 172.0 | 5910.4 | 69019.2 | 0.001899 | 0.002473 |
 | counterfactual_expansion | 0.728 | 0.610 | 0.117 | 172.0 | 11524.0 | 65876.0 | 0.010347 | 0.010347 |
 | prioritized_replay | 0.610 | 0.610 | 0.000 | 172.0 | 6565.6 | 38189.6 | -0.000047 | 0.003612 |
@@ -50,6 +51,7 @@ The heldout split is not used for selection or transformation. Counterfactual ex
 | validation_ranked_induction | false | false | true | false | true |
 | train_calibrated_ranked_induction | false | true | true | false | false |
 | self_ranked_induction | false | true | true | false | false |
+| diverse_self_ranked_induction | false | true | true | false | false |
 | mdl_rule_expansion | false | false | true | false | true |
 | counterfactual_expansion | true | false | false | false | false |
 | prioritized_replay | false | false | false | false | false |
