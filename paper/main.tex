@@ -100,6 +100,13 @@ Rerunning the full neural sample-budget sweep with that efficient profile keeps
 the same target-reaching material counts as the original profile, slightly
 improves the best signed gains for the positive conditions, and uses one
 quarter of the estimated neural training multiply-adds at matched budgets.
+Sweeping the hashed feature dimension for the efficient profile shows a second
+frontier: dimensions 16, 32, and 64 lose the ranked train-only signal at the
+64-material budget, while 256 features improves all positive conditions over
+128 features. A full 256-feature budget rerun keeps the same target-reaching
+budgets for the transformed conditions and improves their best signed gains,
+but does not remove the negative ranked train-only region at 24 and 32
+materials.
 
 \section{Limitations}
 

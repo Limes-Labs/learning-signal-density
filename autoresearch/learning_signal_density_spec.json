@@ -44,7 +44,9 @@
     "lowest_neural_ops_reaching_target",
     "profile_label",
     "comparison_of",
-    "efficient_profile_budget_sweep"
+    "efficient_profile_budget_sweep",
+    "feature_dimension_frontier",
+    "feature_dimension_budget_confirmation"
   ],
   "costs": {
     "external_events": "Original train observations only.",
