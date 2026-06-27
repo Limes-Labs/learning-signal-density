@@ -235,5 +235,24 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024
 ```
 
+8x8 1024-feature low-epoch ablation:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_8x8_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_8x8_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --epochs 8 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_profile_sweep_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_16x8_f1024.json \
+  --profile-label epochs=8_hidden=8_features=1024
+```
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

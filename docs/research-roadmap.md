@@ -37,7 +37,8 @@ confirmation, a neural sample-budget sweep, a profile-efficiency sweep, and an
 efficient-profile budget confirmation. It now also includes a feature-dimension
 frontier plus 256-feature and 1024-feature budget reruns for the efficient
 `32x8` profile, followed by a 1024-feature epoch/width profile sweep and a
-`16x8` budget confirmation.
+`16x8` budget confirmation. A further `8x8` ablation tests whether lower
+training budget can reduce scarce-sample overfitting.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -75,6 +76,10 @@ frontier plus 256-feature and 1024-feature budget reruns for the efficient
   features, `16x8` becomes the strongest self-ranked profile at the
   64-material point and halves neural training operations versus `32x8`, but
   weakens raw text, QA, and oracle best gain in the full budget rerun.
+- Treat the 24/32-material ranked failure as a transform-policy problem, not
+  only an optimizer-size problem. The `8x8` ablation improves the smallest
+  sample-aware budgets, but loses the self-ranked target entirely and does not
+  repair the 32-material failure.
 
 ## Phase 3: Continual-Learning Replay
 
