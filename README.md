@@ -171,6 +171,11 @@ The current artifacts show a useful split:
   64-material budget from 0.140 to 0.151 signed gain while reducing charged
   compute from 48520.8 to 45806.4. It remains negative at 24 and 32 materials,
   so the result is a budget-sensitive frontier improvement, not a universal fix.
+- A fresh-seed confirmation sweep keeps the sample-aware advantage at 24, 32,
+  48, and 64 materials, but does not confirm the 16-material gain. On
+  confirmation seeds, sample-aware improves best signed gain from 0.122 to
+  0.135 versus self-ranked induction and reaches the target at 48 materials,
+  not 16.
 - Diverse self-ranked induction is a negative ablation: it lowers modifier
   concentration, but loses heldout gain at the medium/high budgets where
   self-ranked induction works. In the 48-material pilot, max modifier

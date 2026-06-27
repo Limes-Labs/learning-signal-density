@@ -23,6 +23,8 @@ Status: implemented in this first slice.
 - Add sample-aware self-ranked induction to test whether train-size-aware
   synthetic budgets reduce low-sample generated-label noise without validation
   or oracle labels.
+- Add a fresh-seed confirmation sweep so post-hoc ranked-policy improvements
+  are checked against seed overfitting before being used in the paper.
 - Add diverse self-ranked induction to test whether balancing feature coverage
   improves or harms the fixed ranked budget.
 - Add MDL-style rule compression to test whether compact transform policies can
