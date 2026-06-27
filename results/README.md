@@ -51,7 +51,25 @@ python3 -m learning_signal_density.neural_experiment \
   --epochs 32 \
   --hidden-units 32 \
   --feature-dimension 128 \
-  --learning-rate 0.03
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03
+```
+
+Tiny neural fresh-seed confirmation:
+
+```bash
+python3 -m learning_signal_density.neural_experiment \
+  --output-json results/tiny_neural_confirmation.json \
+  --output-md results/tiny_neural_confirmation.md \
+  --seeds 17 19 23 29 31 \
+  --material-count 48 \
+  --epochs 32 \
+  --hidden-units 32 \
+  --feature-dimension 128 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_replication.json
 ```
 
 Do not edit generated result JSON by hand. If the code changes, regenerate the

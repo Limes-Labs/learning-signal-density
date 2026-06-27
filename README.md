@@ -76,6 +76,8 @@ using the same split and accounting discipline.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation
   accounting.
+- `results/tiny_neural_confirmation.*` - fresh-seed confirmation of the same
+  tiny-MLP profile.
 - `paper/` - paper skeleton and BibTeX file for the eventual technical report.
 - `autoresearch/` - Limes AutoResearch config for ledgered reruns.
 - `UPSTREAMS.md` - inspected inspirations and reuse boundary.
@@ -133,7 +135,25 @@ python3 -m learning_signal_density.neural_experiment \
   --epochs 32 \
   --hidden-units 32 \
   --feature-dimension 128 \
-  --learning-rate 0.03
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03
+```
+
+Run the tiny neural fresh-seed confirmation:
+
+```bash
+python3 -m learning_signal_density.neural_experiment \
+  --output-json results/tiny_neural_confirmation.json \
+  --output-md results/tiny_neural_confirmation.md \
+  --seeds 17 19 23 29 31 \
+  --material-count 48 \
+  --epochs 32 \
+  --hidden-units 32 \
+  --feature-dimension 128 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_replication.json
 ```
 
 ## Metrics
@@ -212,6 +232,12 @@ The current artifacts show a useful split:
   spends more internal compute, its signed learning-signal density is lower
   than the train-only ranked conditions (`0.000851` versus `0.001343`). This
   result is exploratory and neural, but not a language-model result.
+- A fresh-seed tiny-MLP confirmation keeps the ranked train-only conditions
+  above the `0.03` target (`0.038` signed gain, `0.001230` signed LSD), turns
+  QA expansion positive (`0.034` signed gain), and strengthens oracle
+  counterfactual expansion (`0.121` signed gain, `0.001861` signed LSD). Raw
+  text remains negative. This confirms a small neural learning-loop effect
+  under the synthetic audit, while still leaving the language-model claim open.
 
 ## Research Thesis
 
