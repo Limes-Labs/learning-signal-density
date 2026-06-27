@@ -39,7 +39,9 @@
     "fresh_seed_confirmation",
     "target_signed_gain",
     "condition_reaches_target",
-    "neural_budget_threshold"
+    "neural_budget_threshold",
+    "neural_profile_frontier",
+    "lowest_neural_ops_reaching_target"
   ],
   "costs": {
     "external_events": "Original train observations only.",

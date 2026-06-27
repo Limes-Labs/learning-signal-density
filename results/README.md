@@ -89,5 +89,21 @@ python3 -m learning_signal_density.neural_sweep \
   --confirmation-of results/tiny_neural_confirmation.json
 ```
 
+Tiny neural profile sweep:
+
+```bash
+python3 -m learning_signal_density.neural_profile_sweep \
+  --output-json results/tiny_neural_profile_sweep.json \
+  --output-md results/tiny_neural_profile_sweep.md \
+  --profiles 8x8 16x8 32x8 8x16 16x16 32x16 8x32 16x32 32x32 \
+  --seeds 17 19 23 29 31 \
+  --material-count 64 \
+  --feature-dimension 128 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep.json
+```
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

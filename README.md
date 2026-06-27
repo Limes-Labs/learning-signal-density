@@ -80,6 +80,8 @@ using the same split and accounting discipline.
   tiny-MLP profile.
 - `results/tiny_neural_budget_sweep.*` - fresh-seed tiny-MLP sample-budget
   frontier across 16, 24, 32, 48, and 64 materials.
+- `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
+  frontier at the 64-material budget.
 - `paper/` - paper skeleton and BibTeX file for the eventual technical report.
 - `autoresearch/` - Limes AutoResearch config for ledgered reruns.
 - `UPSTREAMS.md` - inspected inspirations and reuse boundary.
@@ -175,6 +177,22 @@ python3 -m learning_signal_density.neural_sweep \
   --confirmation-of results/tiny_neural_confirmation.json
 ```
 
+Run the tiny neural profile sweep:
+
+```bash
+python3 -m learning_signal_density.neural_profile_sweep \
+  --output-json results/tiny_neural_profile_sweep.json \
+  --output-md results/tiny_neural_profile_sweep.md \
+  --profiles 8x8 16x8 32x8 8x16 16x16 32x16 8x32 16x32 32x32 \
+  --seeds 17 19 23 29 31 \
+  --material-count 64 \
+  --feature-dimension 128 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep.json
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -264,6 +282,12 @@ The current artifacts show a useful split:
   At 64 materials, self-ranked induction is the strongest non-oracle condition
   (`0.073` signed gain), ahead of sample-aware self-ranked induction (`0.062`)
   and QA expansion (`0.036`).
+- The tiny-MLP profile sweep shows that bigger is not automatically better.
+  At 64 materials, `epochs=32_hidden=8` improves self-ranked induction to
+  `0.078` signed gain while using about one quarter of the neural train ops of
+  the original `32x32` profile. Sample-aware self-ranked induction can clear
+  the target with the cheaper `16x8` profile, and oracle counterfactual
+  expansion already clears the target with `8x8`.
 
 ## Research Thesis
 

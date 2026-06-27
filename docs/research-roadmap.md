@@ -33,7 +33,7 @@ Status: implemented in this first slice.
 ## Phase 2: Tiny Neural Replication
 
 Status: started with a deterministic CPU MLP artifact, fresh-seed
-confirmation, and a neural sample-budget sweep.
+confirmation, a neural sample-budget sweep, and a profile-efficiency sweep.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -51,6 +51,9 @@ confirmation, and a neural sample-budget sweep.
 - Treat the current tiny-MLP signal as budget-dependent: ranked train-only
   conditions first reach the signed-gain target at 48 materials, while oracle
   counterfactual expansion reaches it at 32 materials.
+- Treat profile selection as part of the compute frontier. The current
+  64-material profile sweep shows that `32x8` beats `32x32` for self-ranked
+  induction with substantially lower neural training operations.
 
 ## Phase 3: Continual-Learning Replay
 
