@@ -32,7 +32,8 @@ Status: implemented in this first slice.
 
 ## Phase 2: Tiny Neural Replication
 
-Status: started with a deterministic CPU MLP artifact.
+Status: started with a deterministic CPU MLP artifact and fresh-seed
+confirmation.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -43,8 +44,10 @@ Status: started with a deterministic CPU MLP artifact.
   counterfactual expansion, validation-gated induction, and direct validation
   gating, ranked induction variants, and MDL-compressed rules to measure the
   cost of imperfect transformation and transform selection.
-- Run fresh-seed confirmation before promoting any neural gain discovered by
-  changing MLP width, epoch count, learning rate, or condition set.
+- Keep fresh-seed confirmation before promoting any neural gain discovered by
+  changing MLP width, epoch count, learning rate, or condition set. The first
+  confirmation keeps ranked train-only conditions above target, but does not
+  replace a small-transformer or nanoGPT-scale replication.
 
 ## Phase 3: Continual-Learning Replay
 

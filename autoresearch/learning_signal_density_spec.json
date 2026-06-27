@@ -35,7 +35,10 @@
     "ranked_max_modifier_count",
     "neural_parameter_count",
     "neural_training_step_count",
-    "estimated_neural_training_multiply_adds"
+    "estimated_neural_training_multiply_adds",
+    "fresh_seed_confirmation",
+    "target_signed_gain",
+    "condition_reaches_target"
   ],
   "costs": {
     "external_events": "Original train observations only.",
@@ -50,6 +53,7 @@
     "artifact_regenerated": true,
     "scope_flags_present": true,
     "neural_model": false,
-    "neural_replication_required_for_paper_claim": true
+    "neural_replication_required_for_paper_claim": true,
+    "fresh_seed_confirmation_required_for_neural_claim": true
   }
 }
