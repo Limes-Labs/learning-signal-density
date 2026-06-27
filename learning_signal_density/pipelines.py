@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 import re
 from typing import Iterable
@@ -15,6 +16,7 @@ AVAILABLE_CONDITIONS = (
     "induced_rule_expansion",
     "validation_gated_induction",
     "direct_validation_gated_induction",
+    "validation_ranked_induction",
     "mdl_rule_expansion",
     "counterfactual_expansion",
     "prioritized_replay",
@@ -27,60 +29,77 @@ CONDITION_SCOPE = {
         "train_only_selection": False,
         "train_only_induction": False,
         "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
     },
     "selected_text": {
         "oracle_generated_labels": False,
         "train_only_selection": True,
         "train_only_induction": False,
         "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
     },
     "qa_expansion": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": False,
         "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
     },
     "induced_rule_expansion": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": True,
         "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
     },
     "validation_gated_induction": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": True,
         "validation_used_for_threshold": True,
+        "validation_used_for_transform_selection": True,
     },
     "direct_validation_gated_induction": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": True,
         "validation_used_for_threshold": True,
+        "validation_used_for_transform_selection": True,
+    },
+    "validation_ranked_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": False,
+        "train_only_induction": True,
+        "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": True,
     },
     "mdl_rule_expansion": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": True,
-        "validation_used_for_threshold": True,
+        "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": True,
     },
     "counterfactual_expansion": {
         "oracle_generated_labels": True,
         "train_only_selection": False,
         "train_only_induction": False,
         "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
     },
     "prioritized_replay": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": False,
         "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
     },
     "selected_counterfactual_replay": {
         "oracle_generated_labels": True,
         "train_only_selection": True,
         "train_only_induction": False,
         "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
     },
 }
 
@@ -110,6 +129,11 @@ class PipelineExamples:
     mdl_description_length_tokens: int
     mdl_selected_rule_count: int
     mdl_validation_score: float
+    candidate_ranking_cost_tokens: int
+    ranked_candidate_count: int
+    ranked_kept_candidate_count: int
+    ranked_validation_precision: float
+    ranked_synthetic_budget_ratio: float
 
     @property
     def internal_example_count(self) -> int:
@@ -118,6 +142,14 @@ class PipelineExamples:
     @property
     def internal_token_count(self) -> int:
         return sum(example.token_count for example in self.examples)
+
+
+@dataclass(frozen=True)
+class _RankedInducedCandidate:
+    example: TrainingExample
+    prediction: InducedPrediction
+    score: float
+    validation_precision: float
 
 
 def raw_observation_example(observation: Observation, source_kind: str = "raw") -> TrainingExample:
@@ -211,6 +243,112 @@ def _add_induced_examples(
     return transform_cost_tokens
 
 
+def _validation_source_reliability(
+    salience_model: InducedRuleModel,
+    validation_observations: tuple[Observation, ...],
+    induction_min_support: int,
+    induction_min_confidence: float,
+) -> tuple[dict[str, float], int]:
+    covered_by_source: Counter[str] = Counter()
+    correct_by_source: Counter[str] = Counter()
+    scoring_cost_tokens = 0
+    for item in validation_observations:
+        scoring_cost_tokens += raw_observation_example(item).token_count
+        prediction = salience_model.predict(item.family, item.stimulus, item.modifier)
+        if prediction.support < induction_min_support or prediction.confidence < induction_min_confidence:
+            continue
+        covered_by_source[prediction.source] += 1
+        if prediction.label == item.label:
+            correct_by_source[prediction.source] += 1
+
+    reliability: dict[str, float] = {}
+    for source, covered in covered_by_source.items():
+        reliability[source] = (correct_by_source[source] + 1) / (covered + 2)
+    return reliability, scoring_cost_tokens
+
+
+def _add_validation_ranked_induced_examples(
+    examples: list[TrainingExample],
+    observations: tuple[Observation, ...],
+    validation_observations: tuple[Observation, ...],
+    salience_model: InducedRuleModel,
+    induction_min_support: int,
+    induction_min_confidence: float,
+    synthetic_budget_ratio: float,
+) -> tuple[int, int, int, int, float]:
+    transform_cost_tokens = 0
+    candidate_ranking_cost_tokens = 0
+    candidates: list[_RankedInducedCandidate] = []
+    source_reliability, validation_scoring_cost = _validation_source_reliability(
+        salience_model=salience_model,
+        validation_observations=validation_observations,
+        induction_min_support=induction_min_support,
+        induction_min_confidence=induction_min_confidence,
+    )
+    candidate_ranking_cost_tokens += validation_scoring_cost
+
+    for item in observations:
+        examples.append(raw_observation_example(item))
+        question = qa_example(item)
+        examples.append(question)
+        transform_cost_tokens += question.token_count
+        item_salience_bonus = 0.05 if _is_high_value(item, salience_model) else 0.0
+        for modifier in MODIFIERS:
+            if modifier == item.modifier:
+                continue
+            prediction = salience_model.predict(item.family, item.stimulus, modifier)
+            if prediction.support < induction_min_support or prediction.confidence < induction_min_confidence:
+                continue
+            synthetic = Observation(
+                observation_id=f"{item.observation_id}-ranked-induced-{modifier}",
+                material=item.material,
+                family=item.family,
+                stimulus=item.stimulus,
+                modifier=modifier,
+                label=prediction.label,
+            )
+            generated = qa_example(synthetic, source_kind="validation_ranked_induced")
+            candidate_ranking_cost_tokens += generated.token_count
+            validation_precision = source_reliability.get(prediction.source, 0.5)
+            support_bonus = min(prediction.support, 8) / 16
+            score = validation_precision + 0.35 * prediction.confidence + support_bonus + item_salience_bonus
+            candidates.append(
+                _RankedInducedCandidate(
+                    example=generated,
+                    prediction=prediction,
+                    score=score,
+                    validation_precision=validation_precision,
+                )
+            )
+
+    candidates.sort(
+        key=lambda candidate: (
+            -candidate.score,
+            -candidate.validation_precision,
+            -candidate.prediction.confidence,
+            -candidate.prediction.support,
+            candidate.example.source_observation_id,
+            candidate.example.text,
+        )
+    )
+    synthetic_budget = max(1, int(len(observations) * synthetic_budget_ratio))
+    kept = candidates[:synthetic_budget]
+    examples.extend(candidate.example for candidate in kept)
+    transform_cost_tokens += sum(candidate.example.token_count for candidate in kept)
+    ranked_validation_precision = (
+        sum(candidate.validation_precision for candidate in kept) / len(kept)
+        if kept
+        else 0.0
+    )
+    return (
+        transform_cost_tokens,
+        candidate_ranking_cost_tokens,
+        len(candidates),
+        len(kept),
+        ranked_validation_precision,
+    )
+
+
 def _add_mdl_examples(
     examples: list[TrainingExample],
     observations: tuple[Observation, ...],
@@ -259,6 +397,7 @@ def build_pipeline_examples(
     induction_min_support: int = 2,
     induction_min_confidence: float = 0.55,
     validation_observations: Iterable[Observation] | None = None,
+    ranked_synthetic_budget_ratio: float = 1.0,
 ) -> PipelineExamples:
     if condition not in AVAILABLE_CONDITIONS:
         raise ValueError(f"unknown condition: {condition}")
@@ -272,6 +411,11 @@ def build_pipeline_examples(
     mdl_description_length_tokens = 0
     mdl_selected_rule_count = 0
     mdl_validation_score = 0.0
+    candidate_ranking_cost_tokens = 0
+    ranked_candidate_count = 0
+    ranked_kept_candidate_count = 0
+    ranked_validation_precision = 0.0
+    exported_ranked_synthetic_budget_ratio = 0.0
     examples: list[TrainingExample] = []
 
     if condition == "raw_text":
@@ -296,6 +440,28 @@ def build_pipeline_examples(
             salience_model=salience_model,
             induction_min_support=induction_min_support,
             induction_min_confidence=induction_min_confidence,
+        )
+
+    elif condition == "validation_ranked_induction":
+        if validation_observations is None:
+            raise ValueError("validation_ranked_induction requires validation_observations")
+        validation_observations = tuple(validation_observations)
+        modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
+        exported_ranked_synthetic_budget_ratio = ranked_synthetic_budget_ratio
+        (
+            transform_cost_tokens,
+            candidate_ranking_cost_tokens,
+            ranked_candidate_count,
+            ranked_kept_candidate_count,
+            ranked_validation_precision,
+        ) = _add_validation_ranked_induced_examples(
+            examples=examples,
+            observations=observations,
+            validation_observations=validation_observations,
+            salience_model=salience_model,
+            induction_min_support=induction_min_support,
+            induction_min_confidence=induction_min_confidence,
+            synthetic_budget_ratio=ranked_synthetic_budget_ratio,
         )
 
     elif condition == "mdl_rule_expansion":
@@ -357,6 +523,11 @@ def build_pipeline_examples(
         mdl_description_length_tokens=mdl_description_length_tokens,
         mdl_selected_rule_count=mdl_selected_rule_count,
         mdl_validation_score=mdl_validation_score,
+        candidate_ranking_cost_tokens=candidate_ranking_cost_tokens,
+        ranked_candidate_count=ranked_candidate_count,
+        ranked_kept_candidate_count=ranked_kept_candidate_count,
+        ranked_validation_precision=ranked_validation_precision,
+        ranked_synthetic_budget_ratio=exported_ranked_synthetic_budget_ratio,
     )
 
 

@@ -63,6 +63,9 @@ generating counterfactual labels. A validation-gated variant selects induction
 thresholds on validation data and charges the tuning overhead.
 A direct validation-gated variant selects thresholds by induced-rule
 precision/coverage without retraining the learner for every candidate.
+The validation-ranked variant uses validation data only to estimate induced
+prediction reliability, then trains on a fixed-budget ranked subset of
+candidate counterfactuals.
 An MDL-style variant selects compact empirical rules with a description-length
 penalty before generating counterfactuals.
 
