@@ -43,6 +43,9 @@ The current pilot is intentionally modest:
   necessary for candidate ranking.
 - `self_ranked_induction` removes calibration entirely and ranks induced
   candidates by train-only confidence, support, and salience signals.
+- `diverse_self_ranked_induction` applies a diversity penalty to the same
+  train-only ranking to test whether balancing modifier/stimulus/family coverage
+  improves the fixed synthetic budget.
 - `mdl_rule_expansion` learns a compact set of train-only empirical rules,
   selects them on validation with a description-length penalty, and charges
   rule search, validation scoring, and rule-description costs.
@@ -133,6 +136,9 @@ The repo reports three families of measurements:
 - Train-calibrated and self-ranked induction ablate whether validation
   reliability estimates are actually needed, or whether confidence/support
   ranking already captures most of the useful signal.
+- Diverse self-ranked induction tests whether the ranked budget should be
+  spread across feature regions, rather than concentrated where induced
+  confidence/support is strongest.
 - MDL rule expansion tests whether compressing the transform policy itself can
   reduce synthetic-example cost without quietly using the hidden rulebook.
 
@@ -153,6 +159,12 @@ The current artifacts show a useful split:
   it improves over unconstrained induced rules at the 48-material pilot, beats
   the validation-ranked variants at 48 and 64 materials, and uses no validation
   labels for transform selection. It is still weak at very low sample budgets.
+- Diverse self-ranked induction is a negative ablation: it lowers modifier
+  concentration, but loses heldout gain at the medium/high budgets where
+  self-ranked induction works. In the 48-material pilot, max modifier
+  concentration falls from 49.4 to 35.0 while signed gain falls from 0.055 to
+  0.041; in the sweep, its best signed gain is 0.070 versus 0.140 for
+  self-ranked induction.
 - MDL rule compression recovers some heldout signal while reducing synthetic
   examples, but its validation-scored rule search is too expensive to reach
   the current sample-budget target or dominate the frontier.

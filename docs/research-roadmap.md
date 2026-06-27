@@ -20,6 +20,8 @@ Status: implemented in this first slice.
 - Add train-calibrated and self-ranked induction ablations to isolate whether
   validation reliability estimates, train-only calibration, or confidence/support
   ranking drive the gain.
+- Add diverse self-ranked induction to test whether balancing feature coverage
+  improves or harms the fixed ranked budget.
 - Add MDL-style rule compression to test whether compact transform policies can
   reduce internal examples and make non-oracle transformation more efficient.
 

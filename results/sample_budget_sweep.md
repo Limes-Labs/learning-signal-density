@@ -1,6 +1,6 @@
 # Learning Signal Density Sample Budget Sweep
 
-Generated: `2026-06-27T17:19:40Z`
+Generated: `2026-06-27T17:35:43Z`
 
 This sweep reruns the pilot across multiple external sample budgets.
 It is still synthetic and non-neural; it is meant to test whether a mechanism is stable across data budgets.
@@ -18,6 +18,7 @@ Target signed gain over majority: `0.03`
 | validation_ranked_induction | 48 | 64 | 0.138 |
 | train_calibrated_ranked_induction | 48 | 64 | 0.138 |
 | self_ranked_induction | 48 | 64 | 0.140 |
+| diverse_self_ranked_induction | 48 | 64 | 0.070 |
 | mdl_rule_expansion | not reached | 48 | 0.021 |
 | counterfactual_expansion | 24 | 64 | 0.127 |
 | prioritized_replay | 64 | 64 | 0.068 |
@@ -36,6 +37,7 @@ Target signed gain over majority: `0.03`
 | validation_ranked_induction | 0.516 | -0.011 | 11813.8 | -0.016247 |
 | train_calibrated_ranked_induction | 0.516 | -0.011 | 12086.8 | -0.015861 |
 | self_ranked_induction | 0.516 | -0.011 | 11680.8 | -0.016443 |
+| diverse_self_ranked_induction | 0.463 | -0.063 | 11680.8 | -0.092600 |
 | mdl_rule_expansion | 0.463 | -0.158 | 11405.4 | -0.240043 |
 | counterfactual_expansion | 0.505 | -0.116 | 22214.0 | -0.089870 |
 | prioritized_replay | 0.442 | -0.179 | 12887.6 | -0.232943 |
@@ -54,6 +56,7 @@ Target signed gain over majority: `0.03`
 | validation_ranked_induction | 0.510 | -0.117 | 17797.4 | -0.076358 |
 | train_calibrated_ranked_induction | 0.510 | -0.117 | 18196.4 | -0.074688 |
 | self_ranked_induction | 0.510 | -0.117 | 17594.4 | -0.077236 |
+| diverse_self_ranked_induction | 0.586 | -0.041 | 17594.4 | -0.027481 |
 | mdl_rule_expansion | 0.538 | -0.090 | 18406.0 | -0.051057 |
 | counterfactual_expansion | 0.676 | 0.048 | 32938.0 | 0.017043 |
 | prioritized_replay | 0.593 | -0.034 | 19282.0 | -0.020339 |
@@ -72,6 +75,7 @@ Target signed gain over majority: `0.03`
 | validation_ranked_induction | 0.500 | -0.137 | 24338.0 | -0.048533 |
 | train_calibrated_ranked_induction | 0.500 | -0.137 | 24884.0 | -0.047466 |
 | self_ranked_induction | 0.500 | -0.137 | 24072.0 | -0.049070 |
+| diverse_self_ranked_induction | 0.537 | -0.100 | 24072.0 | -0.035886 |
 | mdl_rule_expansion | 0.553 | -0.084 | 31771.0 | -0.024209 |
 | counterfactual_expansion | 0.684 | 0.047 | 44428.0 | 0.009191 |
 | prioritized_replay | 0.495 | -0.142 | 25573.6 | -0.047963 |
@@ -90,6 +94,7 @@ Target signed gain over majority: `0.03`
 | validation_ranked_induction | 0.659 | 0.048 | 35585.2 | 0.007878 |
 | train_calibrated_ranked_induction | 0.659 | 0.048 | 36383.2 | 0.007705 |
 | self_ranked_induction | 0.666 | 0.055 | 35179.2 | 0.009108 |
+| diverse_self_ranked_induction | 0.652 | 0.041 | 35179.2 | 0.006832 |
 | mdl_rule_expansion | 0.631 | 0.021 | 69019.2 | 0.001899 |
 | counterfactual_expansion | 0.728 | 0.117 | 65876.0 | 0.010347 |
 | prioritized_replay | 0.610 | 0.000 | 38189.6 | -0.000047 |
@@ -108,6 +113,7 @@ Target signed gain over majority: `0.03`
 | validation_ranked_induction | 0.753 | 0.138 | 49059.8 | 0.012199 |
 | train_calibrated_ranked_induction | 0.753 | 0.138 | 50130.8 | 0.011938 |
 | self_ranked_induction | 0.756 | 0.140 | 48520.8 | 0.012570 |
+| diverse_self_ranked_induction | 0.686 | 0.070 | 48520.8 | 0.006296 |
 | mdl_rule_expansion | 0.600 | -0.016 | 99825.0 | -0.000834 |
 | counterfactual_expansion | 0.743 | 0.127 | 88090.0 | 0.006282 |
 | prioritized_replay | 0.683 | 0.068 | 51134.8 | 0.005701 |
