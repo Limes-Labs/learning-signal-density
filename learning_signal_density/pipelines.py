@@ -17,6 +17,8 @@ AVAILABLE_CONDITIONS = (
     "validation_gated_induction",
     "direct_validation_gated_induction",
     "validation_ranked_induction",
+    "train_calibrated_ranked_induction",
+    "self_ranked_induction",
     "mdl_rule_expansion",
     "counterfactual_expansion",
     "prioritized_replay",
@@ -72,6 +74,20 @@ CONDITION_SCOPE = {
         "train_only_induction": True,
         "validation_used_for_threshold": False,
         "validation_used_for_transform_selection": True,
+    },
+    "train_calibrated_ranked_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": True,
+        "train_only_induction": True,
+        "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
+    },
+    "self_ranked_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": True,
+        "train_only_induction": True,
+        "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
     },
     "mdl_rule_expansion": {
         "oracle_generated_labels": False,
@@ -134,6 +150,8 @@ class PipelineExamples:
     ranked_kept_candidate_count: int
     ranked_validation_precision: float
     ranked_synthetic_budget_ratio: float
+    train_calibration_event_count: int
+    validation_calibration_event_count: int
 
     @property
     def internal_example_count(self) -> int:
@@ -243,16 +261,16 @@ def _add_induced_examples(
     return transform_cost_tokens
 
 
-def _validation_source_reliability(
+def _source_reliability(
     salience_model: InducedRuleModel,
-    validation_observations: tuple[Observation, ...],
+    calibration_observations: tuple[Observation, ...],
     induction_min_support: int,
     induction_min_confidence: float,
 ) -> tuple[dict[str, float], int]:
     covered_by_source: Counter[str] = Counter()
     correct_by_source: Counter[str] = Counter()
     scoring_cost_tokens = 0
-    for item in validation_observations:
+    for item in calibration_observations:
         scoring_cost_tokens += raw_observation_example(item).token_count
         prediction = salience_model.predict(item.family, item.stimulus, item.modifier)
         if prediction.support < induction_min_support or prediction.confidence < induction_min_confidence:
@@ -267,25 +285,20 @@ def _validation_source_reliability(
     return reliability, scoring_cost_tokens
 
 
-def _add_validation_ranked_induced_examples(
+def _add_ranked_induced_examples(
     examples: list[TrainingExample],
     observations: tuple[Observation, ...],
-    validation_observations: tuple[Observation, ...],
     salience_model: InducedRuleModel,
     induction_min_support: int,
     induction_min_confidence: float,
     synthetic_budget_ratio: float,
+    source_reliability: dict[str, float],
+    base_ranking_cost_tokens: int,
+    source_kind: str,
 ) -> tuple[int, int, int, int, float]:
     transform_cost_tokens = 0
-    candidate_ranking_cost_tokens = 0
+    candidate_ranking_cost_tokens = base_ranking_cost_tokens
     candidates: list[_RankedInducedCandidate] = []
-    source_reliability, validation_scoring_cost = _validation_source_reliability(
-        salience_model=salience_model,
-        validation_observations=validation_observations,
-        induction_min_support=induction_min_support,
-        induction_min_confidence=induction_min_confidence,
-    )
-    candidate_ranking_cost_tokens += validation_scoring_cost
 
     for item in observations:
         examples.append(raw_observation_example(item))
@@ -307,7 +320,7 @@ def _add_validation_ranked_induced_examples(
                 modifier=modifier,
                 label=prediction.label,
             )
-            generated = qa_example(synthetic, source_kind="validation_ranked_induced")
+            generated = qa_example(synthetic, source_kind=source_kind)
             candidate_ranking_cost_tokens += generated.token_count
             validation_precision = source_reliability.get(prediction.source, 0.5)
             support_bonus = min(prediction.support, 8) / 16
@@ -346,6 +359,92 @@ def _add_validation_ranked_induced_examples(
         len(candidates),
         len(kept),
         ranked_validation_precision,
+    )
+
+
+def _add_validation_ranked_induced_examples(
+    examples: list[TrainingExample],
+    observations: tuple[Observation, ...],
+    validation_observations: tuple[Observation, ...],
+    salience_model: InducedRuleModel,
+    induction_min_support: int,
+    induction_min_confidence: float,
+    synthetic_budget_ratio: float,
+) -> tuple[int, int, int, int, float]:
+    source_reliability, validation_scoring_cost = _source_reliability(
+        salience_model=salience_model,
+        calibration_observations=validation_observations,
+        induction_min_support=induction_min_support,
+        induction_min_confidence=induction_min_confidence,
+    )
+    return _add_ranked_induced_examples(
+        examples=examples,
+        observations=observations,
+        salience_model=salience_model,
+        induction_min_support=induction_min_support,
+        induction_min_confidence=induction_min_confidence,
+        synthetic_budget_ratio=synthetic_budget_ratio,
+        source_reliability=source_reliability,
+        base_ranking_cost_tokens=validation_scoring_cost,
+        source_kind="validation_ranked_induced",
+    )
+
+
+def _train_calibration_split(observations: tuple[Observation, ...], calibration_fraction: float = 0.2) -> tuple[tuple[Observation, ...], tuple[Observation, ...]]:
+    if len(observations) < 2:
+        return observations, ()
+    calibration_count = min(len(observations) - 1, max(1, round(len(observations) * calibration_fraction)))
+    calibration_ids = {
+        item.observation_id
+        for index, item in enumerate(sorted(observations, key=lambda item: item.observation_id))
+        if index < calibration_count
+    }
+    calibration = tuple(item for item in observations if item.observation_id in calibration_ids)
+    induction = tuple(item for item in observations if item.observation_id not in calibration_ids)
+    return induction, calibration
+
+
+def _add_train_calibrated_ranked_induced_examples(
+    examples: list[TrainingExample],
+    observations: tuple[Observation, ...],
+    salience_model: InducedRuleModel,
+    induction_min_support: int,
+    induction_min_confidence: float,
+    synthetic_budget_ratio: float,
+) -> tuple[int, int, int, int, float, int]:
+    induction_observations, calibration_observations = _train_calibration_split(observations)
+    calibration_model = fit_induced_rule_model(induction_observations)
+    calibration_modeling_cost = sum(raw_observation_example(item).token_count for item in induction_observations)
+    source_reliability, calibration_scoring_cost = _source_reliability(
+        salience_model=calibration_model,
+        calibration_observations=calibration_observations,
+        induction_min_support=induction_min_support,
+        induction_min_confidence=induction_min_confidence,
+    )
+    (
+        transform_cost_tokens,
+        candidate_ranking_cost_tokens,
+        ranked_candidate_count,
+        ranked_kept_candidate_count,
+        ranked_validation_precision,
+    ) = _add_ranked_induced_examples(
+        examples=examples,
+        observations=observations,
+        salience_model=salience_model,
+        induction_min_support=induction_min_support,
+        induction_min_confidence=induction_min_confidence,
+        synthetic_budget_ratio=synthetic_budget_ratio,
+        source_reliability=source_reliability,
+        base_ranking_cost_tokens=calibration_modeling_cost + calibration_scoring_cost,
+        source_kind="train_calibrated_ranked_induced",
+    )
+    return (
+        transform_cost_tokens,
+        candidate_ranking_cost_tokens,
+        ranked_candidate_count,
+        ranked_kept_candidate_count,
+        ranked_validation_precision,
+        len(calibration_observations),
     )
 
 
@@ -416,6 +515,8 @@ def build_pipeline_examples(
     ranked_kept_candidate_count = 0
     ranked_validation_precision = 0.0
     exported_ranked_synthetic_budget_ratio = 0.0
+    train_calibration_event_count = 0
+    validation_calibration_event_count = 0
     examples: list[TrainingExample] = []
 
     if condition == "raw_text":
@@ -446,6 +547,7 @@ def build_pipeline_examples(
         if validation_observations is None:
             raise ValueError("validation_ranked_induction requires validation_observations")
         validation_observations = tuple(validation_observations)
+        validation_calibration_event_count = len(validation_observations)
         modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
         exported_ranked_synthetic_budget_ratio = ranked_synthetic_budget_ratio
         (
@@ -462,6 +564,46 @@ def build_pipeline_examples(
             induction_min_support=induction_min_support,
             induction_min_confidence=induction_min_confidence,
             synthetic_budget_ratio=ranked_synthetic_budget_ratio,
+        )
+
+    elif condition == "train_calibrated_ranked_induction":
+        modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
+        exported_ranked_synthetic_budget_ratio = ranked_synthetic_budget_ratio
+        (
+            transform_cost_tokens,
+            candidate_ranking_cost_tokens,
+            ranked_candidate_count,
+            ranked_kept_candidate_count,
+            ranked_validation_precision,
+            train_calibration_event_count,
+        ) = _add_train_calibrated_ranked_induced_examples(
+            examples=examples,
+            observations=observations,
+            salience_model=salience_model,
+            induction_min_support=induction_min_support,
+            induction_min_confidence=induction_min_confidence,
+            synthetic_budget_ratio=ranked_synthetic_budget_ratio,
+        )
+
+    elif condition == "self_ranked_induction":
+        modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
+        exported_ranked_synthetic_budget_ratio = ranked_synthetic_budget_ratio
+        (
+            transform_cost_tokens,
+            candidate_ranking_cost_tokens,
+            ranked_candidate_count,
+            ranked_kept_candidate_count,
+            ranked_validation_precision,
+        ) = _add_ranked_induced_examples(
+            examples=examples,
+            observations=observations,
+            salience_model=salience_model,
+            induction_min_support=induction_min_support,
+            induction_min_confidence=induction_min_confidence,
+            synthetic_budget_ratio=ranked_synthetic_budget_ratio,
+            source_reliability={},
+            base_ranking_cost_tokens=0,
+            source_kind="self_ranked_induced",
         )
 
     elif condition == "mdl_rule_expansion":
@@ -528,6 +670,8 @@ def build_pipeline_examples(
         ranked_kept_candidate_count=ranked_kept_candidate_count,
         ranked_validation_precision=ranked_validation_precision,
         ranked_synthetic_budget_ratio=exported_ranked_synthetic_budget_ratio,
+        train_calibration_event_count=train_calibration_event_count,
+        validation_calibration_event_count=validation_calibration_event_count,
     )
 
 

@@ -17,6 +17,9 @@ Status: implemented in this first slice.
   proxy preserves most of the gain without paying per-candidate retraining cost.
 - Add validation-ranked induction to test whether a fixed-budget subset of
   validation-scored induced counterfactuals improves non-oracle density.
+- Add train-calibrated and self-ranked induction ablations to isolate whether
+  validation reliability estimates, train-only calibration, or confidence/support
+  ranking drive the gain.
 - Add MDL-style rule compression to test whether compact transform policies can
   reduce internal examples and make non-oracle transformation more efficient.
 
@@ -30,7 +33,7 @@ Replace the online linear learner with a tiny neural model:
 - Report wall-clock time and framework/device metadata.
 - Compare oracle counterfactual expansion against train-only induced
   counterfactual expansion, validation-gated induction, and direct validation
-  gating, validation-ranked induction, and MDL-compressed rules to measure the
+  gating, ranked induction variants, and MDL-compressed rules to measure the
   cost of imperfect transformation and transform selection.
 
 ## Phase 3: Continual-Learning Replay

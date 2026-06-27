@@ -35,6 +35,11 @@ internal processing cost.
 - `validation_ranked_induction`: train-only induced counterfactual candidates
   are ranked by validation-estimated source reliability, then a fixed budgeted
   subset is used for training.
+- `train_calibrated_ranked_induction`: source reliability is estimated from a
+  held-out slice of the train split rather than from validation.
+- `self_ranked_induction`: induced counterfactual candidates are ranked only by
+  train-only confidence, support, and salience signals, with no calibration
+  labels.
 - `mdl_rule_expansion`: train-only empirical rules are scored on validation
   with a description-length penalty, then only selected compact rules are used
   for counterfactual generation.
@@ -81,6 +86,10 @@ is allowed only for train pairs.
 - Validation-ranked induction must charge validation scoring and candidate
   ranking overhead, and the committed pilot must use a fixed budget ratio rather
   than a heldout-selected ratio.
+- Train-calibrated ranked induction must charge the extra train-calibration
+  model and scoring pass.
+- Self-ranked induction must not use validation or calibration labels for
+  transform selection, and must still charge candidate-ranking overhead.
 - MDL rule expansion must charge rule-search cost, validation-scoring cost,
   and selected-rule description length.
 - Negative or mixed results remain publishable.

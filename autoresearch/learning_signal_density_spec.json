@@ -25,11 +25,13 @@
     "candidate_ranking_cost_tokens",
     "ranked_candidate_count",
     "ranked_kept_candidate_count",
-    "ranked_synthetic_budget_ratio"
+    "ranked_synthetic_budget_ratio",
+    "train_calibration_event_count",
+    "validation_calibration_event_count"
   ],
   "costs": {
     "external_events": "Original train observations only.",
-    "internal_compute": "Training tokens over epochs plus train-only selection, train-only rule induction, validation threshold search, validation-ranked candidate scoring, validation-scored MDL rule search and description length, and transform token costs."
+    "internal_compute": "Training tokens over epochs plus train-only selection, train-only rule induction, validation threshold search, ranked candidate scoring, train-calibration scoring, validation-scored MDL rule search and description length, and transform token costs."
   },
   "splits": {
     "unit": "material-stimulus pair",
