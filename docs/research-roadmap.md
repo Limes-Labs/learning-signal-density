@@ -32,16 +32,19 @@ Status: implemented in this first slice.
 
 ## Phase 2: Tiny Neural Replication
 
-Replace the online linear learner with a tiny neural model:
+Status: started with a deterministic CPU MLP artifact.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
 - Keep the exact same split boundary and artifact schema.
-- Report wall-clock time and framework/device metadata.
+- Report parameter count, training steps, estimated training operations,
+  wall-clock time, and framework/device metadata.
 - Compare oracle counterfactual expansion against train-only induced
   counterfactual expansion, validation-gated induction, and direct validation
   gating, ranked induction variants, and MDL-compressed rules to measure the
   cost of imperfect transformation and transform selection.
+- Run fresh-seed confirmation before promoting any neural gain discovered by
+  changing MLP width, epoch count, learning rate, or condition set.
 
 ## Phase 3: Continual-Learning Replay
 

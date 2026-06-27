@@ -25,6 +25,9 @@ The current pilot is intentionally modest:
 
 - It is not a neural language-model result.
 - It uses an online linear learner as the first audit instrument.
+- A first tiny neural replication now uses a deterministic CPU MLP with the
+  same split discipline and cost accounting; it is still not a language-model
+  or frontier-model result.
 - Counterfactual transforms are oracle-generated inside the synthetic world.
 - `induced_rule_expansion` is the first non-oracle transform: it fits simple
   train-only empirical rules, then generates counterfactual labels from those
@@ -70,6 +73,9 @@ using the same split and accounting discipline.
 - `docs/literature.md` - source-backed research map for data selection,
   transformation, dense feedback, replay, and world-model imagination.
 - `results/` - checked-in result cards and JSON artifacts.
+- `results/tiny_neural_replication.*` - first deterministic tiny-MLP
+  replication artifact with neural parameter, step, and estimated operation
+  accounting.
 - `paper/` - paper skeleton and BibTeX file for the eventual technical report.
 - `autoresearch/` - Limes AutoResearch config for ledgered reruns.
 - `UPSTREAMS.md` - inspected inspirations and reuse boundary.
@@ -114,6 +120,20 @@ python3 -m learning_signal_density.sweep \
   --seeds 3 5 7 11 13 \
   --epochs 5 \
   --target-signed-gain 0.03
+```
+
+Run the tiny neural replication:
+
+```bash
+python3 -m learning_signal_density.neural_experiment \
+  --output-json results/tiny_neural_replication.json \
+  --output-md results/tiny_neural_replication.md \
+  --seeds 3 5 7 11 13 \
+  --material-count 48 \
+  --epochs 32 \
+  --hidden-units 32 \
+  --feature-dimension 128 \
+  --learning-rate 0.03
 ```
 
 ## Metrics
@@ -185,6 +205,13 @@ The current artifacts show a useful split:
 - MDL rule compression recovers some heldout signal while reducing synthetic
   examples, but its validation-scored rule search is too expensive to reach
   the current sample-budget target or dominate the frontier.
+- The first tiny-MLP replication changes the learner-dependent readout:
+  raw text and QA expansion are negative, self-ranked and sample-aware
+  self-ranked induction reach a positive `0.041` signed gain, and oracle
+  counterfactual expansion reaches `0.055`. Because counterfactual expansion
+  spends more internal compute, its signed learning-signal density is lower
+  than the train-only ranked conditions (`0.000851` versus `0.001343`). This
+  result is exploratory and neural, but not a language-model result.
 
 ## Research Thesis
 

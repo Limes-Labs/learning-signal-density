@@ -78,13 +78,20 @@ penalty before generating counterfactuals.
 Because several ranked-policy variants were designed after inspecting discovery
 seeds, the repository also records a fresh-seed confirmation sweep and treats
 non-confirmed budget-specific gains as exploratory.
+The repository now also includes a deterministic CPU tiny-MLP replication that
+keeps the same split discipline while recording neural parameter count,
+training steps, and estimated training multiply-adds. In this first neural
+profile, train-only ranked induction conditions become positive while raw text
+and question-answer expansion remain negative, but the result is still
+exploratory and not a language-model claim.
 
 \section{Limitations}
 
-The current pilot uses an online linear learner, not a neural language model.
-Counterfactual labels are oracle-generated inside the synthetic world. These
-limitations are intentional for the first audit and must be removed or bracketed
-before a stronger paper claim.
+The first pilot uses an online linear learner, and the first neural replication
+uses a tiny MLP rather than a neural language model. Counterfactual labels are
+oracle-generated inside the synthetic world. These limitations are intentional
+for the first audits and must be removed or bracketed before a stronger paper
+claim.
 
 \bibliographystyle{plain}
 \bibliography{references}

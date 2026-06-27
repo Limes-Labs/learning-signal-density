@@ -40,5 +40,19 @@ python3 -m learning_signal_density.sweep \
   --confirmation-of results/sample_budget_sweep.json
 ```
 
+Tiny neural replication:
+
+```bash
+python3 -m learning_signal_density.neural_experiment \
+  --output-json results/tiny_neural_replication.json \
+  --output-md results/tiny_neural_replication.md \
+  --seeds 3 5 7 11 13 \
+  --material-count 48 \
+  --epochs 32 \
+  --hidden-units 32 \
+  --feature-dimension 128 \
+  --learning-rate 0.03
+```
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.
