@@ -35,7 +35,8 @@ Status: implemented in this first slice.
 Status: started with a deterministic CPU MLP artifact, fresh-seed
 confirmation, a neural sample-budget sweep, a profile-efficiency sweep, and an
 efficient-profile budget confirmation. It now also includes a feature-dimension
-frontier and a 256-feature budget rerun for the efficient `32x8` profile.
+frontier plus 256-feature and 1024-feature budget reruns for the efficient
+`32x8` profile.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -65,6 +66,10 @@ frontier and a 256-feature budget rerun for the efficient `32x8` profile.
   The current `32x8` feature sweep rejects 16, 32, and 64 features for ranked
   train-only conditions at 64 materials, while 256 features improves the
   128-feature frontier with only a small neural-op increase.
+- Continue widening the feature map until the sparse hash frontier visibly
+  saturates. The current 1024-feature sweep improves the 256-feature frontier
+  with only a small additional operation cost, but still leaves train-only
+  ranked methods negative at 24 and 32 materials.
 
 ## Phase 3: Continual-Learning Replay
 

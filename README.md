@@ -88,6 +88,11 @@ using the same split and accounting discipline.
 - `results/tiny_neural_budget_sweep_32x8_f256.*` - full sample-budget rerun
   of the `32x8` profile with 256 hashed features, compared against the
   128-feature `32x8` artifact.
+- `results/tiny_neural_feature_sweep_wide.*` - wider 128/256/512/1024
+  feature-hash sweep at the 64-material budget.
+- `results/tiny_neural_budget_sweep_32x8_f1024.*` - full sample-budget rerun
+  of the `32x8` profile with 1024 hashed features, compared against the
+  256-feature `32x8` artifact.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - paper skeleton and BibTeX file for the eventual technical report.
@@ -258,6 +263,44 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=32_hidden=8_features=256
 ```
 
+Run the wide tiny neural feature-dimension sweep:
+
+```bash
+python3 -m learning_signal_density.neural_feature_sweep \
+  --output-json results/tiny_neural_feature_sweep_wide.json \
+  --output-md results/tiny_neural_feature_sweep_wide.md \
+  --feature-dimensions 128 256 512 1024 \
+  --seeds 17 19 23 29 31 \
+  --material-count 64 \
+  --epochs 32 \
+  --hidden-units 8 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_feature_sweep.json \
+  --comparison-of results/tiny_neural_feature_sweep.json \
+  --profile-label epochs=32_hidden=8
+```
+
+Run the 1024-feature efficient tiny neural budget sweep:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_32x8_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_32x8_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --epochs 32 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_feature_sweep_wide.json \
+  --comparison-of results/tiny_neural_budget_sweep_32x8_f256.json \
+  --profile-label epochs=32_hidden=8_features=1024
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -382,6 +425,21 @@ The current artifacts show a useful split:
   `0.130` for sample-aware self-ranked induction, and `0.124` to `0.197` for
   oracle counterfactual expansion. The result still has a clear low-budget
   limit: train-only ranked conditions remain negative at 24 and 32 materials.
+- The wider feature sweep shows that the hashed feature frontier had not yet
+  saturated at 256. At 64 materials, 1024 features improves signed gain and
+  signed LSD over 256 for every condition while increasing estimated neural
+  train ops by only about `1.01x` to `1.02x`. Self-ranked induction rises from
+  `0.132` to `0.145` signed gain, sample-aware self-ranked induction rises
+  from `0.130` to `0.156`, and oracle counterfactual expansion rises from
+  `0.174` to `0.247`.
+- A full 1024-feature budget rerun confirms the wider-feature result across the
+  sample-budget frontier. Against the 256-feature sweep, raw text first reaches
+  target at `48` rather than `64`, oracle counterfactual expansion first reaches
+  target at `24` rather than `32`, and the transformed train-only conditions
+  keep the same `48`-material threshold while improving best signed gain. The
+  low-budget caveat remains: self-ranked and sample-aware self-ranked induction
+  are still negative at 24 and 32 materials, so feature capacity helps but does
+  not solve scarce-data generated-label noise.
 
 ## Research Thesis
 

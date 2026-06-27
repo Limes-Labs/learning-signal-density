@@ -107,6 +107,14 @@ frontier: dimensions 16, 32, and 64 lose the ranked train-only signal at the
 budgets for the transformed conditions and improves their best signed gains,
 but does not remove the negative ranked train-only region at 24 and 32
 materials.
+A wider feature sweep shows that this frontier has not yet saturated at 256
+features. At 64 materials, 1024 features improves signed gain and signed
+learning-signal density over 256 features for every condition with only a small
+increase in estimated neural training operations. In the full 1024-feature
+budget rerun, raw text first reaches target at 48 materials, oracle
+counterfactual expansion first reaches target at 24, and ranked train-only
+conditions still first reach target at 48 while remaining negative at 24 and
+32 materials.
 
 \section{Limitations}
 
