@@ -44,12 +44,38 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertGreater(examples.transform_cost_tokens, 0)
         self.assertIn("induced_counterfactual", {example.source_kind for example in examples.examples})
 
+    def test_stricter_induction_threshold_produces_no_more_examples(self) -> None:
+        world = build_world(seed=42, material_count=40)
+        split = split_observations(world.observations)
+        permissive = build_pipeline_examples(
+            "validation_gated_induction",
+            split.train,
+            world.rules,
+            induction_min_support=1,
+            induction_min_confidence=0.5,
+        )
+        strict = build_pipeline_examples(
+            "validation_gated_induction",
+            split.train,
+            world.rules,
+            induction_min_support=4,
+            induction_min_confidence=0.85,
+        )
+
+        self.assertLessEqual(strict.internal_example_count, permissive.internal_example_count)
+        self.assertEqual(strict.external_event_count, permissive.external_event_count)
+
     def test_selection_and_replay_do_not_peek_at_hidden_rulebook(self) -> None:
         world = build_world(seed=43, material_count=40)
         alternate_rules = build_world(seed=101, material_count=40).rules
         split = split_observations(world.observations)
 
-        for condition in ("selected_text", "prioritized_replay"):
+        for condition in (
+            "selected_text",
+            "prioritized_replay",
+            "validation_gated_induction",
+            "direct_validation_gated_induction",
+        ):
             normal = build_pipeline_examples(condition, split.train, world.rules)
             alternate = build_pipeline_examples(condition, split.train, alternate_rules)
             normal_signature = [(example.source_observation_id, example.source_kind) for example in normal.examples]

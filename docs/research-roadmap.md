@@ -11,6 +11,10 @@ Status: implemented in this first slice.
 - Publish JSON and Markdown result artifacts.
 - Add signed metrics and sample-budget sweeps so negative or budget-sensitive
   results stay visible.
+- Add validation-gated induction to measure whether spending validation compute
+  improves non-oracle transformation quality enough to justify its overhead.
+- Add direct validation gating to test whether a cheaper threshold-selection
+  proxy preserves most of the gain without paying per-candidate retraining cost.
 
 ## Phase 2: Tiny Neural Replication
 
@@ -21,7 +25,9 @@ Replace the online linear learner with a tiny neural model:
 - Keep the exact same split boundary and artifact schema.
 - Report wall-clock time and framework/device metadata.
 - Compare oracle counterfactual expansion against train-only induced
-  counterfactual expansion to measure the cost of imperfect transformation.
+  counterfactual expansion, validation-gated induction, and direct validation
+  gating to measure the cost of imperfect transformation and transform
+  selection.
 
 ## Phase 3: Continual-Learning Replay
 

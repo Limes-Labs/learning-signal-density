@@ -29,6 +29,12 @@ The current pilot is intentionally modest:
 - `induced_rule_expansion` is the first non-oracle transform: it fits simple
   train-only empirical rules, then generates counterfactual labels from those
   induced rules rather than from the hidden rulebook.
+- `validation_gated_induction` spends validation compute to choose the
+  confidence/support thresholds for induced counterfactual generation, then
+  charges that search cost in the final metric.
+- `direct_validation_gated_induction` chooses the same thresholds by direct
+  induced-rule precision/coverage on validation, avoiding per-candidate learner
+  retraining and charging the cheaper gate search.
 - Heldout examples are not used for selection, transformation, or replay.
 - The artifact reports cost and scope flags so readers do not mistake the pilot
   for the final paper claim.
@@ -106,6 +112,10 @@ The repo reports three families of measurements:
 - Signed metrics preserve losses; clipped metrics count only positive per-seed
   improvements. Public interpretation should prefer signed metrics unless the
   question is explicitly "how often did this condition win?"
+- Validation-gated transforms are allowed to use validation labels for threshold
+  choice, never heldout labels, and their search overhead is charged.
+- Direct validation gating is an explicit attempt to trade a slightly weaker
+  selection signal for much lower tuning cost.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 

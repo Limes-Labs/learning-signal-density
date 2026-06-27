@@ -59,7 +59,10 @@ pipelines. It records heldout accuracy, majority-baseline improvement,
 external-event count, internal-token count, charged transform costs, signed
 efficiency metrics, and sample-budget sensitivity. The first non-oracle
 transformation condition induces empirical rules from the train split before
-generating counterfactual labels.
+generating counterfactual labels. A validation-gated variant selects induction
+thresholds on validation data and charges the tuning overhead.
+A direct validation-gated variant selects thresholds by induced-rule
+precision/coverage without retraining the learner for every candidate.
 
 \section{Limitations}
 

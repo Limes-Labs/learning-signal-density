@@ -13,6 +13,8 @@ AVAILABLE_CONDITIONS = (
     "selected_text",
     "qa_expansion",
     "induced_rule_expansion",
+    "validation_gated_induction",
+    "direct_validation_gated_induction",
     "counterfactual_expansion",
     "prioritized_replay",
     "selected_counterfactual_replay",
@@ -23,36 +25,55 @@ CONDITION_SCOPE = {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": False,
+        "validation_used_for_threshold": False,
     },
     "selected_text": {
         "oracle_generated_labels": False,
         "train_only_selection": True,
         "train_only_induction": False,
+        "validation_used_for_threshold": False,
     },
     "qa_expansion": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": False,
+        "validation_used_for_threshold": False,
     },
     "induced_rule_expansion": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": True,
+        "validation_used_for_threshold": False,
+    },
+    "validation_gated_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": False,
+        "train_only_induction": True,
+        "validation_used_for_threshold": True,
+    },
+    "direct_validation_gated_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": False,
+        "train_only_induction": True,
+        "validation_used_for_threshold": True,
     },
     "counterfactual_expansion": {
         "oracle_generated_labels": True,
         "train_only_selection": False,
         "train_only_induction": False,
+        "validation_used_for_threshold": False,
     },
     "prioritized_replay": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": False,
+        "validation_used_for_threshold": False,
     },
     "selected_counterfactual_replay": {
         "oracle_generated_labels": True,
         "train_only_selection": True,
         "train_only_induction": False,
+        "validation_used_for_threshold": False,
     },
 }
 
@@ -146,10 +167,45 @@ def _is_high_value(observation: Observation, salience_model: InducedRuleModel) -
     return is_observed_exception or is_non_plain_modifier or is_low_confidence_region
 
 
+def _add_induced_examples(
+    examples: list[TrainingExample],
+    observations: tuple[Observation, ...],
+    salience_model: InducedRuleModel,
+    induction_min_support: int,
+    induction_min_confidence: float,
+) -> int:
+    transform_cost_tokens = 0
+    for item in observations:
+        examples.append(raw_observation_example(item))
+        question = qa_example(item)
+        examples.append(question)
+        transform_cost_tokens += question.token_count
+        for modifier in MODIFIERS:
+            if modifier == item.modifier:
+                continue
+            prediction = salience_model.predict(item.family, item.stimulus, modifier)
+            if prediction.support < induction_min_support or prediction.confidence < induction_min_confidence:
+                continue
+            synthetic = Observation(
+                observation_id=f"{item.observation_id}-induced-{modifier}",
+                material=item.material,
+                family=item.family,
+                stimulus=item.stimulus,
+                modifier=modifier,
+                label=prediction.label,
+            )
+            generated = qa_example(synthetic, source_kind="induced_counterfactual")
+            examples.append(generated)
+            transform_cost_tokens += generated.token_count
+    return transform_cost_tokens
+
+
 def build_pipeline_examples(
     condition: str,
     observations: Iterable[Observation],
     rules: RuleBook,
+    induction_min_support: int = 2,
+    induction_min_confidence: float = 0.55,
 ) -> PipelineExamples:
     if condition not in AVAILABLE_CONDITIONS:
         raise ValueError(f"unknown condition: {condition}")
@@ -175,30 +231,15 @@ def build_pipeline_examples(
             examples.append(qa_example(item))
             transform_cost_tokens += examples[-1].token_count
 
-    elif condition == "induced_rule_expansion":
+    elif condition in {"induced_rule_expansion", "validation_gated_induction", "direct_validation_gated_induction"}:
         modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
-        for item in observations:
-            examples.append(raw_observation_example(item))
-            question = qa_example(item)
-            examples.append(question)
-            transform_cost_tokens += question.token_count
-            for modifier in MODIFIERS:
-                if modifier == item.modifier:
-                    continue
-                prediction = salience_model.predict(item.family, item.stimulus, modifier)
-                if prediction.support < 2 or prediction.confidence < 0.55:
-                    continue
-                synthetic = Observation(
-                    observation_id=f"{item.observation_id}-induced-{modifier}",
-                    material=item.material,
-                    family=item.family,
-                    stimulus=item.stimulus,
-                    modifier=modifier,
-                    label=prediction.label,
-                )
-                generated = qa_example(synthetic, source_kind="induced_counterfactual")
-                examples.append(generated)
-                transform_cost_tokens += generated.token_count
+        transform_cost_tokens = _add_induced_examples(
+            examples=examples,
+            observations=observations,
+            salience_model=salience_model,
+            induction_min_support=induction_min_support,
+            induction_min_confidence=induction_min_confidence,
+        )
 
     elif condition == "counterfactual_expansion":
         for item in observations:
