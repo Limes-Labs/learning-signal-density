@@ -1,18 +1,23 @@
 # Learning Signal Density Pilot
 
-Generated: `2026-06-27T16:09:38Z`
+Generated: `2026-06-27T16:24:44Z`
 
 This is a controlled pilot on a synthetic causal-text domain. It is not a neural-language-model result.
 The heldout split is not used for selection or transformation. Counterfactual expansion is oracle-generated inside the synthetic world.
 
-| Condition | Heldout acc. | Majority acc. | External events | Internal tokens | Compute units | External eff. | Compute eff./10k | LSD/1M |
+| Condition | Heldout acc. | Majority acc. | Signed gain | External events | Internal tokens | Compute units | Signed LSD/1M | Clipped LSD/1M |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| raw_text | 0.607 | 0.610 | 172.0 | 1204.0 | 6020.0 | 0.000080 | 0.022912 | 0.013321 |
-| selected_text | 0.603 | 0.610 | 172.0 | 961.8 | 6013.0 | 0.000160 | 0.044681 | 0.025977 |
-| qa_expansion | 0.603 | 0.610 | 172.0 | 3268.0 | 18404.0 | 0.000201 | 0.018737 | 0.010893 |
-| counterfactual_expansion | 0.728 | 0.610 | 172.0 | 11524.0 | 65876.0 | 0.000681 | 0.017797 | 0.010347 |
-| prioritized_replay | 0.610 | 0.610 | 172.0 | 6565.6 | 38189.6 | 0.000140 | 0.006213 | 0.003612 |
-| selected_counterfactual_replay | 0.666 | 0.610 | 172.0 | 9205.8 | 53828.2 | 0.000421 | 0.013551 | 0.007878 |
+| raw_text | 0.607 | 0.610 | -0.003 | 172.0 | 1204.0 | 6020.0 | -0.003330 | 0.013321 |
+| selected_text | 0.603 | 0.610 | -0.007 | 172.0 | 961.8 | 6013.0 | -0.008087 | 0.025977 |
+| qa_expansion | 0.603 | 0.610 | -0.007 | 172.0 | 3268.0 | 18404.0 | -0.002179 | 0.010893 |
+| induced_rule_expansion | 0.655 | 0.610 | 0.045 | 172.0 | 6455.2 | 38731.2 | 0.006787 | 0.006787 |
+| counterfactual_expansion | 0.728 | 0.610 | 0.117 | 172.0 | 11524.0 | 65876.0 | 0.010347 | 0.010347 |
+| prioritized_replay | 0.610 | 0.610 | 0.000 | 172.0 | 6565.6 | 38189.6 | -0.000047 | 0.003612 |
+| selected_counterfactual_replay | 0.666 | 0.610 | 0.055 | 172.0 | 9205.8 | 53828.2 | 0.006045 | 0.007878 |
+
+## Pareto Frontier
+
+`counterfactual_expansion`, `induced_rule_expansion`, `prioritized_replay`, `raw_text`, `selected_counterfactual_replay`, `selected_text`
 
 ## Scope Flags
 
@@ -26,9 +31,22 @@ The heldout split is not used for selection or transformation. Counterfactual ex
 }
 ```
 
+## Condition Scope
+
+| Condition | Oracle labels | Train-only selection | Train-only induction |
+| --- | ---: | ---: | ---: |
+| raw_text | false | false | false |
+| selected_text | false | true | false |
+| qa_expansion | false | false | false |
+| induced_rule_expansion | false | false | true |
+| counterfactual_expansion | true | false | false |
+| prioritized_replay | false | false | false |
+| selected_counterfactual_replay | true | true | false |
+
 ## Interpretation
 
 - External sample efficiency charges the original observations only.
 - Compute efficiency charges training tokens, train-only selection cost, and synthetic transform tokens.
+- Signed metrics preserve negative results; clipped metrics count only per-seed positive improvements.
 - Learning-signal density is reported as heldout improvement per external event per charged internal unit, scaled by 1M.
 - The first useful scientific question is the Pareto frontier, not a single winning condition.

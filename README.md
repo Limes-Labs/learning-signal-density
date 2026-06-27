@@ -26,6 +26,9 @@ The current pilot is intentionally modest:
 - It is not a neural language-model result.
 - It uses an online linear learner as the first audit instrument.
 - Counterfactual transforms are oracle-generated inside the synthetic world.
+- `induced_rule_expansion` is the first non-oracle transform: it fits simple
+  train-only empirical rules, then generates counterfactual labels from those
+  induced rules rather than from the hidden rulebook.
 - Heldout examples are not used for selection, transformation, or replay.
 - The artifact reports cost and scope flags so readers do not mistake the pilot
   for the final paper claim.
@@ -78,6 +81,18 @@ python3 -m learning_signal_density \
   --epochs 5
 ```
 
+Run the sample-budget sweep:
+
+```bash
+python3 -m learning_signal_density.sweep \
+  --output-json results/sample_budget_sweep.json \
+  --output-md results/sample_budget_sweep.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 3 5 7 11 13 \
+  --epochs 5 \
+  --target-signed-gain 0.03
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -88,6 +103,9 @@ The repo reports three families of measurements:
   training tokens, train-only selection cost, and transform tokens.
 - Learning-signal density: heldout improvement per external event per charged
   internal unit.
+- Signed metrics preserve losses; clipped metrics count only positive per-seed
+  improvements. Public interpretation should prefer signed metrics unless the
+  question is explicitly "how often did this condition win?"
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 

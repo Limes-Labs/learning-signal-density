@@ -24,6 +24,8 @@ internal processing cost.
 - `selected_text`: train-only heuristic selection of higher-value examples.
 - `qa_expansion`: each observation becomes an observation plus a question-answer
   training view.
+- `induced_rule_expansion`: train-only empirical rule induction generates
+  counterfactual labels without querying the hidden synthetic rulebook.
 - `counterfactual_expansion`: each train observation generates same-pair
   modifier counterfactuals using the synthetic world's rules.
 - `prioritized_replay`: high-value train observations are replayed more often.
@@ -49,6 +51,10 @@ is allowed only for train pairs.
 - External sample efficiency.
 - Compute efficiency per 10,000 charged units.
 - Learning-signal density per 1,000,000 event-compute units.
+- Signed and clipped versions of the efficiency metrics. Signed metrics are the
+  primary scientific readout; clipped metrics are diagnostic win-only summaries.
+- Sample-budget thresholds for reaching a target signed gain over the majority
+  baseline.
 
 ## Anti-Cheat Rules
 
@@ -58,7 +64,9 @@ is allowed only for train pairs.
 - Negative or mixed results remain publishable.
 - The current pilot must mark `neural_model=false`.
 - The current pilot must mark `oracle_transform=true` because the synthetic
-  world supplies ground-truth counterfactual labels.
+  world supplies ground-truth counterfactual labels for at least one condition.
+- Condition-level scope must identify which transforms use oracle-generated
+  labels.
 - A paper-level claim requires a neural replication and at least one non-oracle
   transformation condition.
 

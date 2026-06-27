@@ -14,5 +14,17 @@ python3 -m learning_signal_density \
   --epochs 5
 ```
 
+Current sample-budget sweep:
+
+```bash
+python3 -m learning_signal_density.sweep \
+  --output-json results/sample_budget_sweep.json \
+  --output-md results/sample_budget_sweep.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 3 5 7 11 13 \
+  --epochs 5 \
+  --target-signed-gain 0.03
+```
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.
