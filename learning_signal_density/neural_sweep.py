@@ -53,6 +53,8 @@ def run_neural_budget_sweep(
     learning_rate: float = 0.03,
     target_signed_gain: float = 0.03,
     confirmation_of: str | None = None,
+    comparison_of: str | None = None,
+    profile_label: str | None = None,
     fresh_seed_confirmation: bool = False,
 ) -> dict:
     budget_results: dict[str, dict] = {}
@@ -88,6 +90,7 @@ def run_neural_budget_sweep(
         "hidden_units": hidden_units,
         "feature_dimension": feature_dimension,
         "learning_rate": learning_rate,
+        "profile_label": profile_label or f"epochs={epochs}_hidden={hidden_units}",
         "target_signed_gain": target_signed_gain,
         "claim_scope": {
             "synthetic_domain": True,
@@ -101,6 +104,8 @@ def run_neural_budget_sweep(
     }
     if confirmation_of is not None:
         result["confirmation_of"] = confirmation_of
+    if comparison_of is not None:
+        result["comparison_of"] = comparison_of
 
     if output_json:
         output_json.parent.mkdir(parents=True, exist_ok=True)
@@ -132,6 +137,7 @@ def render_neural_sweep_markdown(result: dict) -> str:
     lines.extend(
         [
             f"Backend: `{result['learner_backend']}`",
+            f"Profile label: `{result['profile_label']}`",
             f"Hidden units: `{result['hidden_units']}`",
             f"Feature dimension: `{result['feature_dimension']}`",
             f"Target signed gain over majority: `{result['target_signed_gain']}`",
@@ -156,6 +162,8 @@ def render_neural_sweep_markdown(result: dict) -> str:
             )
             + " |"
         )
+    if result.get("comparison_of"):
+        lines.extend(["", f"Comparison target: `{result['comparison_of']}`"])
 
     for material_count in result["material_counts"]:
         lines.extend(
@@ -200,6 +208,8 @@ def main() -> None:
     parser.add_argument("--learning-rate", type=float, default=0.03)
     parser.add_argument("--target-signed-gain", type=float, default=0.03)
     parser.add_argument("--confirmation-of", default=None)
+    parser.add_argument("--comparison-of", default=None)
+    parser.add_argument("--profile-label", default=None)
     parser.add_argument("--fresh-seed-confirmation", action="store_true")
     args = parser.parse_args()
     run_neural_budget_sweep(
@@ -214,6 +224,8 @@ def main() -> None:
         learning_rate=args.learning_rate,
         target_signed_gain=args.target_signed_gain,
         confirmation_of=args.confirmation_of,
+        comparison_of=args.comparison_of,
+        profile_label=args.profile_label,
         fresh_seed_confirmation=args.fresh_seed_confirmation,
     )
     print(f"wrote {args.output_json}")

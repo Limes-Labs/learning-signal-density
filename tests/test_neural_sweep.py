@@ -37,6 +37,33 @@ class NeuralBudgetSweepTests(unittest.TestCase):
             self.assertGreater(raw_budget["estimated_neural_training_multiply_adds_mean"], 0)
             self.assertIn("Tiny Neural Budget Sweep", out_md.read_text())
 
+    def test_neural_budget_sweep_records_profile_label_and_comparison_target(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_json = Path(temp_dir) / "neural_budget_sweep.json"
+            out_md = Path(temp_dir) / "neural_budget_sweep.md"
+
+            run_neural_budget_sweep(
+                material_counts=[16],
+                seeds=[3],
+                conditions=["raw_text"],
+                output_json=out_json,
+                output_markdown=out_md,
+                epochs=2,
+                hidden_units=4,
+                feature_dimension=32,
+                learning_rate=0.03,
+                target_signed_gain=0.03,
+                profile_label="epochs=2_hidden=4",
+                comparison_of="results/baseline_profile.json",
+            )
+
+            saved = json.loads(out_json.read_text())
+            self.assertEqual(saved["profile_label"], "epochs=2_hidden=4")
+            self.assertEqual(saved["comparison_of"], "results/baseline_profile.json")
+            markdown = out_md.read_text()
+            self.assertIn("Profile label: `epochs=2_hidden=4`", markdown)
+            self.assertIn("Comparison target: `results/baseline_profile.json`", markdown)
+
 
 if __name__ == "__main__":
     unittest.main()
