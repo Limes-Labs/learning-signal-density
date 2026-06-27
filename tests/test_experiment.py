@@ -83,12 +83,33 @@ class ExperimentArtifactTests(unittest.TestCase):
 
         row = result["per_seed"][0]
         self.assertEqual(result["condition_scope"]["mdl_rule_expansion"]["oracle_generated_labels"], False)
-        self.assertEqual(result["condition_scope"]["mdl_rule_expansion"]["validation_used_for_threshold"], True)
+        self.assertEqual(result["condition_scope"]["mdl_rule_expansion"]["validation_used_for_threshold"], False)
+        self.assertEqual(result["condition_scope"]["mdl_rule_expansion"]["validation_used_for_transform_selection"], True)
         self.assertGreater(row["mdl_selected_rule_count"], 0)
         self.assertGreater(row["mdl_description_length_tokens"], 0)
         self.assertGreater(row["rule_search_cost_tokens"], 0)
         self.assertGreaterEqual(row["charged_compute_units"], row["rule_search_cost_tokens"])
         self.assertIn("mdl_selected_rule_count_mean", result["conditions"]["mdl_rule_expansion"])
+
+    def test_validation_ranked_induction_records_budget_and_ranking_cost(self) -> None:
+        result = run_seedset(
+            seeds=[3],
+            conditions=["validation_ranked_induction"],
+            material_count=32,
+            epochs=2,
+        )
+
+        row = result["per_seed"][0]
+        self.assertEqual(result["condition_scope"]["validation_ranked_induction"]["oracle_generated_labels"], False)
+        self.assertEqual(result["condition_scope"]["validation_ranked_induction"]["validation_used_for_threshold"], False)
+        self.assertEqual(result["condition_scope"]["validation_ranked_induction"]["validation_used_for_transform_selection"], True)
+        self.assertGreater(row["ranked_candidate_count"], row["ranked_kept_candidate_count"])
+        self.assertGreater(row["ranked_kept_candidate_count"], 0)
+        self.assertEqual(row["ranked_synthetic_budget_ratio"], 1.0)
+        self.assertGreater(row["candidate_ranking_cost_tokens"], 0)
+        self.assertGreaterEqual(row["charged_compute_units"], row["candidate_ranking_cost_tokens"])
+        self.assertIn("ranked_synthetic_budget_ratio_mean", result["conditions"]["validation_ranked_induction"])
+        self.assertIn("ranked_kept_candidate_count_mean", result["conditions"]["validation_ranked_induction"])
 
 
 if __name__ == "__main__":

@@ -98,12 +98,35 @@ class PipelineAccountingTests(unittest.TestCase):
         alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
         self.assertEqual(normal_signature, alternate_signature, "mdl_rule_expansion")
 
+        normal = build_pipeline_examples(
+            "validation_ranked_induction",
+            split.train,
+            world.rules,
+            validation_observations=split.validation,
+        )
+        alternate = build_pipeline_examples(
+            "validation_ranked_induction",
+            split.train,
+            alternate_rules,
+            validation_observations=split.validation,
+        )
+        normal_signature = [(example.source_observation_id, example.source_kind) for example in normal.examples]
+        alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
+        self.assertEqual(normal_signature, alternate_signature, "validation_ranked_induction")
+
     def test_mdl_rule_expansion_requires_explicit_validation_split(self) -> None:
         world = build_world(seed=44, material_count=40)
         split = split_observations(world.observations)
 
         with self.assertRaises(ValueError):
             build_pipeline_examples("mdl_rule_expansion", split.train, world.rules)
+
+    def test_validation_ranked_induction_requires_explicit_validation_split(self) -> None:
+        world = build_world(seed=45, material_count=40)
+        split = split_observations(world.observations)
+
+        with self.assertRaises(ValueError):
+            build_pipeline_examples("validation_ranked_induction", split.train, world.rules)
 
     def test_mdl_rule_expansion_uses_fewer_synthetic_examples_than_induced_rules(self) -> None:
         world = build_world(seed=47, material_count=48)
@@ -117,6 +140,24 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertGreater(mdl.mdl_description_length_tokens, 0)
         self.assertGreater(mdl.rule_search_cost_tokens, len(split.train) * 7)
         self.assertIn("mdl_counterfactual", {example.source_kind for example in mdl.examples})
+
+    def test_validation_ranked_induction_budgets_candidates_and_charges_ranking(self) -> None:
+        world = build_world(seed=49, material_count=48)
+        split = split_observations(world.observations)
+        induced = build_pipeline_examples("induced_rule_expansion", split.train, world.rules)
+        ranked = build_pipeline_examples(
+            "validation_ranked_induction",
+            split.train,
+            world.rules,
+            validation_observations=split.validation,
+        )
+
+        self.assertEqual(ranked.external_event_count, induced.external_event_count)
+        self.assertLess(ranked.internal_example_count, induced.internal_example_count)
+        self.assertGreater(ranked.ranked_candidate_count, ranked.ranked_kept_candidate_count)
+        self.assertGreater(ranked.ranked_kept_candidate_count, 0)
+        self.assertGreater(ranked.candidate_ranking_cost_tokens, 0)
+        self.assertIn("validation_ranked_induced", {example.source_kind for example in ranked.examples})
 
 
 if __name__ == "__main__":

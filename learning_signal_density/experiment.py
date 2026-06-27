@@ -32,6 +32,7 @@ DEFAULT_CONDITIONS = (
     "induced_rule_expansion",
     VALIDATION_GATED_INDUCTION,
     DIRECT_VALIDATION_GATED_INDUCTION,
+    "validation_ranked_induction",
     "mdl_rule_expansion",
     "counterfactual_expansion",
     "prioritized_replay",
@@ -51,6 +52,7 @@ def _pipeline_compute_units(pipeline, epochs: int, validation_tuning_cost_tokens
         + pipeline.transform_cost_tokens
         + pipeline.rule_search_cost_tokens
         + pipeline.mdl_description_length_tokens
+        + pipeline.candidate_ranking_cost_tokens
         + validation_tuning_cost_tokens
     )
 
@@ -184,6 +186,13 @@ def run_condition(seed: int, condition: str, material_count: int, epochs: int) -
             world.rules,
             validation_observations=split.validation,
         )
+    elif condition == "validation_ranked_induction":
+        pipeline = build_pipeline_examples(
+            condition,
+            split.train,
+            world.rules,
+            validation_observations=split.validation,
+        )
     else:
         pipeline = build_pipeline_examples(condition, split.train, world.rules)
 
@@ -220,6 +229,11 @@ def run_condition(seed: int, condition: str, material_count: int, epochs: int) -
         "mdl_description_length_tokens": pipeline.mdl_description_length_tokens,
         "mdl_selected_rule_count": pipeline.mdl_selected_rule_count,
         "mdl_validation_score": _round(pipeline.mdl_validation_score),
+        "candidate_ranking_cost_tokens": pipeline.candidate_ranking_cost_tokens,
+        "ranked_candidate_count": pipeline.ranked_candidate_count,
+        "ranked_kept_candidate_count": pipeline.ranked_kept_candidate_count,
+        "ranked_validation_precision": _round(pipeline.ranked_validation_precision),
+        "ranked_synthetic_budget_ratio": _round(pipeline.ranked_synthetic_budget_ratio),
         "validation_tuning_cost_tokens": gate["validation_tuning_cost_tokens"],
         "charged_compute_units": charged_compute_units,
         "perceptron_updates": update_count,
@@ -257,6 +271,11 @@ def _aggregate(rows: list[dict]) -> dict:
         "mdl_description_length_tokens",
         "mdl_selected_rule_count",
         "mdl_validation_score",
+        "candidate_ranking_cost_tokens",
+        "ranked_candidate_count",
+        "ranked_kept_candidate_count",
+        "ranked_validation_precision",
+        "ranked_synthetic_budget_ratio",
         "validation_tuning_cost_tokens",
         "charged_compute_units",
         "perceptron_updates",
@@ -395,8 +414,8 @@ def render_markdown(result: dict) -> str:
             "",
             "## Condition Scope",
             "",
-            "| Condition | Oracle labels | Train-only selection | Train-only induction | Validation-gated threshold |",
-            "| --- | ---: | ---: | ---: | ---: |",
+            "| Condition | Oracle labels | Train-only selection | Train-only induction | Validation threshold | Validation transform selection |",
+            "| --- | ---: | ---: | ---: | ---: | ---: |",
         ]
     )
     for condition in result["conditions"]:
@@ -410,6 +429,7 @@ def render_markdown(result: dict) -> str:
                     str(scope["train_only_selection"]).lower(),
                     str(scope["train_only_induction"]).lower(),
                     str(scope["validation_used_for_threshold"]).lower(),
+                    str(scope["validation_used_for_transform_selection"]).lower(),
                 ]
             )
             + " |"
@@ -422,6 +442,7 @@ def render_markdown(result: dict) -> str:
             "- External sample efficiency charges the original observations only.",
             "- Compute efficiency charges training tokens, train-only selection cost, and synthetic transform tokens.",
             "- Validation-gated conditions also charge threshold-search overhead.",
+            "- Validation-ranked conditions charge validation scoring and candidate-ranking overhead.",
             "- MDL conditions charge rule-search, validation scoring, and selected-rule description length.",
             "- Signed metrics preserve negative results; clipped metrics count only per-seed positive improvements.",
             "- Learning-signal density is reported as heldout improvement per external event per charged internal unit, scaled by 1M.",
