@@ -41,7 +41,10 @@
     "condition_reaches_target",
     "neural_budget_threshold",
     "neural_profile_frontier",
-    "lowest_neural_ops_reaching_target"
+    "lowest_neural_ops_reaching_target",
+    "profile_label",
+    "comparison_of",
+    "efficient_profile_budget_sweep"
   ],
   "costs": {
     "external_events": "Original train observations only.",

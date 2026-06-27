@@ -33,7 +33,8 @@ Status: implemented in this first slice.
 ## Phase 2: Tiny Neural Replication
 
 Status: started with a deterministic CPU MLP artifact, fresh-seed
-confirmation, a neural sample-budget sweep, and a profile-efficiency sweep.
+confirmation, a neural sample-budget sweep, a profile-efficiency sweep, and an
+efficient-profile budget confirmation.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -54,6 +55,11 @@ confirmation, a neural sample-budget sweep, and a profile-efficiency sweep.
 - Treat profile selection as part of the compute frontier. The current
   64-material profile sweep shows that `32x8` beats `32x32` for self-ranked
   induction with substantially lower neural training operations.
+- Confirm profile choices across the full sample-budget frontier. The current
+  `32x8` rerun preserves the target-reaching material counts from the original
+  `32x32` sweep, slightly improves best signed gains for the positive
+  conditions, and uses one quarter of the estimated neural training
+  multiply-adds at matched budgets.
 
 ## Phase 3: Continual-Learning Replay
 

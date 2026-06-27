@@ -96,6 +96,10 @@ An epoch/width profile sweep at 64 materials further shows that the efficient
 frontier is not monotone in model size: a 32-epoch, 8-hidden-unit profile
 outperforms the original 32-hidden-unit profile for self-ranked induction while
 using far fewer neural training operations.
+Rerunning the full neural sample-budget sweep with that efficient profile keeps
+the same target-reaching material counts as the original profile, slightly
+improves the best signed gains for the positive conditions, and uses one
+quarter of the estimated neural training multiply-adds at matched budgets.
 
 \section{Limitations}
 
