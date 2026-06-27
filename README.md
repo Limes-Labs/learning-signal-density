@@ -78,6 +78,8 @@ using the same split and accounting discipline.
   accounting.
 - `results/tiny_neural_confirmation.*` - fresh-seed confirmation of the same
   tiny-MLP profile.
+- `results/tiny_neural_budget_sweep.*` - fresh-seed tiny-MLP sample-budget
+  frontier across 16, 24, 32, 48, and 64 materials.
 - `paper/` - paper skeleton and BibTeX file for the eventual technical report.
 - `autoresearch/` - Limes AutoResearch config for ledgered reruns.
 - `UPSTREAMS.md` - inspected inspirations and reuse boundary.
@@ -154,6 +156,23 @@ python3 -m learning_signal_density.neural_experiment \
   --target-signed-gain 0.03 \
   --fresh-seed-confirmation \
   --confirmation-of results/tiny_neural_replication.json
+```
+
+Run the tiny neural budget sweep:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep.json \
+  --output-md results/tiny_neural_budget_sweep.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --epochs 32 \
+  --hidden-units 32 \
+  --feature-dimension 128 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_confirmation.json
 ```
 
 ## Metrics
@@ -238,6 +257,13 @@ The current artifacts show a useful split:
   counterfactual expansion (`0.121` signed gain, `0.001861` signed LSD). Raw
   text remains negative. This confirms a small neural learning-loop effect
   under the synthetic audit, while still leaving the language-model claim open.
+- The tiny-MLP budget sweep shows where that effect starts. Raw text never
+  reaches the target. Oracle counterfactual expansion first reaches target at
+  32 materials and peaks at 48 (`0.121` signed gain). QA, self-ranked
+  induction, and sample-aware self-ranked induction first reach target at 48.
+  At 64 materials, self-ranked induction is the strongest non-oracle condition
+  (`0.073` signed gain), ahead of sample-aware self-ranked induction (`0.062`)
+  and QA expansion (`0.036`).
 
 ## Research Thesis
 

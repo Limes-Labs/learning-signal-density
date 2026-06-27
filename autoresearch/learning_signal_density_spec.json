@@ -38,7 +38,8 @@
     "estimated_neural_training_multiply_adds",
     "fresh_seed_confirmation",
     "target_signed_gain",
-    "condition_reaches_target"
+    "condition_reaches_target",
+    "neural_budget_threshold"
   ],
   "costs": {
     "external_events": "Original train observations only.",

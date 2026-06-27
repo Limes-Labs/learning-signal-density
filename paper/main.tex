@@ -89,6 +89,9 @@ conditions above the signed-gain target, turns question-answer expansion
 positive, and strengthens oracle counterfactual expansion. This makes the
 tiny-MLP result less seed-specific, while leaving the larger language-model
 replication unresolved.
+A tiny-MLP sample-budget sweep shows that the neural signal is not present at
+the smallest budgets: ranked train-only induction first reaches target at 48
+materials, while oracle counterfactual expansion reaches target at 32.
 
 \section{Limitations}
 

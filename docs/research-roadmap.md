@@ -32,8 +32,8 @@ Status: implemented in this first slice.
 
 ## Phase 2: Tiny Neural Replication
 
-Status: started with a deterministic CPU MLP artifact and fresh-seed
-confirmation.
+Status: started with a deterministic CPU MLP artifact, fresh-seed
+confirmation, and a neural sample-budget sweep.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -48,6 +48,9 @@ confirmation.
   changing MLP width, epoch count, learning rate, or condition set. The first
   confirmation keeps ranked train-only conditions above target, but does not
   replace a small-transformer or nanoGPT-scale replication.
+- Treat the current tiny-MLP signal as budget-dependent: ranked train-only
+  conditions first reach the signed-gain target at 48 materials, while oracle
+  counterfactual expansion reaches it at 32 materials.
 
 ## Phase 3: Continual-Learning Replay
 
