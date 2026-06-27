@@ -38,6 +38,11 @@ The current pilot is intentionally modest:
 - `validation_ranked_induction` scores train-only induced counterfactual
   candidates by validation-estimated reliability, keeps a fixed budgeted subset,
   and charges validation scoring plus candidate-ranking cost.
+- `train_calibrated_ranked_induction` estimates the same reliability from a
+  held-out slice of the train split, testing whether validation labels are
+  necessary for candidate ranking.
+- `self_ranked_induction` removes calibration entirely and ranks induced
+  candidates by train-only confidence, support, and salience signals.
 - `mdl_rule_expansion` learns a compact set of train-only empirical rules,
   selects them on validation with a description-length penalty, and charges
   rule search, validation scoring, and rule-description costs.
@@ -125,6 +130,9 @@ The repo reports three families of measurements:
 - Validation-ranked induction tests whether a fixed-budget non-oracle transform
   can keep the most reliable induced counterfactuals without using heldout
   labels or the hidden rulebook.
+- Train-calibrated and self-ranked induction ablate whether validation
+  reliability estimates are actually needed, or whether confidence/support
+  ranking already captures most of the useful signal.
 - MDL rule expansion tests whether compressing the transform policy itself can
   reduce synthetic-example cost without quietly using the hidden rulebook.
 
@@ -141,10 +149,10 @@ The current artifacts show a useful split:
 - Validation-gated induction improves accuracy, but full per-candidate
   retraining is too expensive under charged learning-signal density.
 - Direct validation gating keeps much of that accuracy lift at lower cost.
-- Validation-ranked induction is the strongest current non-oracle density
-  result: it improves over unconstrained induced rules at the 48-material pilot
-  and becomes best among non-oracle signed-gain conditions at 64 materials, but
-  it is still weak at very low sample budgets.
+- Self-ranked induction is the strongest current non-oracle density result:
+  it improves over unconstrained induced rules at the 48-material pilot, beats
+  the validation-ranked variants at 48 and 64 materials, and uses no validation
+  labels for transform selection. It is still weak at very low sample budgets.
 - MDL rule compression recovers some heldout signal while reducing synthetic
   examples, but its validation-scored rule search is too expensive to reach
   the current sample-budget target or dominate the frontier.

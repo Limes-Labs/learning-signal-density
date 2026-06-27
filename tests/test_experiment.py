@@ -111,6 +111,48 @@ class ExperimentArtifactTests(unittest.TestCase):
         self.assertIn("ranked_synthetic_budget_ratio_mean", result["conditions"]["validation_ranked_induction"])
         self.assertIn("ranked_kept_candidate_count_mean", result["conditions"]["validation_ranked_induction"])
 
+    def test_train_calibrated_ranked_induction_records_train_only_scope(self) -> None:
+        result = run_seedset(
+            seeds=[3],
+            conditions=["train_calibrated_ranked_induction"],
+            material_count=32,
+            epochs=2,
+        )
+
+        row = result["per_seed"][0]
+        scope = result["condition_scope"]["train_calibrated_ranked_induction"]
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_threshold"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertGreater(row["ranked_candidate_count"], row["ranked_kept_candidate_count"])
+        self.assertGreater(row["candidate_ranking_cost_tokens"], 0)
+        self.assertGreater(row["train_calibration_event_count"], 0)
+        self.assertEqual(row["validation_calibration_event_count"], 0)
+        self.assertIn("train_calibration_event_count_mean", result["conditions"]["train_calibrated_ranked_induction"])
+
+    def test_self_ranked_induction_records_no_calibration_scope(self) -> None:
+        result = run_seedset(
+            seeds=[3],
+            conditions=["self_ranked_induction"],
+            material_count=32,
+            epochs=2,
+        )
+
+        row = result["per_seed"][0]
+        scope = result["condition_scope"]["self_ranked_induction"]
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_threshold"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertGreater(row["ranked_candidate_count"], row["ranked_kept_candidate_count"])
+        self.assertGreater(row["candidate_ranking_cost_tokens"], 0)
+        self.assertEqual(row["train_calibration_event_count"], 0)
+        self.assertEqual(row["validation_calibration_event_count"], 0)
+        self.assertIn("candidate_ranking_cost_tokens_mean", result["conditions"]["self_ranked_induction"])
+
 
 if __name__ == "__main__":
     unittest.main()

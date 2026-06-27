@@ -114,6 +114,18 @@ class PipelineAccountingTests(unittest.TestCase):
         alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
         self.assertEqual(normal_signature, alternate_signature, "validation_ranked_induction")
 
+        normal = build_pipeline_examples("train_calibrated_ranked_induction", split.train, world.rules)
+        alternate = build_pipeline_examples("train_calibrated_ranked_induction", split.train, alternate_rules)
+        normal_signature = [(example.source_observation_id, example.source_kind) for example in normal.examples]
+        alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
+        self.assertEqual(normal_signature, alternate_signature, "train_calibrated_ranked_induction")
+
+        normal = build_pipeline_examples("self_ranked_induction", split.train, world.rules)
+        alternate = build_pipeline_examples("self_ranked_induction", split.train, alternate_rules)
+        normal_signature = [(example.source_observation_id, example.source_kind) for example in normal.examples]
+        alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
+        self.assertEqual(normal_signature, alternate_signature, "self_ranked_induction")
+
     def test_mdl_rule_expansion_requires_explicit_validation_split(self) -> None:
         world = build_world(seed=44, material_count=40)
         split = split_observations(world.observations)
@@ -158,6 +170,35 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertGreater(ranked.ranked_kept_candidate_count, 0)
         self.assertGreater(ranked.candidate_ranking_cost_tokens, 0)
         self.assertIn("validation_ranked_induced", {example.source_kind for example in ranked.examples})
+
+    def test_train_calibrated_ranked_induction_uses_train_calibration_not_validation(self) -> None:
+        world = build_world(seed=53, material_count=48)
+        split = split_observations(world.observations)
+        induced = build_pipeline_examples("induced_rule_expansion", split.train, world.rules)
+        ranked = build_pipeline_examples("train_calibrated_ranked_induction", split.train, world.rules)
+
+        self.assertEqual(ranked.external_event_count, induced.external_event_count)
+        self.assertLess(ranked.internal_example_count, induced.internal_example_count)
+        self.assertGreater(ranked.ranked_candidate_count, ranked.ranked_kept_candidate_count)
+        self.assertGreater(ranked.ranked_kept_candidate_count, 0)
+        self.assertGreater(ranked.candidate_ranking_cost_tokens, 0)
+        self.assertGreater(ranked.train_calibration_event_count, 0)
+        self.assertEqual(ranked.validation_calibration_event_count, 0)
+        self.assertIn("train_calibrated_ranked_induced", {example.source_kind for example in ranked.examples})
+
+    def test_self_ranked_induction_removes_calibration_cost(self) -> None:
+        world = build_world(seed=59, material_count=48)
+        split = split_observations(world.observations)
+        train_calibrated = build_pipeline_examples("train_calibrated_ranked_induction", split.train, world.rules)
+        self_ranked = build_pipeline_examples("self_ranked_induction", split.train, world.rules)
+
+        self.assertEqual(self_ranked.external_event_count, train_calibrated.external_event_count)
+        self.assertEqual(self_ranked.ranked_kept_candidate_count, train_calibrated.ranked_kept_candidate_count)
+        self.assertGreater(self_ranked.ranked_candidate_count, self_ranked.ranked_kept_candidate_count)
+        self.assertEqual(self_ranked.train_calibration_event_count, 0)
+        self.assertEqual(self_ranked.validation_calibration_event_count, 0)
+        self.assertLess(self_ranked.candidate_ranking_cost_tokens, train_calibrated.candidate_ranking_cost_tokens)
+        self.assertIn("self_ranked_induced", {example.source_kind for example in self_ranked.examples})
 
 
 if __name__ == "__main__":

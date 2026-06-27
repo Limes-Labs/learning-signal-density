@@ -66,6 +66,8 @@ precision/coverage without retraining the learner for every candidate.
 The validation-ranked variant uses validation data only to estimate induced
 prediction reliability, then trains on a fixed-budget ranked subset of
 candidate counterfactuals.
+Train-calibrated and self-ranked ablations replace validation reliability with
+train-only calibration or with confidence/support ranking alone.
 An MDL-style variant selects compact empirical rules with a description-length
 penalty before generating counterfactuals.
 
