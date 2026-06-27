@@ -82,6 +82,42 @@ class PipelineAccountingTests(unittest.TestCase):
             alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
             self.assertEqual(normal_signature, alternate_signature, condition)
 
+        normal = build_pipeline_examples(
+            "mdl_rule_expansion",
+            split.train,
+            world.rules,
+            validation_observations=split.validation,
+        )
+        alternate = build_pipeline_examples(
+            "mdl_rule_expansion",
+            split.train,
+            alternate_rules,
+            validation_observations=split.validation,
+        )
+        normal_signature = [(example.source_observation_id, example.source_kind) for example in normal.examples]
+        alternate_signature = [(example.source_observation_id, example.source_kind) for example in alternate.examples]
+        self.assertEqual(normal_signature, alternate_signature, "mdl_rule_expansion")
+
+    def test_mdl_rule_expansion_requires_explicit_validation_split(self) -> None:
+        world = build_world(seed=44, material_count=40)
+        split = split_observations(world.observations)
+
+        with self.assertRaises(ValueError):
+            build_pipeline_examples("mdl_rule_expansion", split.train, world.rules)
+
+    def test_mdl_rule_expansion_uses_fewer_synthetic_examples_than_induced_rules(self) -> None:
+        world = build_world(seed=47, material_count=48)
+        split = split_observations(world.observations)
+        induced = build_pipeline_examples("induced_rule_expansion", split.train, world.rules)
+        mdl = build_pipeline_examples("mdl_rule_expansion", split.train, world.rules, validation_observations=split.validation)
+
+        self.assertEqual(mdl.external_event_count, induced.external_event_count)
+        self.assertLess(mdl.internal_example_count, induced.internal_example_count)
+        self.assertGreater(mdl.mdl_selected_rule_count, 0)
+        self.assertGreater(mdl.mdl_description_length_tokens, 0)
+        self.assertGreater(mdl.rule_search_cost_tokens, len(split.train) * 7)
+        self.assertIn("mdl_counterfactual", {example.source_kind for example in mdl.examples})
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -32,6 +32,9 @@ internal processing cost.
 - `direct_validation_gated_induction`: threshold selection by direct
   induced-rule precision/coverage on validation, without retraining a learner
   for each threshold candidate.
+- `mdl_rule_expansion`: train-only empirical rules are scored on validation
+  with a description-length penalty, then only selected compact rules are used
+  for counterfactual generation.
 - `counterfactual_expansion`: each train observation generates same-pair
   modifier counterfactuals using the synthetic world's rules.
 - `prioritized_replay`: high-value train observations are replayed more often.
@@ -72,6 +75,8 @@ is allowed only for train pairs.
 - Validation-gated conditions must charge threshold-search overhead.
 - Direct validation gating must still charge train-modeling and validation
   scoring overhead, even though it avoids per-candidate learner retraining.
+- MDL rule expansion must charge rule-search cost, validation-scoring cost,
+  and selected-rule description length.
 - Negative or mixed results remain publishable.
 - The current pilot must mark `neural_model=false`.
 - The current pilot must mark `oracle_transform=true` because the synthetic

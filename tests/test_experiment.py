@@ -73,6 +73,23 @@ class ExperimentArtifactTests(unittest.TestCase):
         self.assertGreater(direct["validation_gate_candidates"], 1)
         self.assertIsNotNone(direct["validation_gate_score"])
 
+    def test_mdl_rule_expansion_records_description_length_and_rule_count(self) -> None:
+        result = run_seedset(
+            seeds=[3],
+            conditions=["mdl_rule_expansion"],
+            material_count=32,
+            epochs=2,
+        )
+
+        row = result["per_seed"][0]
+        self.assertEqual(result["condition_scope"]["mdl_rule_expansion"]["oracle_generated_labels"], False)
+        self.assertEqual(result["condition_scope"]["mdl_rule_expansion"]["validation_used_for_threshold"], True)
+        self.assertGreater(row["mdl_selected_rule_count"], 0)
+        self.assertGreater(row["mdl_description_length_tokens"], 0)
+        self.assertGreater(row["rule_search_cost_tokens"], 0)
+        self.assertGreaterEqual(row["charged_compute_units"], row["rule_search_cost_tokens"])
+        self.assertIn("mdl_selected_rule_count_mean", result["conditions"]["mdl_rule_expansion"])
+
 
 if __name__ == "__main__":
     unittest.main()

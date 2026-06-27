@@ -5,7 +5,7 @@ import re
 from typing import Iterable
 
 from .domain import MODIFIERS, Observation, RuleBook
-from .induction import InducedRuleModel, fit_induced_rule_model
+from .induction import InducedRuleModel, MdlRuleSet, fit_induced_rule_model, fit_mdl_rule_set
 
 
 AVAILABLE_CONDITIONS = (
@@ -15,6 +15,7 @@ AVAILABLE_CONDITIONS = (
     "induced_rule_expansion",
     "validation_gated_induction",
     "direct_validation_gated_induction",
+    "mdl_rule_expansion",
     "counterfactual_expansion",
     "prioritized_replay",
     "selected_counterfactual_replay",
@@ -52,6 +53,12 @@ CONDITION_SCOPE = {
         "validation_used_for_threshold": True,
     },
     "direct_validation_gated_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": False,
+        "train_only_induction": True,
+        "validation_used_for_threshold": True,
+    },
+    "mdl_rule_expansion": {
         "oracle_generated_labels": False,
         "train_only_selection": False,
         "train_only_induction": True,
@@ -99,6 +106,10 @@ class PipelineExamples:
     selection_cost_tokens: int
     modeling_cost_tokens: int
     transform_cost_tokens: int
+    rule_search_cost_tokens: int
+    mdl_description_length_tokens: int
+    mdl_selected_rule_count: int
+    mdl_validation_score: float
 
     @property
     def internal_example_count(self) -> int:
@@ -200,12 +211,54 @@ def _add_induced_examples(
     return transform_cost_tokens
 
 
+def _add_mdl_examples(
+    examples: list[TrainingExample],
+    observations: tuple[Observation, ...],
+    rule_set: MdlRuleSet,
+) -> int:
+    transform_cost_tokens = 0
+    for item in observations:
+        examples.append(raw_observation_example(item))
+        question = qa_example(item)
+        examples.append(question)
+        transform_cost_tokens += question.token_count
+        for modifier in MODIFIERS:
+            if modifier == item.modifier:
+                continue
+            synthetic = Observation(
+                observation_id=f"{item.observation_id}-mdl-{modifier}",
+                material=item.material,
+                family=item.family,
+                stimulus=item.stimulus,
+                modifier=modifier,
+                label=False,
+            )
+            prediction = rule_set.predict(synthetic)
+            if prediction is None:
+                continue
+            generated = qa_example(
+                Observation(
+                    observation_id=synthetic.observation_id,
+                    material=synthetic.material,
+                    family=synthetic.family,
+                    stimulus=synthetic.stimulus,
+                    modifier=synthetic.modifier,
+                    label=prediction.label,
+                ),
+                source_kind="mdl_counterfactual",
+            )
+            examples.append(generated)
+            transform_cost_tokens += generated.token_count
+    return transform_cost_tokens
+
+
 def build_pipeline_examples(
     condition: str,
     observations: Iterable[Observation],
     rules: RuleBook,
     induction_min_support: int = 2,
     induction_min_confidence: float = 0.55,
+    validation_observations: Iterable[Observation] | None = None,
 ) -> PipelineExamples:
     if condition not in AVAILABLE_CONDITIONS:
         raise ValueError(f"unknown condition: {condition}")
@@ -215,6 +268,10 @@ def build_pipeline_examples(
     selection_cost_tokens = 0
     modeling_cost_tokens = 0
     transform_cost_tokens = 0
+    rule_search_cost_tokens = 0
+    mdl_description_length_tokens = 0
+    mdl_selected_rule_count = 0
+    mdl_validation_score = 0.0
     examples: list[TrainingExample] = []
 
     if condition == "raw_text":
@@ -239,6 +296,25 @@ def build_pipeline_examples(
             salience_model=salience_model,
             induction_min_support=induction_min_support,
             induction_min_confidence=induction_min_confidence,
+        )
+
+    elif condition == "mdl_rule_expansion":
+        if validation_observations is None:
+            raise ValueError("mdl_rule_expansion requires validation_observations")
+        validation_observations = tuple(validation_observations)
+        modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
+        rule_set = fit_mdl_rule_set(
+            train_observations=observations,
+            validation_observations=validation_observations,
+        )
+        rule_search_cost_tokens = rule_set.search_cost_tokens
+        mdl_description_length_tokens = rule_set.description_length_tokens
+        mdl_selected_rule_count = len(rule_set.rules)
+        mdl_validation_score = rule_set.validation_score
+        transform_cost_tokens = _add_mdl_examples(
+            examples=examples,
+            observations=observations,
+            rule_set=rule_set,
         )
 
     elif condition == "counterfactual_expansion":
@@ -277,6 +353,10 @@ def build_pipeline_examples(
         selection_cost_tokens=selection_cost_tokens,
         modeling_cost_tokens=modeling_cost_tokens,
         transform_cost_tokens=transform_cost_tokens,
+        rule_search_cost_tokens=rule_search_cost_tokens,
+        mdl_description_length_tokens=mdl_description_length_tokens,
+        mdl_selected_rule_count=mdl_selected_rule_count,
+        mdl_validation_score=mdl_validation_score,
     )
 
 

@@ -15,6 +15,8 @@ Status: implemented in this first slice.
   improves non-oracle transformation quality enough to justify its overhead.
 - Add direct validation gating to test whether a cheaper threshold-selection
   proxy preserves most of the gain without paying per-candidate retraining cost.
+- Add MDL-style rule compression to test whether compact transform policies can
+  reduce internal examples and make non-oracle transformation more efficient.
 
 ## Phase 2: Tiny Neural Replication
 
@@ -26,8 +28,8 @@ Replace the online linear learner with a tiny neural model:
 - Report wall-clock time and framework/device metadata.
 - Compare oracle counterfactual expansion against train-only induced
   counterfactual expansion, validation-gated induction, and direct validation
-  gating to measure the cost of imperfect transformation and transform
-  selection.
+  gating, and MDL-compressed rules to measure the cost of imperfect
+  transformation and transform selection.
 
 ## Phase 3: Continual-Learning Replay
 
