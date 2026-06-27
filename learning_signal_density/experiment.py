@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
 from datetime import UTC, datetime
 import json
 from pathlib import Path
@@ -9,7 +8,7 @@ from statistics import mean
 
 from .domain import build_world, split_observations
 from .learner import PerceptronClassifier, majority_baseline
-from .pipelines import AVAILABLE_CONDITIONS, build_evaluation_examples, build_pipeline_examples
+from .pipelines import AVAILABLE_CONDITIONS, CONDITION_SCOPE, build_evaluation_examples, build_pipeline_examples
 
 
 DEFAULT_SEEDS = (3, 5, 7, 11, 13)
@@ -17,6 +16,7 @@ DEFAULT_CONDITIONS = (
     "raw_text",
     "selected_text",
     "qa_expansion",
+    "induced_rule_expansion",
     "counterfactual_expansion",
     "prioritized_replay",
     "selected_counterfactual_replay",
@@ -43,10 +43,17 @@ def run_condition(seed: int, condition: str, material_count: int, epochs: int) -
     charged_compute_units = (
         pipeline.internal_token_count * epochs
         + pipeline.selection_cost_tokens
+        + pipeline.modeling_cost_tokens
         + pipeline.transform_cost_tokens
     )
     improvement = heldout.accuracy - baseline.accuracy
     positive_improvement = max(0.0, improvement)
+    signed_external_sample_efficiency = improvement / max(1, pipeline.external_event_count)
+    clipped_external_sample_efficiency = positive_improvement / max(1, pipeline.external_event_count)
+    signed_compute_efficiency = 10000.0 * improvement / max(1, charged_compute_units)
+    clipped_compute_efficiency = 10000.0 * positive_improvement / max(1, charged_compute_units)
+    signed_lsd = 1_000_000.0 * improvement / max(1, pipeline.external_event_count * charged_compute_units)
+    clipped_lsd = 1_000_000.0 * positive_improvement / max(1, pipeline.external_event_count * charged_compute_units)
 
     return {
         "seed": seed,
@@ -55,6 +62,7 @@ def run_condition(seed: int, condition: str, material_count: int, epochs: int) -
         "internal_examples": pipeline.internal_example_count,
         "internal_tokens": pipeline.internal_token_count,
         "selection_cost_tokens": pipeline.selection_cost_tokens,
+        "modeling_cost_tokens": pipeline.modeling_cost_tokens,
         "transform_cost_tokens": pipeline.transform_cost_tokens,
         "charged_compute_units": charged_compute_units,
         "perceptron_updates": update_count,
@@ -62,11 +70,15 @@ def run_condition(seed: int, condition: str, material_count: int, epochs: int) -
         "validation_accuracy": _round(validation.accuracy),
         "majority_baseline_accuracy": _round(baseline.accuracy),
         "accuracy_improvement_over_majority": _round(improvement),
-        "external_sample_efficiency": _round(positive_improvement / max(1, pipeline.external_event_count)),
-        "compute_efficiency_per_10k_units": _round(10000.0 * positive_improvement / max(1, charged_compute_units)),
-        "learning_signal_density_per_1m_event_compute": _round(
-            1_000_000.0 * positive_improvement / max(1, pipeline.external_event_count * charged_compute_units)
-        ),
+        "signed_external_sample_efficiency": _round(signed_external_sample_efficiency),
+        "clipped_external_sample_efficiency": _round(clipped_external_sample_efficiency),
+        "signed_compute_efficiency_per_10k_units": _round(signed_compute_efficiency),
+        "clipped_compute_efficiency_per_10k_units": _round(clipped_compute_efficiency),
+        "signed_learning_signal_density_per_1m_event_compute": _round(signed_lsd),
+        "clipped_learning_signal_density_per_1m_event_compute": _round(clipped_lsd),
+        "external_sample_efficiency": _round(clipped_external_sample_efficiency),
+        "compute_efficiency_per_10k_units": _round(clipped_compute_efficiency),
+        "learning_signal_density_per_1m_event_compute": _round(clipped_lsd),
     }
 
 
@@ -75,17 +87,49 @@ def _aggregate(rows: list[dict]) -> dict:
         "external_events",
         "internal_examples",
         "internal_tokens",
+        "selection_cost_tokens",
+        "modeling_cost_tokens",
+        "transform_cost_tokens",
         "charged_compute_units",
         "perceptron_updates",
         "heldout_accuracy",
         "validation_accuracy",
         "majority_baseline_accuracy",
         "accuracy_improvement_over_majority",
+        "signed_external_sample_efficiency",
+        "clipped_external_sample_efficiency",
+        "signed_compute_efficiency_per_10k_units",
+        "clipped_compute_efficiency_per_10k_units",
+        "signed_learning_signal_density_per_1m_event_compute",
+        "clipped_learning_signal_density_per_1m_event_compute",
         "external_sample_efficiency",
         "compute_efficiency_per_10k_units",
         "learning_signal_density_per_1m_event_compute",
     )
     return {f"{key}_mean": _round(mean(row[key] for row in rows)) for key in keys}
+
+
+def _pareto_frontier(conditions: dict[str, dict]) -> list[str]:
+    frontier: list[str] = []
+    for name, stats in conditions.items():
+        dominated = False
+        for other_name, other in conditions.items():
+            if other_name == name:
+                continue
+            at_least_as_accurate = other["heldout_accuracy_mean"] >= stats["heldout_accuracy_mean"]
+            no_more_external = other["external_events_mean"] <= stats["external_events_mean"]
+            no_more_compute = other["charged_compute_units_mean"] <= stats["charged_compute_units_mean"]
+            strictly_better = (
+                other["heldout_accuracy_mean"] > stats["heldout_accuracy_mean"]
+                or other["external_events_mean"] < stats["external_events_mean"]
+                or other["charged_compute_units_mean"] < stats["charged_compute_units_mean"]
+            )
+            if at_least_as_accurate and no_more_external and no_more_compute and strictly_better:
+                dominated = True
+                break
+        if not dominated:
+            frontier.append(name)
+    return sorted(frontier)
 
 
 def run_seedset(
@@ -109,6 +153,7 @@ def run_seedset(
     for row in per_seed:
         grouped[row["condition"]].append(row)
 
+    condition_stats = {condition: _aggregate(rows) for condition, rows in grouped.items()}
     result = {
         "title": "Learning Signal Density Pilot",
         "generated_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
@@ -119,10 +164,12 @@ def run_seedset(
             "synthetic_domain": True,
             "neural_model": False,
             "heldout_used_for_selection": False,
-            "oracle_transform": True,
+            "oracle_transform": any(CONDITION_SCOPE[condition]["oracle_generated_labels"] for condition in conditions),
             "paper_ready_claim": False,
         },
-        "conditions": {condition: _aggregate(rows) for condition, rows in grouped.items()},
+        "condition_scope": CONDITION_SCOPE,
+        "conditions": condition_stats,
+        "pareto_frontier_conditions": _pareto_frontier(condition_stats),
         "per_seed": per_seed,
     }
 
@@ -144,7 +191,7 @@ def render_markdown(result: dict) -> str:
         "This is a controlled pilot on a synthetic causal-text domain. It is not a neural-language-model result.",
         "The heldout split is not used for selection or transformation. Counterfactual expansion is oracle-generated inside the synthetic world.",
         "",
-        "| Condition | Heldout acc. | Majority acc. | External events | Internal tokens | Compute units | External eff. | Compute eff./10k | LSD/1M |",
+        "| Condition | Heldout acc. | Majority acc. | Signed gain | External events | Internal tokens | Compute units | Signed LSD/1M | Clipped LSD/1M |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for condition, stats in result["conditions"].items():
@@ -155,12 +202,12 @@ def render_markdown(result: dict) -> str:
                     condition,
                     f"{stats['heldout_accuracy_mean']:.3f}",
                     f"{stats['majority_baseline_accuracy_mean']:.3f}",
+                    f"{stats['accuracy_improvement_over_majority_mean']:.3f}",
                     f"{stats['external_events_mean']:.1f}",
                     f"{stats['internal_tokens_mean']:.1f}",
                     f"{stats['charged_compute_units_mean']:.1f}",
-                    f"{stats['external_sample_efficiency_mean']:.6f}",
-                    f"{stats['compute_efficiency_per_10k_units_mean']:.6f}",
-                    f"{stats['learning_signal_density_per_1m_event_compute_mean']:.6f}",
+                    f"{stats['signed_learning_signal_density_per_1m_event_compute_mean']:.6f}",
+                    f"{stats['clipped_learning_signal_density_per_1m_event_compute_mean']:.6f}",
                 ]
             )
             + " |"
@@ -168,16 +215,44 @@ def render_markdown(result: dict) -> str:
     lines.extend(
         [
             "",
+            "## Pareto Frontier",
+            "",
+            ", ".join(f"`{name}`" for name in result["pareto_frontier_conditions"]),
+            "",
             "## Scope Flags",
             "",
             "```json",
             json.dumps(result["claim_scope"], indent=2, sort_keys=True),
             "```",
             "",
+            "## Condition Scope",
+            "",
+            "| Condition | Oracle labels | Train-only selection | Train-only induction |",
+            "| --- | ---: | ---: | ---: |",
+        ]
+    )
+    for condition in result["conditions"]:
+        scope = result["condition_scope"][condition]
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    condition,
+                    str(scope["oracle_generated_labels"]).lower(),
+                    str(scope["train_only_selection"]).lower(),
+                    str(scope["train_only_induction"]).lower(),
+                ]
+            )
+            + " |"
+        )
+    lines.extend(
+        [
+            "",
             "## Interpretation",
             "",
             "- External sample efficiency charges the original observations only.",
             "- Compute efficiency charges training tokens, train-only selection cost, and synthetic transform tokens.",
+            "- Signed metrics preserve negative results; clipped metrics count only per-seed positive improvements.",
             "- Learning-signal density is reported as heldout improvement per external event per charged internal unit, scaled by 1M.",
             "- The first useful scientific question is the Pareto frontier, not a single winning condition.",
             "",

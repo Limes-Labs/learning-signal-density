@@ -9,6 +9,8 @@ Status: implemented in this first slice.
 - Compare raw, selected, transformed, counterfactual, and replay pipelines.
 - Charge internal tokens and transform cost.
 - Publish JSON and Markdown result artifacts.
+- Add signed metrics and sample-budget sweeps so negative or budget-sensitive
+  results stay visible.
 
 ## Phase 2: Tiny Neural Replication
 
@@ -18,6 +20,8 @@ Replace the online linear learner with a tiny neural model:
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
 - Keep the exact same split boundary and artifact schema.
 - Report wall-clock time and framework/device metadata.
+- Compare oracle counterfactual expansion against train-only induced
+  counterfactual expansion to measure the cost of imperfect transformation.
 
 ## Phase 3: Continual-Learning Replay
 

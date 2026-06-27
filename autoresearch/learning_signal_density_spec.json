@@ -14,9 +14,15 @@
     "compute_efficiency_per_10k_units",
     "learning_signal_density_per_1m_event_compute"
   ],
+  "secondary_metrics": [
+    "signed_external_sample_efficiency",
+    "signed_compute_efficiency_per_10k_units",
+    "signed_learning_signal_density_per_1m_event_compute",
+    "sample_budget_threshold"
+  ],
   "costs": {
     "external_events": "Original train observations only.",
-    "internal_compute": "Training tokens over epochs plus train-only selection and transform token costs."
+    "internal_compute": "Training tokens over epochs plus train-only selection, train-only rule induction, and transform token costs."
   },
   "splits": {
     "unit": "material-stimulus pair",

@@ -56,7 +56,10 @@ and
 The first experiment uses a synthetic causal-text domain with hidden rules,
 fixed train/validation/heldout splits, and several train-only processing
 pipelines. It records heldout accuracy, majority-baseline improvement,
-external-event count, internal-token count, and charged transform costs.
+external-event count, internal-token count, charged transform costs, signed
+efficiency metrics, and sample-budget sensitivity. The first non-oracle
+transformation condition induces empirical rules from the train split before
+generating counterfactual labels.
 
 \section{Limitations}
 

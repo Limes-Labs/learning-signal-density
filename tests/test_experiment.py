@@ -27,6 +27,12 @@ class ExperimentArtifactTests(unittest.TestCase):
             self.assertIn("counterfactual_expansion", saved["conditions"])
             self.assertGreater(saved["conditions"]["raw_text"]["external_events_mean"], 0)
             self.assertGreater(saved["conditions"]["counterfactual_expansion"]["internal_tokens_mean"], 0)
+            self.assertIn("signed_external_sample_efficiency_mean", saved["conditions"]["raw_text"])
+            self.assertIn("clipped_external_sample_efficiency_mean", saved["conditions"]["raw_text"])
+            self.assertIn("pareto_frontier_conditions", saved)
+            self.assertEqual(saved["condition_scope"]["induced_rule_expansion"]["oracle_generated_labels"], False)
+            self.assertEqual(saved["condition_scope"]["counterfactual_expansion"]["oracle_generated_labels"], True)
+            self.assertTrue(saved["pareto_frontier_conditions"])
             self.assertIn("Learning Signal Density Pilot", out_md.read_text())
 
 
