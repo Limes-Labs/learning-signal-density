@@ -200,5 +200,40 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=32_hidden=8_features=1024
 ```
 
+1024-feature tiny neural profile sweep:
+
+```bash
+python3 -m learning_signal_density.neural_profile_sweep \
+  --output-json results/tiny_neural_profile_sweep_f1024.json \
+  --output-md results/tiny_neural_profile_sweep_f1024.md \
+  --profiles 8x8 16x8 32x8 64x8 8x16 16x16 32x16 64x16 32x32 \
+  --seeds 17 19 23 29 31 \
+  --material-count 64 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_32x8_f1024.json
+```
+
+16x8 1024-feature efficient tiny neural budget sweep:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_16x8_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_16x8_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_profile_sweep_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_32x8_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024
+```
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

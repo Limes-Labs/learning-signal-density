@@ -93,6 +93,11 @@ using the same split and accounting discipline.
 - `results/tiny_neural_budget_sweep_32x8_f1024.*` - full sample-budget rerun
   of the `32x8` profile with 1024 hashed features, compared against the
   256-feature `32x8` artifact.
+- `results/tiny_neural_profile_sweep_f1024.*` - epoch/width profile sweep at
+  the 64-material budget with 1024 hashed features.
+- `results/tiny_neural_budget_sweep_16x8_f1024.*` - full sample-budget rerun
+  of the lower-epoch `16x8` profile with 1024 hashed features, compared
+  against the `32x8_features=1024` artifact.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - paper skeleton and BibTeX file for the eventual technical report.
@@ -301,6 +306,41 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=32_hidden=8_features=1024
 ```
 
+Run the 1024-feature tiny neural profile sweep:
+
+```bash
+python3 -m learning_signal_density.neural_profile_sweep \
+  --output-json results/tiny_neural_profile_sweep_f1024.json \
+  --output-md results/tiny_neural_profile_sweep_f1024.md \
+  --profiles 8x8 16x8 32x8 64x8 8x16 16x16 32x16 64x16 32x32 \
+  --seeds 17 19 23 29 31 \
+  --material-count 64 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_32x8_f1024.json
+```
+
+Run the 16x8 1024-feature efficient tiny neural budget sweep:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_16x8_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_16x8_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_profile_sweep_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_32x8_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -440,6 +480,17 @@ The current artifacts show a useful split:
   low-budget caveat remains: self-ranked and sample-aware self-ranked induction
   are still negative at 24 and 32 materials, so feature capacity helps but does
   not solve scarce-data generated-label noise.
+- The 1024-feature profile sweep shows that the old `32x8` profile is no
+  longer the only efficient point. At 64 materials, `16x8` is best for
+  self-ranked induction (`0.153` signed gain) and signed LSD (`0.005247`),
+  using exactly half the neural train ops of `32x8`. The full `16x8`
+  1024-feature budget rerun confirms this tradeoff: self-ranked induction keeps
+  the `48`-material target threshold, improves best signed gain from `0.145` to
+  `0.153`, and halves neural train ops at every matched budget. It is not a
+  universal replacement: raw text no longer reaches target, QA best gain falls
+  from `0.101` to `0.052`, oracle counterfactual best gain falls from `0.252`
+  to `0.239`, and ranked train-only conditions are still negative at 24 and 32
+  materials.
 
 ## Research Thesis
 

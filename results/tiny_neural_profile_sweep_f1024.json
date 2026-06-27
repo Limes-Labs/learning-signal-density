@@ -1,0 +1,775 @@
+{
+  "claim_scope": {
+    "fresh_seed_confirmation": true,
+    "heldout_used_for_selection": false,
+    "neural_model": true,
+    "paper_ready_claim": false,
+    "synthetic_domain": true
+  },
+  "conditions": [
+    "raw_text",
+    "qa_expansion",
+    "self_ranked_induction",
+    "sample_aware_self_ranked_induction",
+    "counterfactual_expansion"
+  ],
+  "confirmation_of": "results/tiny_neural_budget_sweep_32x8_f1024.json",
+  "feature_dimension": 1024,
+  "frontier": {
+    "counterfactual_expansion": {
+      "best_signed_gain": 0.314285,
+      "best_signed_gain_profile": "epochs=64_hidden=8",
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.006474,
+      "best_signed_lsd_profile": "epochs=8_hidden=8",
+      "lowest_neural_ops_reaching_target": 6591808,
+      "lowest_neural_ops_reaching_target_profile": "epochs=8_hidden=8",
+      "lowest_neural_ops_reaching_target_signed_gain": 0.2
+    },
+    "qa_expansion": {
+      "best_signed_gain": 0.106493,
+      "best_signed_gain_profile": "epochs=32_hidden=16",
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.003247,
+      "best_signed_lsd_profile": "epochs=32_hidden=16",
+      "lowest_neural_ops_reaching_target": 3903232,
+      "lowest_neural_ops_reaching_target_profile": "epochs=16_hidden=8",
+      "lowest_neural_ops_reaching_target_signed_gain": 0.051948
+    },
+    "raw_text": {
+      "best_signed_gain": 0.088312,
+      "best_signed_gain_profile": "epochs=64_hidden=8",
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.006357,
+      "best_signed_lsd_profile": "epochs=32_hidden=32",
+      "lowest_neural_ops_reaching_target": 3167232,
+      "lowest_neural_ops_reaching_target_profile": "epochs=32_hidden=8",
+      "lowest_neural_ops_reaching_target_signed_gain": 0.07013
+    },
+    "sample_aware_self_ranked_induction": {
+      "best_signed_gain": 0.155844,
+      "best_signed_gain_profile": "epochs=32_hidden=8",
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.00527,
+      "best_signed_lsd_profile": "epochs=16_hidden=8",
+      "lowest_neural_ops_reaching_target": 3111936,
+      "lowest_neural_ops_reaching_target_profile": "epochs=8_hidden=8",
+      "lowest_neural_ops_reaching_target_signed_gain": 0.046753
+    },
+    "self_ranked_induction": {
+      "best_signed_gain": 0.153247,
+      "best_signed_gain_profile": "epochs=16_hidden=8",
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.005247,
+      "best_signed_lsd_profile": "epochs=16_hidden=8",
+      "lowest_neural_ops_reaching_target": 6224000,
+      "lowest_neural_ops_reaching_target_profile": "epochs=16_hidden=8",
+      "lowest_neural_ops_reaching_target_signed_gain": 0.153247
+    }
+  },
+  "generated_at": "2026-06-27T21:07:33Z",
+  "learner_backend": "tiny_mlp",
+  "learning_rate": 0.03,
+  "material_count": 64,
+  "profile_results": {
+    "epochs=16_hidden=16": {
+      "conditions": {
+        "counterfactual_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.241558,
+          "charged_compute_units_mean": 257600,
+          "estimated_neural_training_multiply_adds_mean": 26367232,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.833766,
+          "internal_examples_mean": 1380,
+          "internal_tokens_mean": 15410,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 22080,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.004077
+        },
+        "qa_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.046753,
+          "charged_compute_units_mean": 72680,
+          "estimated_neural_training_multiply_adds_mean": 7806464,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.638961,
+          "internal_examples_mean": 460,
+          "internal_tokens_mean": 4370,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 7360,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.002797
+        },
+        "raw_text": {
+          "accuracy_improvement_over_majority_mean": -0.025974,
+          "charged_compute_units_mean": 25760,
+          "estimated_neural_training_multiply_adds_mean": 3167232,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.566234,
+          "internal_examples_mean": 230,
+          "internal_tokens_mean": 1610,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 3680,
+          "signed_learning_signal_density_per_1m_event_compute_mean": -0.004384
+        },
+        "sample_aware_self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.148052,
+          "charged_compute_units_mean": 124255.6,
+          "estimated_neural_training_multiply_adds_mean": 12447744,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.74026,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 11040,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.005179
+        },
+        "self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.148052,
+          "charged_compute_units_mean": 126970,
+          "estimated_neural_training_multiply_adds_mean": 12448000,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.74026,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 11040,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.005069
+        }
+      },
+      "profile": {
+        "epochs": 16,
+        "hidden_units": 16
+      }
+    },
+    "epochs=16_hidden=8": {
+      "conditions": {
+        "counterfactual_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.238961,
+          "charged_compute_units_mean": 257600,
+          "estimated_neural_training_multiply_adds_mean": 13183616,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.831169,
+          "internal_examples_mean": 1380,
+          "internal_tokens_mean": 15410,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 22080,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.004033
+        },
+        "qa_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.051948,
+          "charged_compute_units_mean": 72680,
+          "estimated_neural_training_multiply_adds_mean": 3903232,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.644156,
+          "internal_examples_mean": 460,
+          "internal_tokens_mean": 4370,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 7360,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.003107
+        },
+        "raw_text": {
+          "accuracy_improvement_over_majority_mean": -0.018182,
+          "charged_compute_units_mean": 25760,
+          "estimated_neural_training_multiply_adds_mean": 1583616,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.574026,
+          "internal_examples_mean": 230,
+          "internal_tokens_mean": 1610,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 3680,
+          "signed_learning_signal_density_per_1m_event_compute_mean": -0.003069
+        },
+        "sample_aware_self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.150649,
+          "charged_compute_units_mean": 124255.6,
+          "estimated_neural_training_multiply_adds_mean": 6223872,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.742857,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 11040,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.00527
+        },
+        "self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.153247,
+          "charged_compute_units_mean": 126970,
+          "estimated_neural_training_multiply_adds_mean": 6224000,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.745455,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 11040,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.005247
+        }
+      },
+      "profile": {
+        "epochs": 16,
+        "hidden_units": 8
+      }
+    },
+    "epochs=32_hidden=16": {
+      "conditions": {
+        "counterfactual_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.241558,
+          "charged_compute_units_mean": 504160,
+          "estimated_neural_training_multiply_adds_mean": 52734464,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.833766,
+          "internal_examples_mean": 1380,
+          "internal_tokens_mean": 15410,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 44160,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.002083
+        },
+        "qa_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.106493,
+          "charged_compute_units_mean": 142600,
+          "estimated_neural_training_multiply_adds_mean": 15612928,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.698702,
+          "internal_examples_mean": 460,
+          "internal_tokens_mean": 4370,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 14720,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.003247
+        },
+        "raw_text": {
+          "accuracy_improvement_over_majority_mean": 0.064935,
+          "charged_compute_units_mean": 51520,
+          "estimated_neural_training_multiply_adds_mean": 6334464,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.657143,
+          "internal_examples_mean": 230,
+          "internal_tokens_mean": 1610,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 7360,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.00548
+        },
+        "sample_aware_self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.153247,
+          "charged_compute_units_mean": 238335.6,
+          "estimated_neural_training_multiply_adds_mean": 24895488,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.745455,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 22080,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.002795
+        },
+        "self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.145454,
+          "charged_compute_units_mean": 241050,
+          "estimated_neural_training_multiply_adds_mean": 24896000,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.737663,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 22080,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.002623
+        }
+      },
+      "profile": {
+        "epochs": 32,
+        "hidden_units": 16
+      }
+    },
+    "epochs=32_hidden=32": {
+      "conditions": {
+        "counterfactual_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.241558,
+          "charged_compute_units_mean": 504160,
+          "estimated_neural_training_multiply_adds_mean": 105468928,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.833766,
+          "internal_examples_mean": 1380,
+          "internal_tokens_mean": 15410,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 32833,
+          "neural_training_step_count_mean": 44160,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.002083
+        },
+        "qa_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.106493,
+          "charged_compute_units_mean": 142600,
+          "estimated_neural_training_multiply_adds_mean": 31225856,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.698702,
+          "internal_examples_mean": 460,
+          "internal_tokens_mean": 4370,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 32833,
+          "neural_training_step_count_mean": 14720,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.003247
+        },
+        "raw_text": {
+          "accuracy_improvement_over_majority_mean": 0.075325,
+          "charged_compute_units_mean": 51520,
+          "estimated_neural_training_multiply_adds_mean": 12668928,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.667533,
+          "internal_examples_mean": 230,
+          "internal_tokens_mean": 1610,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 32833,
+          "neural_training_step_count_mean": 7360,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.006357
+        },
+        "sample_aware_self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.153247,
+          "charged_compute_units_mean": 238335.6,
+          "estimated_neural_training_multiply_adds_mean": 49790976,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.745455,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 32833,
+          "neural_training_step_count_mean": 22080,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.002795
+        },
+        "self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.148052,
+          "charged_compute_units_mean": 241050,
+          "estimated_neural_training_multiply_adds_mean": 49792000,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.74026,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 32833,
+          "neural_training_step_count_mean": 22080,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.00267
+        }
+      },
+      "profile": {
+        "epochs": 32,
+        "hidden_units": 32
+      }
+    },
+    "epochs=32_hidden=8": {
+      "conditions": {
+        "counterfactual_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.246753,
+          "charged_compute_units_mean": 504160,
+          "estimated_neural_training_multiply_adds_mean": 26367232,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.838961,
+          "internal_examples_mean": 1380,
+          "internal_tokens_mean": 15410,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 44160,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.002128
+        },
+        "qa_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.101299,
+          "charged_compute_units_mean": 142600,
+          "estimated_neural_training_multiply_adds_mean": 7806464,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.693507,
+          "internal_examples_mean": 460,
+          "internal_tokens_mean": 4370,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 14720,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.003089
+        },
+        "raw_text": {
+          "accuracy_improvement_over_majority_mean": 0.07013,
+          "charged_compute_units_mean": 51520,
+          "estimated_neural_training_multiply_adds_mean": 3167232,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.662338,
+          "internal_examples_mean": 230,
+          "internal_tokens_mean": 1610,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 7360,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.005918
+        },
+        "sample_aware_self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.155844,
+          "charged_compute_units_mean": 238335.6,
+          "estimated_neural_training_multiply_adds_mean": 12447744,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.748052,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 22080,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.002843
+        },
+        "self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.145454,
+          "charged_compute_units_mean": 241050,
+          "estimated_neural_training_multiply_adds_mean": 12448000,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.737663,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 22080,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.002623
+        }
+      },
+      "profile": {
+        "epochs": 32,
+        "hidden_units": 8
+      }
+    },
+    "epochs=64_hidden=16": {
+      "conditions": {
+        "counterfactual_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.296104,
+          "charged_compute_units_mean": 997280,
+          "estimated_neural_training_multiply_adds_mean": 105468928,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.888312,
+          "internal_examples_mean": 1380,
+          "internal_tokens_mean": 15410,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 88320,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.001291
+        },
+        "qa_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.101299,
+          "charged_compute_units_mean": 282440,
+          "estimated_neural_training_multiply_adds_mean": 31225856,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.693507,
+          "internal_examples_mean": 460,
+          "internal_tokens_mean": 4370,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 29440,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.001559
+        },
+        "raw_text": {
+          "accuracy_improvement_over_majority_mean": 0.088312,
+          "charged_compute_units_mean": 103040,
+          "estimated_neural_training_multiply_adds_mean": 12668928,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.68052,
+          "internal_examples_mean": 230,
+          "internal_tokens_mean": 1610,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 14720,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.003726
+        },
+        "sample_aware_self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.106493,
+          "charged_compute_units_mean": 466495.6,
+          "estimated_neural_training_multiply_adds_mean": 49790976,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.698702,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 44160,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.000992
+        },
+        "self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.11948,
+          "charged_compute_units_mean": 469210,
+          "estimated_neural_training_multiply_adds_mean": 49792000,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.711689,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 44160,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.001107
+        }
+      },
+      "profile": {
+        "epochs": 64,
+        "hidden_units": 16
+      }
+    },
+    "epochs=64_hidden=8": {
+      "conditions": {
+        "counterfactual_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.314285,
+          "charged_compute_units_mean": 997280,
+          "estimated_neural_training_multiply_adds_mean": 52734464,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.906494,
+          "internal_examples_mean": 1380,
+          "internal_tokens_mean": 15410,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 88320,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.00137
+        },
+        "qa_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.103896,
+          "charged_compute_units_mean": 282440,
+          "estimated_neural_training_multiply_adds_mean": 15612928,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.696104,
+          "internal_examples_mean": 460,
+          "internal_tokens_mean": 4370,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 29440,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.001599
+        },
+        "raw_text": {
+          "accuracy_improvement_over_majority_mean": 0.088312,
+          "charged_compute_units_mean": 103040,
+          "estimated_neural_training_multiply_adds_mean": 6334464,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.68052,
+          "internal_examples_mean": 230,
+          "internal_tokens_mean": 1610,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 14720,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.003726
+        },
+        "sample_aware_self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.116883,
+          "charged_compute_units_mean": 466495.6,
+          "estimated_neural_training_multiply_adds_mean": 24895488,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.709091,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 44160,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.001089
+        },
+        "self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.122078,
+          "charged_compute_units_mean": 469210,
+          "estimated_neural_training_multiply_adds_mean": 24896000,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.714286,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 44160,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.001131
+        }
+      },
+      "profile": {
+        "epochs": 64,
+        "hidden_units": 8
+      }
+    },
+    "epochs=8_hidden=16": {
+      "conditions": {
+        "counterfactual_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.194805,
+          "charged_compute_units_mean": 134320,
+          "estimated_neural_training_multiply_adds_mean": 13183616,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.787013,
+          "internal_examples_mean": 1380,
+          "internal_tokens_mean": 15410,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 11040,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.006306
+        },
+        "qa_expansion": {
+          "accuracy_improvement_over_majority_mean": -0.062338,
+          "charged_compute_units_mean": 37720,
+          "estimated_neural_training_multiply_adds_mean": 3903232,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.52987,
+          "internal_examples_mean": 460,
+          "internal_tokens_mean": 4370,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 3680,
+          "signed_learning_signal_density_per_1m_event_compute_mean": -0.007185
+        },
+        "raw_text": {
+          "accuracy_improvement_over_majority_mean": 0.0,
+          "charged_compute_units_mean": 12880,
+          "estimated_neural_training_multiply_adds_mean": 1583616,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.592208,
+          "internal_examples_mean": 230,
+          "internal_tokens_mean": 1610,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 1840,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.0
+        },
+        "sample_aware_self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.041558,
+          "charged_compute_units_mean": 67215.6,
+          "estimated_neural_training_multiply_adds_mean": 6223872,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.633767,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 5520,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.002684
+        },
+        "self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.025974,
+          "charged_compute_units_mean": 69930,
+          "estimated_neural_training_multiply_adds_mean": 6224000,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.618182,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 16417,
+          "neural_training_step_count_mean": 5520,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.001614
+        }
+      },
+      "profile": {
+        "epochs": 8,
+        "hidden_units": 16
+      }
+    },
+    "epochs=8_hidden=8": {
+      "conditions": {
+        "counterfactual_expansion": {
+          "accuracy_improvement_over_majority_mean": 0.2,
+          "charged_compute_units_mean": 134320,
+          "estimated_neural_training_multiply_adds_mean": 6591808,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.792208,
+          "internal_examples_mean": 1380,
+          "internal_tokens_mean": 15410,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 11040,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.006474
+        },
+        "qa_expansion": {
+          "accuracy_improvement_over_majority_mean": -0.05974,
+          "charged_compute_units_mean": 37720,
+          "estimated_neural_training_multiply_adds_mean": 1951616,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.532468,
+          "internal_examples_mean": 460,
+          "internal_tokens_mean": 4370,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 3680,
+          "signed_learning_signal_density_per_1m_event_compute_mean": -0.006886
+        },
+        "raw_text": {
+          "accuracy_improvement_over_majority_mean": -0.025974,
+          "charged_compute_units_mean": 12880,
+          "estimated_neural_training_multiply_adds_mean": 791808,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.566234,
+          "internal_examples_mean": 230,
+          "internal_tokens_mean": 1610,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 1840,
+          "signed_learning_signal_density_per_1m_event_compute_mean": -0.008768
+        },
+        "sample_aware_self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.046753,
+          "charged_compute_units_mean": 67215.6,
+          "estimated_neural_training_multiply_adds_mean": 3111936,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.638961,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 5520,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.003021
+        },
+        "self_ranked_induction": {
+          "accuracy_improvement_over_majority_mean": 0.020779,
+          "charged_compute_units_mean": 69930,
+          "estimated_neural_training_multiply_adds_mean": 3112000,
+          "external_events_mean": 230,
+          "heldout_accuracy_mean": 0.612987,
+          "internal_examples_mean": 690,
+          "internal_tokens_mean": 7130,
+          "majority_baseline_accuracy_mean": 0.592208,
+          "neural_parameter_count_mean": 8209,
+          "neural_training_step_count_mean": 5520,
+          "signed_learning_signal_density_per_1m_event_compute_mean": 0.001291
+        }
+      },
+      "profile": {
+        "epochs": 8,
+        "hidden_units": 8
+      }
+    }
+  },
+  "profiles": [
+    {
+      "epochs": 8,
+      "hidden_units": 8
+    },
+    {
+      "epochs": 16,
+      "hidden_units": 8
+    },
+    {
+      "epochs": 32,
+      "hidden_units": 8
+    },
+    {
+      "epochs": 64,
+      "hidden_units": 8
+    },
+    {
+      "epochs": 8,
+      "hidden_units": 16
+    },
+    {
+      "epochs": 16,
+      "hidden_units": 16
+    },
+    {
+      "epochs": 32,
+      "hidden_units": 16
+    },
+    {
+      "epochs": 64,
+      "hidden_units": 16
+    },
+    {
+      "epochs": 32,
+      "hidden_units": 32
+    }
+  ],
+  "seeds": [
+    17,
+    19,
+    23,
+    29,
+    31
+  ],
+  "target_signed_gain": 0.03,
+  "title": "Learning Signal Density Tiny Neural Profile Sweep"
+}

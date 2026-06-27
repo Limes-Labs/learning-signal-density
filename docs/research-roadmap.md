@@ -36,7 +36,8 @@ Status: started with a deterministic CPU MLP artifact, fresh-seed
 confirmation, a neural sample-budget sweep, a profile-efficiency sweep, and an
 efficient-profile budget confirmation. It now also includes a feature-dimension
 frontier plus 256-feature and 1024-feature budget reruns for the efficient
-`32x8` profile.
+`32x8` profile, followed by a 1024-feature epoch/width profile sweep and a
+`16x8` budget confirmation.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -70,6 +71,10 @@ frontier plus 256-feature and 1024-feature budget reruns for the efficient
   saturates. The current 1024-feature sweep improves the 256-feature frontier
   with only a small additional operation cost, but still leaves train-only
   ranked methods negative at 24 and 32 materials.
+- Re-check profile efficiency whenever the representation changes. At 1024
+  features, `16x8` becomes the strongest self-ranked profile at the
+  64-material point and halves neural training operations versus `32x8`, but
+  weakens raw text, QA, and oracle best gain in the full budget rerun.
 
 ## Phase 3: Continual-Learning Replay
 

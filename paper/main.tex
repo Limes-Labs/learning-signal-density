@@ -115,6 +115,14 @@ budget rerun, raw text first reaches target at 48 materials, oracle
 counterfactual expansion first reaches target at 24, and ranked train-only
 conditions still first reach target at 48 while remaining negative at 24 and
 32 materials.
+Re-running the epoch/width profile sweep at 1024 features changes the efficient
+profile frontier: the 16-epoch, 8-hidden-unit profile produces the best
+self-ranked induction gain and signed learning-signal density at 64 materials
+while using half the neural training operations of the 32-epoch profile. A full
+16x8 budget rerun preserves the 48-material self-ranked threshold and improves
+that condition's best signed gain, but it weakens raw text, question-answer
+expansion, and oracle counterfactual best gain. Thus profile efficiency is
+condition-dependent rather than globally monotone.
 
 \section{Limitations}
 

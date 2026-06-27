@@ -48,7 +48,9 @@
     "feature_dimension_frontier",
     "feature_dimension_budget_confirmation",
     "wide_feature_dimension_frontier",
-    "wide_feature_dimension_budget_confirmation"
+    "wide_feature_dimension_budget_confirmation",
+    "f1024_profile_frontier",
+    "f1024_low_epoch_budget_confirmation"
   ],
   "costs": {
     "external_events": "Original train observations only.",

@@ -121,6 +121,54 @@ class CommittedResultArtifactTests(unittest.TestCase):
         )
         self.assertLess(ops_ratio, 1.03)
 
+    def test_f1024_profile_artifact_records_capacity_frontier(self) -> None:
+        profile = json.loads(Path("results/tiny_neural_profile_sweep_f1024.json").read_text())
+
+        self.assertEqual(profile["feature_dimension"], 1024)
+        self.assertEqual(profile["material_count"], 64)
+        self.assertEqual(profile["confirmation_of"], "results/tiny_neural_budget_sweep_32x8_f1024.json")
+        self.assertEqual(profile["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(profile["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn({"epochs": 32, "hidden_units": 8}, profile["profiles"])
+        self.assertIn("self_ranked_induction", profile["frontier"])
+        self.assertGreater(
+            profile["profile_results"]["epochs=32_hidden=8"]["conditions"]["self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0,
+        )
+
+    def test_f1024_16x8_budget_artifact_confirms_lower_ops_self_ranked_profile(self) -> None:
+        budget_32x8 = json.loads(Path("results/tiny_neural_budget_sweep_32x8_f1024.json").read_text())
+        budget_16x8 = json.loads(Path("results/tiny_neural_budget_sweep_16x8_f1024.json").read_text())
+
+        self.assertEqual(budget_16x8["feature_dimension"], 1024)
+        self.assertEqual(budget_16x8["profile_label"], "epochs=16_hidden=8_features=1024")
+        self.assertEqual(budget_16x8["comparison_of"], "results/tiny_neural_budget_sweep_32x8_f1024.json")
+        self.assertIsNone(budget_16x8["thresholds"]["raw_text"]["first_material_count_reaching_target"])
+        self.assertEqual(budget_16x8["thresholds"]["self_ranked_induction"]["first_material_count_reaching_target"], 48)
+        self.assertEqual(
+            budget_16x8["thresholds"]["counterfactual_expansion"]["first_material_count_reaching_target"],
+            24,
+        )
+        self.assertGreater(
+            budget_16x8["thresholds"]["self_ranked_induction"]["best_signed_gain"],
+            budget_32x8["thresholds"]["self_ranked_induction"]["best_signed_gain"],
+        )
+        self.assertLess(
+            budget_16x8["thresholds"]["counterfactual_expansion"]["best_signed_gain"],
+            budget_32x8["thresholds"]["counterfactual_expansion"]["best_signed_gain"],
+        )
+        self.assertLess(
+            budget_16x8["budgets"]["32"]["self_ranked_induction"]["accuracy_improvement_over_majority_mean"],
+            0,
+        )
+        ops_ratio = (
+            budget_16x8["budgets"]["64"]["self_ranked_induction"]["estimated_neural_training_multiply_adds_mean"]
+            / budget_32x8["budgets"]["64"]["self_ranked_induction"]["estimated_neural_training_multiply_adds_mean"]
+        )
+        self.assertEqual(ops_ratio, 0.5)
+
 
 if __name__ == "__main__":
     unittest.main()
