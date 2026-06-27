@@ -92,6 +92,10 @@ replication unresolved.
 A tiny-MLP sample-budget sweep shows that the neural signal is not present at
 the smallest budgets: ranked train-only induction first reaches target at 48
 materials, while oracle counterfactual expansion reaches target at 32.
+An epoch/width profile sweep at 64 materials further shows that the efficient
+frontier is not monotone in model size: a 32-epoch, 8-hidden-unit profile
+outperforms the original 32-hidden-unit profile for self-ranked induction while
+using far fewer neural training operations.
 
 \section{Limitations}
 
