@@ -175,6 +175,28 @@ class ExperimentArtifactTests(unittest.TestCase):
         self.assertEqual(row["validation_calibration_event_count"], 0)
         self.assertIn("ranked_diversity_penalty_mean", result["conditions"]["diverse_self_ranked_induction"])
 
+    def test_sample_aware_self_ranked_induction_records_adaptive_policy(self) -> None:
+        result = run_seedset(
+            seeds=[3],
+            conditions=["sample_aware_self_ranked_induction"],
+            material_count=16,
+            epochs=2,
+        )
+
+        row = result["per_seed"][0]
+        scope = result["condition_scope"]["sample_aware_self_ranked_induction"]
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_threshold"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(row["ranked_synthetic_budget_ratio"], 0.25)
+        self.assertEqual(row["ranked_induction_min_support"], 2)
+        self.assertEqual(row["ranked_induction_min_confidence"], 0.55)
+        self.assertEqual(row["train_calibration_event_count"], 0)
+        self.assertEqual(row["validation_calibration_event_count"], 0)
+        self.assertIn("ranked_induction_min_support_mean", result["conditions"]["sample_aware_self_ranked_induction"])
+
 
 if __name__ == "__main__":
     unittest.main()

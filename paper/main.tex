@@ -68,6 +68,9 @@ prediction reliability, then trains on a fixed-budget ranked subset of
 candidate counterfactuals.
 Train-calibrated and self-ranked ablations replace validation reliability with
 train-only calibration or with confidence/support ranking alone.
+A sample-aware self-ranked ablation scales the generated budget and minimum
+support from train split size to test whether generated-label noise should be
+controlled differently across external-sample regimes.
 A diversity-ranked ablation penalizes repeated feature regions to test whether
 balanced generated coverage improves the fixed transform budget.
 An MDL-style variant selects compact empirical rules with a description-length
