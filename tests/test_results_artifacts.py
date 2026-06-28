@@ -209,6 +209,48 @@ class CommittedResultArtifactTests(unittest.TestCase):
         )
         self.assertEqual(ops_ratio, 0.5)
 
+    def test_f1024_validation_selected_budget_artifact_records_charged_reliability_probe(self) -> None:
+        validation_selected = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_selected_f1024.json").read_text()
+        )
+
+        self.assertEqual(validation_selected["feature_dimension"], 1024)
+        self.assertEqual(validation_selected["profile_label"], "epochs=16_hidden=8_features=1024_validation_selected")
+        self.assertEqual(validation_selected["comparison_of"], "results/tiny_neural_budget_sweep_16x8_f1024.json")
+        self.assertEqual(validation_selected["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(validation_selected["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_ranked_induction", validation_selected["conditions"])
+        self.assertIn("mdl_rule_expansion", validation_selected["conditions"])
+        self.assertEqual(
+            validation_selected["thresholds"]["validation_ranked_induction"][
+                "first_material_count_reaching_target"
+            ],
+            48,
+        )
+        self.assertEqual(validation_selected["thresholds"]["mdl_rule_expansion"]["first_material_count_reaching_target"], 48)
+        self.assertLess(
+            validation_selected["budgets"]["32"]["validation_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0,
+        )
+        self.assertGreater(
+            validation_selected["budgets"]["32"]["mdl_rule_expansion"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            validation_selected["budgets"]["32"]["self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertLess(
+            validation_selected["thresholds"]["mdl_rule_expansion"]["best_signed_gain"],
+            validation_selected["thresholds"]["self_ranked_induction"]["best_signed_gain"],
+        )
+        self.assertGreater(
+            validation_selected["budgets"]["64"]["mdl_rule_expansion"]["charged_compute_units_mean"],
+            validation_selected["budgets"]["64"]["self_ranked_induction"]["charged_compute_units_mean"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

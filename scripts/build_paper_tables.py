@@ -16,6 +16,7 @@ BUDGET_ARTIFACTS = [
 ]
 FEATURE_FRONTIER_ARTIFACT = Path("results/tiny_neural_feature_sweep_wide.json")
 PROFILE_FRONTIER_ARTIFACT = Path("results/tiny_neural_profile_sweep_f1024.json")
+VALIDATION_SELECTED_ARTIFACT = Path("results/tiny_neural_budget_sweep_validation_selected_f1024.json")
 
 FRONTIER_CONDITIONS = [
     "raw_text",
@@ -31,10 +32,12 @@ LOW_BUDGET_MATERIALS = ["16", "24", "32"]
 
 CONDITION_LABELS = {
     "counterfactual_expansion": "Oracle counterfactual",
+    "mdl_rule_expansion": "MDL rule expansion",
     "qa_expansion": "QA expansion",
     "raw_text": "Raw text",
     "sample_aware_self_ranked_induction": "Sample-aware self-ranked",
     "self_ranked_induction": "Self-ranked",
+    "validation_ranked_induction": "Validation-ranked",
 }
 
 
@@ -103,9 +106,11 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     artifacts = {
         "feature": load_json(repo_root / FEATURE_FRONTIER_ARTIFACT),
         "profile": load_json(repo_root / PROFILE_FRONTIER_ARTIFACT),
+        "validation_selected": load_json(repo_root / VALIDATION_SELECTED_ARTIFACT),
     }
     validate_claim_scope(FEATURE_FRONTIER_ARTIFACT, artifacts["feature"])
     validate_claim_scope(PROFILE_FRONTIER_ARTIFACT, artifacts["profile"])
+    validate_claim_scope(VALIDATION_SELECTED_ARTIFACT, artifacts["validation_selected"])
     return artifacts
 
 
@@ -164,6 +169,42 @@ def build_frontier_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_validation_selected_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["validation_selected"]
+    conditions = (
+        "self_ranked_induction",
+        "sample_aware_self_ranked_induction",
+        "validation_ranked_induction",
+        "mdl_rule_expansion",
+        "counterfactual_expansion",
+    )
+    materials = ("16", "24", "32", "48")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Charged reliability-selection probe at the 16x8 f1024 profile. Entries are heldout accuracy improvement over the majority baseline; first target uses \LsdPaperTargetGain{} signed gain.}",
+        r"\label{tab:validation-selected-reliability-probe}",
+        r"\begin{tabular}{@{}llrrrrr@{}}",
+        r"\toprule",
+        r"Condition & First target & 16 & 24 & 32 & 48 & Best gain \\",
+        r"\midrule",
+    ]
+    for condition in conditions:
+        thresholds = artifact["thresholds"][condition]
+        row = [
+            latex_escape(condition_label(condition)),
+            latex_escape(fmt_target(thresholds["first_material_count_reaching_target"])),
+            *(
+                fmt_float(artifact["budgets"][material][condition]["accuracy_improvement_over_majority_mean"])
+                for material in materials
+            ),
+            fmt_float(thresholds["best_signed_gain"]),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def build_low_budget_failure_table(repo_root: Path) -> str:
     lines = [
         r"\begin{table}[htbp]",
@@ -199,6 +240,7 @@ def render_tables(repo_root: Path) -> str:
         [
             build_macros(repo_root),
             build_frontier_table(repo_root),
+            build_validation_selected_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )
