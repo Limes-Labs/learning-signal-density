@@ -1,141 +1,200 @@
 \documentclass[11pt]{article}
 
 \usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
 \usepackage{booktabs}
-\usepackage{hyperref}
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+]{hyperref}
 
-\title{Learning Signal Density: Measuring External-Sample and Internal-Compute Efficiency in Learning Loops}
+\title{Learning Signal Density: External-Sample and Internal-Compute Efficiency in Learning Loops}
 \author{Francesco Giannicola \\ Limes Labs}
-\date{2026}
+\date{June 2026}
+
+\newcommand{\LSD}{\mathrm{LSD}}
+\newcommand{\E}{\mathbb{E}}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-This paper studies whether apparent sample efficiency is better attributed to a
-whole learning loop than to a neural network in isolation. We define external
-sample efficiency, compute efficiency, and learning-signal density, then use
-controlled synthetic domains to compare raw training examples with selected,
-transformed, replayed, and feedback-enriched training loops. The current
-repository contains a pilot audit and a preregistered path toward tiny neural
-replications. The pilot is not a claim about frontier language models.
+This draft studies whether apparent sample efficiency should be measured at the
+level of a whole learning loop rather than at the level of a model update
+alone. We define learning signal density as heldout quality improvement per
+external observation and charged internal compute, then evaluate raw examples,
+question-answer expansion, oracle counterfactual expansion, and train-only
+ranked induction policies in a controlled causal-text domain. The present
+evidence is intentionally narrow: deterministic CPU tiny-MLP artifacts with
+fresh-seed confirmation, explicit heldout isolation, and generated tables
+pulled from committed JSON. The strongest current positive result is not a
+frontier-model claim. It is a reusable measurement protocol plus a concrete
+finding: representation width and model profile can improve density, but
+scarce-sample generated-label noise remains visible at 24 and 32 external
+materials.
 \end{abstract}
 
-\section{Motivation}
+\paragraph{Keywords.}
+sample efficiency; data transformation; synthetic data; counterfactual
+generation; internal compute; learning-loop measurement; small neural audits.
 
-Comparisons between human learning and language-model pretraining often count
-raw tokens or approximate brain compute. This can hide the central mechanism:
-biological and engineered systems do not merely receive data. They select,
-transform, replay, reward, and consolidate it.
+\section{Introduction}
 
-\section{Definitions}
+Token-count comparisons between biological learning and language-model
+pretraining often treat data as if it arrived in a single undifferentiated
+stream. That framing misses the mechanism this work wants to measure. A
+learning system selects observations, rewrites them, asks questions, generates
+counterfactuals, replays fragments, receives feedback, and spends internal
+compute before any parameter update becomes useful.
+Nearby mechanisms include token/data selection
+\cite{lin2024rho1,li2024datacomp,xia2024less}, process feedback
+\cite{lightman2023verify}, and replay \cite{schaul2015prioritized}. This draft
+does not treat those literatures as interchangeable; it asks how to charge and
+compare them inside one loop-level measurement protocol.
 
-Let a learning system be
+The research question is therefore not ``are language models or brains more
+sample efficient?'' The sharper question is:
+\emph{how much heldout improvement does a learning loop obtain per external
+event once transformation, replay, feedback, selection, and internal compute
+are charged?} This draft begins with a small but fully auditable causal domain
+because the hidden rulebook, train/validation/heldout split, and generated-label
+provenance can be controlled exactly.
+
+\paragraph{Contributions in the current repository.}
+The repository currently provides four pieces of evidence. First, it defines a
+costed artifact schema for external events, internal examples, internal tokens,
+charged transform cost, neural step count, estimated neural operations, and
+claim scope. Second, it implements train-only and oracle transformation
+policies under fixed heldout isolation. Third, it records fresh-seed tiny-MLP
+sample-budget, feature-width, and epoch/width ablations. Fourth, the paper
+tables below are generated from committed result JSON, so the manuscript cannot
+silently drift away from the artifacts.
+
+\paragraph{Non-claims.}
+This is not a transformer-scale result, not a language-model leaderboard, and
+not evidence that synthetic data is universally good. The current findings are
+mechanism evidence for a measurement protocol. They justify more serious
+replications; they do not replace them.
+
+\section{Measurement Protocol}
+
+Let a learning loop be
 \[
-S = (\theta, M, \pi_{\mathrm{collect}}, \pi_{\mathrm{select}},
-\pi_{\mathrm{transform}}, \pi_{\mathrm{train}}, R, E).
+S = (\theta, D_{\mathrm{ext}}, \pi_{\mathrm{select}},
+\pi_{\mathrm{transform}}, \pi_{\mathrm{train}}, R, C).
 \]
+Here $\theta$ is the learner, $D_{\mathrm{ext}}$ is the externally observed
+material, $\pi_{\mathrm{select}}$ chooses what to use, $\pi_{\mathrm{transform}}$
+creates internal training examples, $\pi_{\mathrm{train}}$ updates the learner,
+$R$ is the feedback or evaluation channel, and $C$ is charged internal compute.
 
-We measure:
+For a heldout quality metric $Q$, external-event count $N_{\mathrm{ext}}$, and
+charged internal compute $C_{\mathrm{int}}$, we track
 \[
 \mathrm{external\ sample\ efficiency} =
-\frac{\Delta Q}{N_{\mathrm{external\ events}}},
-\]
-\[
+\frac{\Delta Q}{N_{\mathrm{ext}}},
+\qquad
 \mathrm{compute\ efficiency} =
-\frac{\Delta Q}{C_{\mathrm{internal}}},
+\frac{\Delta Q}{C_{\mathrm{int}}},
 \]
 and
 \[
-\mathrm{learning\ signal\ density} =
-\frac{\Delta Q}{N_{\mathrm{external\ events}} C_{\mathrm{internal}}}.
+\LSD =
+\frac{\Delta Q}{N_{\mathrm{ext}} C_{\mathrm{int}}}.
 \]
+The reported signed version uses improvement over the majority baseline as
+$\Delta Q$. Negative values remain negative instead of being clipped away.
 
-\section{Pilot Experiment}
+\section{Anti-Cheat Rules}
 
-The first experiment uses a synthetic causal-text domain with hidden rules,
-fixed train/validation/heldout splits, and several train-only processing
-pipelines. It records heldout accuracy, majority-baseline improvement,
-external-event count, internal-token count, charged transform costs, signed
-efficiency metrics, and sample-budget sensitivity. The first non-oracle
-transformation condition induces empirical rules from the train split before
-generating counterfactual labels. A validation-gated variant selects induction
-thresholds on validation data and charges the tuning overhead.
-A direct validation-gated variant selects thresholds by induced-rule
-precision/coverage without retraining the learner for every candidate.
-The validation-ranked variant uses validation data only to estimate induced
-prediction reliability, then trains on a fixed-budget ranked subset of
-candidate counterfactuals.
-Train-calibrated and self-ranked ablations replace validation reliability with
-train-only calibration or with confidence/support ranking alone.
-A sample-aware self-ranked ablation scales the generated budget and minimum
-support from train split size to test whether generated-label noise should be
-controlled differently across external-sample regimes.
-A diversity-ranked ablation penalizes repeated feature regions to test whether
-balanced generated coverage improves the fixed transform budget.
-An MDL-style variant selects compact empirical rules with a description-length
-penalty before generating counterfactuals.
-Because several ranked-policy variants were designed after inspecting discovery
-seeds, the repository also records a fresh-seed confirmation sweep and treats
-non-confirmed budget-specific gains as exploratory.
-The repository now also includes a deterministic CPU tiny-MLP replication that
-keeps the same split discipline while recording neural parameter count,
-training steps, and estimated training multiply-adds. In this first neural
-profile, train-only ranked induction conditions become positive while raw text
-and question-answer expansion remain negative, but the result is still
-exploratory and not a language-model claim.
-A fresh-seed rerun of the same tiny-MLP profile keeps the ranked train-only
-conditions above the signed-gain target, turns question-answer expansion
-positive, and strengthens oracle counterfactual expansion. This makes the
-tiny-MLP result less seed-specific, while leaving the larger language-model
-replication unresolved.
-A tiny-MLP sample-budget sweep shows that the neural signal is not present at
-the smallest budgets: ranked train-only induction first reaches target at 48
-materials, while oracle counterfactual expansion reaches target at 32.
-An epoch/width profile sweep at 64 materials further shows that the efficient
-frontier is not monotone in model size: a 32-epoch, 8-hidden-unit profile
-outperforms the original 32-hidden-unit profile for self-ranked induction while
-using far fewer neural training operations.
-Rerunning the full neural sample-budget sweep with that efficient profile keeps
-the same target-reaching material counts as the original profile, slightly
-improves the best signed gains for the positive conditions, and uses one
-quarter of the estimated neural training multiply-adds at matched budgets.
-Sweeping the hashed feature dimension for the efficient profile shows a second
-frontier: dimensions 16, 32, and 64 lose the ranked train-only signal at the
-64-material budget, while 256 features improves all positive conditions over
-128 features. A full 256-feature budget rerun keeps the same target-reaching
-budgets for the transformed conditions and improves their best signed gains,
-but does not remove the negative ranked train-only region at 24 and 32
-materials.
-A wider feature sweep shows that this frontier has not yet saturated at 256
-features. At 64 materials, 1024 features improves signed gain and signed
-learning-signal density over 256 features for every condition with only a small
-increase in estimated neural training operations. In the full 1024-feature
-budget rerun, raw text first reaches target at 48 materials, oracle
-counterfactual expansion first reaches target at 24, and ranked train-only
-conditions still first reach target at 48 while remaining negative at 24 and
-32 materials.
-Re-running the epoch/width profile sweep at 1024 features changes the efficient
-profile frontier: the 16-epoch, 8-hidden-unit profile produces the best
-self-ranked induction gain and signed learning-signal density at 64 materials
-while using half the neural training operations of the 32-epoch profile. A full
-16x8 budget rerun preserves the 48-material self-ranked threshold and improves
-that condition's best signed gain, but it weakens raw text, question-answer
-expansion, and oracle counterfactual best gain. Thus profile efficiency is
-condition-dependent rather than globally monotone.
-An 8x8 low-epoch ablation halves training operations again and slightly
-improves sample-aware self-ranked induction at 16 and 24 materials, but loses
-the self-ranked target entirely and leaves the 32-material ranked failure
-intact. This points away from pure optimizer-size reduction as the solution to
-scarce-sample generated-label noise.
+All transformation and selection policies must be chosen without heldout
+examples. Validation labels may be used only by conditions that declare and
+charge validation use. Train-only ranked induction may use confidence, support,
+and salience signals computed from training material, but it may not inspect
+heldout accuracy. Oracle counterfactual expansion is allowed only as an upper
+bound inside the synthetic world and must be labeled as oracle-generated.
+
+Every committed result artifact carries a claim scope. The current neural
+artifacts explicitly record that they are fresh-seed confirmations, use a
+synthetic domain, do not use heldout data for selection, and are not yet
+paper-ready claims. The generated paper-table script refuses artifacts that
+violate those scope flags.
+
+\section{Experimental Design}
+
+The domain is a synthetic causal-text world with hidden rules and fixed splits
+by material/stimulus pair. The learner observes textual or question-answer
+views of a material, predicts heldout labels, and reports improvement over a
+majority baseline. The current neural backend is a deterministic CPU MLP with
+hashed features. It is intentionally dependency-light so that the artifact can
+run in ordinary CI, but it is still a neural replication rather than the first
+linear pilot.
+
+The latest ablation path asks a practical efficiency question: once 1024 hashed
+features improve the signal frontier, how much epoch/width budget is actually
+needed? The tested profiles compare 32x8, 16x8, and 8x8 MLPs at 1024 features
+over 16, 24, 32, 48, and 64 external-material budgets. Conditions include raw
+text, train-only self-ranked induction, sample-aware self-ranked induction, and
+oracle counterfactual expansion.
+
+\section{Results}
+
+Table~\ref{tab:f1024-profile-frontier} and
+Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in
+JSON artifacts by the paper-table generator at
+\texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
+
+\input{generated/results_tables.tex}
+
+The current frontier has two useful signals and one important failure. First,
+the 16x8 profile halves neural training operations relative to 32x8 for the
+same feature width and improves the best self-ranked signed gain, so larger
+training budgets are not automatically better. Second, reducing the profile to
+8x8 halves operations again, but loses the self-ranked target and weakens the
+main non-oracle result. Third, scarce-sample generated-label noise is not fixed
+by shrinking the optimizer budget: all ranked 16x8 and 8x8 rows still fail at
+32 materials, even when sample-aware ranking is positive at 16 and 24 for the
+8x8 profile.
+
+\section{Discussion}
+
+The mathematical shape suggested by the current evidence is a three-way
+frontier. Feature width controls collision and representation capacity. Epoch
+and hidden-unit budget control how much of that representation the learner can
+use. Transformation policy controls whether generated labels add reliable
+signal or amplify noise when external material is scarce. A useful next
+breakthrough is therefore unlikely to come from only increasing the MLP budget.
+The low-budget failure points instead toward reliability-aware generated-label
+policies, explicit uncertainty gates, or a small transformer backend whose
+sequence structure can be charged honestly.
+
+The oracle counterfactual condition remains valuable because it estimates the
+headroom available if generated examples were reliable. It should not be
+confused with a deployable method. The non-oracle target is to close part of
+the gap with train-only or explicitly charged validation mechanisms.
+
+\section{Release Readiness}
+
+This draft follows the release discipline used in Limes Labs public research
+repos, but it is not ready for a versioned paper release. A release-quality
+package should include a rendered PDF, source archive, result manifest,
+checksums, artifact README, submission metadata, and the exact commands used to
+rebuild the paper and reproduce the canonical artifacts. The current repo has
+the result artifacts and generated table path; it still needs stronger model
+replication and a frozen release bundle before public paper promotion.
 
 \section{Limitations}
 
-The first pilot uses an online linear learner, and the first neural replication
-uses a tiny MLP rather than a neural language model. Counterfactual labels are
-oracle-generated inside the synthetic world. These limitations are intentional
-for the first audits and must be removed or bracketed before a stronger paper
-claim.
+The current neural backend is a tiny MLP, not a transformer or language model.
+The domain is synthetic and deliberately narrow. Oracle counterfactual labels
+use the hidden world and exist only as an upper bound. The sample-aware and
+self-ranked policies were developed through earlier discovery artifacts, so
+fresh-seed confirmation helps but does not eliminate the need for independent
+replication. Wall-clock time and hardware metadata are not yet sufficient for
+a full compute-efficiency claim.
 
 \bibliographystyle{plain}
 \bibliography{references}

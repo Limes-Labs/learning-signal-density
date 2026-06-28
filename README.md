@@ -103,7 +103,8 @@ using the same split and accounting discipline.
   compared against the `16x8_features=1024` artifact.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
-- `paper/` - paper skeleton and BibTeX file for the eventual technical report.
+- `paper/` - working paper draft, generated result tables, BibTeX file, and
+  release-readiness checklist for the eventual technical report.
 - `autoresearch/` - Limes AutoResearch config for ledgered reruns.
 - `UPSTREAMS.md` - inspected inspirations and reuse boundary.
 
@@ -118,6 +119,12 @@ Run tests:
 
 ```bash
 python3 -m unittest discover -s tests
+```
+
+Regenerate the manuscript result tables from checked-in JSON artifacts:
+
+```bash
+python3 scripts/build_paper_tables.py
 ```
 
 Run the smoke experiment:
