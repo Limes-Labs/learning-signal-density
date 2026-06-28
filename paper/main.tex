@@ -133,18 +133,21 @@ hashed features. It is intentionally dependency-light so that the artifact can
 run in ordinary CI, but it is still a neural replication rather than the first
 linear pilot.
 
-The latest ablation path asks a practical efficiency question: once 1024 hashed
-features improve the signal frontier, how much epoch/width budget is actually
-needed? The tested profiles compare 32x8, 16x8, and 8x8 MLPs at 1024 features
-over 16, 24, 32, 48, and 64 external-material budgets. Conditions include raw
-text, train-only self-ranked induction, sample-aware self-ranked induction, and
-oracle counterfactual expansion.
+The latest ablation path asks two practical efficiency questions. First, once
+1024 hashed features improve the signal frontier, how much epoch/width budget
+is actually needed? The tested profiles compare 32x8, 16x8, and 8x8 MLPs at
+1024 features over 16, 24, 32, 48, and 64 external-material budgets. Second,
+does explicit reliability selection repair the scarce-sample generated-label
+failure? To test that, the 16x8 profile is rerun with charged validation-ranked
+induction and MDL rule expansion beside the train-only ranked policies and
+oracle counterfactual headroom.
 
 \section{Results}
 
-Table~\ref{tab:f1024-profile-frontier} and
-Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in
-JSON artifacts by the paper-table generator at
+Table~\ref{tab:f1024-profile-frontier},
+Table~\ref{tab:validation-selected-reliability-probe}, and
+Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
+artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
 
 \input{generated/results_tables.tex}
@@ -159,17 +162,29 @@ by shrinking the optimizer budget: all ranked 16x8 and 8x8 rows still fail at
 32 materials, even when sample-aware ranking is positive at 16 and 24 for the
 8x8 profile.
 
+The validation-selected rerun sharpens that failure mode. Charged
+validation-ranked induction slightly improves the 48-material point relative to
+self-ranked induction, but it does not move the first target below 48 and it
+does not repair the 32-material failure. MDL rule expansion is more conservative
+at scarce budgets: it is positive at 16 materials and less negative than
+self-ranked induction at 32 materials. However, it still remains below target at
+32, reaches target only at 48, and has a lower peak signed gain than the
+train-only ranked policies. This points to a more specific next step: a useful
+generated-label policy must improve reliability at 24--32 materials without
+paying so much selection cost that density collapses.
+
 \section{Discussion}
 
-The mathematical shape suggested by the current evidence is a three-way
+The mathematical shape suggested by the current evidence is a four-way
 frontier. Feature width controls collision and representation capacity. Epoch
 and hidden-unit budget control how much of that representation the learner can
 use. Transformation policy controls whether generated labels add reliable
-signal or amplify noise when external material is scarce. A useful next
-breakthrough is therefore unlikely to come from only increasing the MLP budget.
-The low-budget failure points instead toward reliability-aware generated-label
-policies, explicit uncertainty gates, or a small transformer backend whose
-sequence structure can be charged honestly.
+signal or amplify noise when external material is scarce. Selection policy
+controls how much reliability is bought per extra unit of charged compute. A
+useful next breakthrough is therefore unlikely to come from only increasing or
+shrinking the MLP budget. The low-budget failure points instead toward
+reliability-aware generated-label policies with sharper uncertainty estimates,
+or a small transformer backend whose sequence structure can be charged honestly.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

@@ -38,7 +38,9 @@ efficient-profile budget confirmation. It now also includes a feature-dimension
 frontier plus 256-feature and 1024-feature budget reruns for the efficient
 `32x8` profile, followed by a 1024-feature epoch/width profile sweep and a
 `16x8` budget confirmation. A further `8x8` ablation tests whether lower
-training budget can reduce scarce-sample overfitting.
+training budget can reduce scarce-sample overfitting, and a charged
+validation-selected rerun tests whether validation-ranked or MDL rule-selection
+policies repair the low-budget generated-label failure.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -80,6 +82,11 @@ training budget can reduce scarce-sample overfitting.
   only an optimizer-size problem. The `8x8` ablation improves the smallest
   sample-aware budgets, but loses the self-ranked target entirely and does not
   repair the 32-material failure.
+- Treat charged validation selection as informative but not solved. The
+  validation-ranked rerun reaches target only at 48 materials, like the
+  train-only ranked policies. MDL rule expansion is less negative at 32
+  materials but still below target and lower at peak gain, so the next policy
+  needs better scarce-sample reliability without excessive selection cost.
 
 ## Phase 3: Continual-Learning Replay
 
