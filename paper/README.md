@@ -37,6 +37,7 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_density_capped_compact_f1024.json`
 - `results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json`
 - `results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json`
+- `results/tiny_neural_budget_sweep_density_window_compact_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked
@@ -93,6 +94,10 @@ The late-confidence compact artifact must use fresh seeds, mark train-only
 selection and induction, keep validation and heldout out of policy selection,
 and disclose both the abundant-data support ramp and the later confidence
 floor.
+The density-window compact artifact must use fresh seeds, mark train-only
+selection and induction, keep validation and heldout out of policy selection,
+and disclose the fixed compact, raw, support-ramped, and abundant raw fallback
+windows.
 
 ## Release Checklist
 

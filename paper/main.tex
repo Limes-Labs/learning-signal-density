@@ -51,7 +51,9 @@ interaction probe improves the 64-material sample-aware row but does not beat
 the compact density frontier, separating candidate-order coverage from
 representation cost. A high-budget density cap then shows the frontier can
 switch back to raw text once external evidence is abundant, trading absolute
-gain for better learning-signal density.
+gain for better learning-signal density. Support-ramped and fixed-window
+follow-ups expose the remaining selector problem: local transition windows can
+improve one high-budget density row, but still miss another.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -196,6 +198,9 @@ to 4 after the abundant-data tier.
 A final high-budget control then asks whether tightening the induced-label
 confidence floor after 432 train events is enough to repair the remaining
 tradeoff.
+A fixed-window high-budget control then asks whether simple train-event
+breakpoints are enough: compact below 320 train events, raw from 320 to 400,
+support-ramped compact from 400 to 432, and raw again after 432.
 
 \section{Results}
 
@@ -214,7 +219,8 @@ Table~\ref{tab:compact-train-size-gated},
 Table~\ref{tab:diversity-interaction},
 Table~\ref{tab:density-capped-compact},
 Table~\ref{tab:support-ramped-compact},
-Table~\ref{tab:late-confidence-ramped-compact}, and
+Table~\ref{tab:late-confidence-ramped-compact},
+Table~\ref{tab:density-window-compact}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -418,6 +424,17 @@ late-confidence policy's best signed gain, 0.171098, remains below plain
 compact induction's 0.196875. A confidence floor alone is therefore not the
 missing selector.
 
+Table~\ref{tab:density-window-compact} tests whether a fixed transition window
+can encode the high-budget selector. On fresh seeds 929, 937, 941, 947, and
+953, the density-window policy matches compact at 64 and 80 materials, raw at
+96, 104, and 120, support-ramped compact at 112, and raw again at 128. This is
+locally useful: at 112 materials it improves signed LSD over density-capped
+raw fallback, 0.004269 versus 0.004001, and at 120 materials it keeps raw's
+0.005648 signed LSD instead of the support-ramped 0.004899. It also fails in a
+way that matters: at 128 materials it falls back to raw at 0.003726 signed
+LSD, while support-ramped compact reaches 0.004290. Fixed train-event windows
+are therefore a good control, but not a deployable selector.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -481,6 +498,11 @@ alone.
 The late-confidence control further narrows the design: stricter generated
 labels can improve one support-ramped point, but confidence tightening alone
 does not produce a deployable frontier policy.
+The density-window compact control narrows it again: simple train-event
+breakpoints can recover the 112-material transition and avoid unnecessary
+support-ramped cost at 120, but they miss the 128-material support-ramped
+opportunity. A useful selector likely needs a sample-aware utility signal over
+expected gain, representation cost, and generated-label reliability.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

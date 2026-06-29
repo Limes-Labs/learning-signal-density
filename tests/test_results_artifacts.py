@@ -1400,6 +1400,90 @@ class CommittedResultArtifactTests(unittest.TestCase):
             late_confidence["thresholds"]["compact_train_size_gated_induction"]["best_signed_gain"],
         )
 
+    def test_f1024_density_window_compact_artifact_records_local_window_tradeoff(self) -> None:
+        density_window = json.loads(
+            Path("results/tiny_neural_budget_sweep_density_window_compact_f1024.json").read_text()
+        )
+
+        self.assertEqual(density_window["seeds"], [929, 937, 941, 947, 953])
+        self.assertEqual(density_window["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(density_window["feature_dimension"], 1024)
+        self.assertEqual(density_window["profile_label"], "f1024_16x8_density_window_compact")
+        self.assertEqual(
+            density_window["confirmation_of"],
+            "results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json",
+        )
+        self.assertEqual(
+            density_window["comparison_of"],
+            "results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json",
+        )
+        self.assertEqual(density_window["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(density_window["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("density_window_compact_induction", density_window["conditions"])
+
+        scope = density_window["condition_scope"]["density_window_compact_induction"]
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["compact_original_encoding_at_large_samples"], True)
+        self.assertEqual(scope["compact_density_window_max_events"], 320)
+        self.assertEqual(scope["transition_support_window_min_events"], 400)
+        self.assertEqual(scope["transition_support_window_max_events"], 432)
+        self.assertEqual(scope["abundant_data_raw_fallback"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        for material_count in ("64", "80"):
+            self.assertEqual(
+                density_window["budgets"][material_count]["density_window_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                density_window["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+
+        for material_count in ("96", "104", "120"):
+            self.assertEqual(
+                density_window["budgets"][material_count]["density_window_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                density_window["budgets"][material_count]["raw_text"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+
+        self.assertEqual(
+            density_window["budgets"]["112"]["density_window_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.135821,
+        )
+        self.assertGreater(
+            density_window["budgets"]["112"]["density_window_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            density_window["budgets"]["112"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertGreater(
+            density_window["budgets"]["120"]["density_window_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            density_window["budgets"]["120"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            density_window["budgets"]["128"]["density_window_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            density_window["budgets"]["128"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

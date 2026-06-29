@@ -88,6 +88,9 @@ from `3` to `4` after the abundant-data tier.
 A late-confidence compact control then tests whether raising induced-label
 confidence from `0.55` to `0.60` after 432 train events repairs the remaining
 high-budget tradeoff.
+A density-window compact probe then tests a fixed train-only transition
+schedule: compact below 320 train events, raw from 320 to 400, support-ramped
+compact from 400 to 432, and raw again after 432.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -248,6 +251,14 @@ high-budget tradeoff.
   signed gain (`0.171098`) remains below plain compact (`0.196875`). The next
   useful selector needs a richer utility signal than confidence tightening
   alone.
+- Treat fixed density windows as a falsified simplification of that selector.
+  On fresh seeds `929 937 941 947 953`, density-window compact induction
+  improves the 112-material signed LSD over density-capped/raw fallback
+  (`0.004269` versus `0.004001`) and preserves the 120-material raw density
+  (`0.005648` versus support-ramped `0.004899`), but it misses the
+  support-ramped 128-material row (`0.003726` versus `0.004290`). The next
+  selector needs sample- or feature-aware utility, not just fixed train-event
+  breakpoints.
 
 ## Phase 3: Continual-Learning Replay
 

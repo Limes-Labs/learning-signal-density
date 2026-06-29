@@ -615,5 +615,34 @@ over compact at 104, 112, 120, and 128 materials. The tradeoff is explicit:
 at 128 materials it gives up gain (`0.132468` to `0.081818`) to improve signed
 LSD (`0.001860` to `0.003452`).
 
+16x8 1024-feature density-window compact transition probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_density_window_compact_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_density_window_compact_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 929 937 941 947 953 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json \
+  --profile-label f1024_16x8_density_window_compact
+```
+
+The density-window compact policy is train-only. It uses compact induction
+below 320 train events, raw text from 320 to 400, support-ramped compact from
+400 to 432, and raw text again after 432. On seeds `929 937 941 947 953`, the
+fixed window improves the 112-material signed LSD over density-capped/raw
+fallback (`0.004269` versus `0.004001`) and keeps the 120-material raw density
+(`0.005648` versus support-ramped `0.004899`). It also misses the
+support-ramped 128-material row (`0.003726` versus `0.004290`), so the artifact
+is evidence for a local transition-window tradeoff, not a solved selector.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

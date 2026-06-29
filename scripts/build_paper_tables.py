@@ -50,6 +50,9 @@ SUPPORT_RAMPED_COMPACT_ARTIFACT = Path(
 LATE_CONFIDENCE_RAMPED_COMPACT_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json"
 )
+DENSITY_WINDOW_COMPACT_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_density_window_compact_f1024.json"
+)
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
@@ -73,6 +76,7 @@ CONDITION_LABELS = {
     "compact_diverse_train_size_gated_induction": "Compact diverse",
     "compact_train_size_gated_induction": "Compact train-size gated",
     "density_capped_compact_induction": "Density-capped compact",
+    "density_window_compact_induction": "Density-window compact",
     "diverse_self_ranked_induction": "Diverse self-ranked",
     "late_confidence_ramped_compact_induction": "Late-confidence compact",
     "mdl_rule_expansion": "MDL rule expansion",
@@ -305,6 +309,34 @@ def validate_late_confidence_ramped_compact_scope(artifact_path: Path, artifact:
         raise ValueError(f"{artifact_path} must not use oracle labels for the late-confidence policy")
 
 
+def validate_density_window_compact_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("density_window_compact_induction", {})
+    if scope.get("train_only_selection") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only density-window selection")
+    if scope.get("train_only_induction") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only density-window induction")
+    if scope.get("validation_used_for_policy_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for density-window selection")
+    if scope.get("validation_used_for_transform_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for density-window transforms")
+    if scope.get("compact_original_encoding_at_large_samples") is not True:
+        raise ValueError(f"{artifact_path} must mark compact large-sample encoding")
+    if scope.get("compact_density_window") is not True:
+        raise ValueError(f"{artifact_path} must mark the compact density window")
+    if scope.get("compact_density_window_max_events") != 320:
+        raise ValueError(f"{artifact_path} must disclose the compact density-window ceiling")
+    if scope.get("transition_support_window") is not True:
+        raise ValueError(f"{artifact_path} must mark the transition support window")
+    if scope.get("transition_support_window_min_events") != 400:
+        raise ValueError(f"{artifact_path} must disclose the support-window floor")
+    if scope.get("transition_support_window_max_events") != 432:
+        raise ValueError(f"{artifact_path} must disclose the support-window ceiling")
+    if scope.get("abundant_data_raw_fallback") is not True:
+        raise ValueError(f"{artifact_path} must mark abundant-data raw fallback")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the density-window policy")
+
+
 def validate_tempered_sample_aware_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("condition_scope", {}).get("tempered_sample_aware_self_ranked_induction", {})
     if scope.get("train_only_selection") is not True:
@@ -412,6 +444,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "late_confidence_ramped_compact": load_json(
             repo_root / LATE_CONFIDENCE_RAMPED_COMPACT_ARTIFACT
         ),
+        "density_window_compact": load_json(repo_root / DENSITY_WINDOW_COMPACT_ARTIFACT),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
         "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
@@ -472,6 +505,11 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_late_confidence_ramped_compact_scope(
         LATE_CONFIDENCE_RAMPED_COMPACT_ARTIFACT,
         artifacts["late_confidence_ramped_compact"],
+    )
+    validate_claim_scope(DENSITY_WINDOW_COMPACT_ARTIFACT, artifacts["density_window_compact"])
+    validate_density_window_compact_scope(
+        DENSITY_WINDOW_COMPACT_ARTIFACT,
+        artifacts["density_window_compact"],
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
@@ -1224,6 +1262,51 @@ def build_late_confidence_ramped_compact_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_density_window_compact_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["density_window_compact"]
+    conditions = (
+        "raw_text",
+        "compact_train_size_gated_induction",
+        "support_ramped_compact_induction",
+        "density_window_compact_induction",
+        "density_capped_compact_induction",
+    )
+    materials = ("96", "104", "112", "120", "128")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Fresh-seed density-window compact probe. The policy is train-only: compact generated-label induction is used below 320 train events, raw text from 320 to 400, support-ramped compact induction from 400 to 432, and raw text again after 432. The fixed window improves signed density at 112 materials relative to density-capped raw fallback, preserves raw density at 120, but misses the support-ramped 128-material row.}",
+        r"\label{tab:density-window-compact}",
+        r"\small",
+        r"\setlength{\tabcolsep}{2pt}",
+        r"\begin{tabular}{@{}llrrrrr@{}}",
+        r"\toprule",
+        r"Condition & Metric & 96 & 104 & 112 & 120 & 128 \\",
+        r"\midrule",
+    ]
+    for condition in conditions:
+        rows = (
+            ("Gain", "accuracy_improvement_over_majority_mean"),
+            ("LSD", "signed_learning_signal_density_per_1m_event_compute_mean"),
+        )
+        for index, (metric_label, metric_key) in enumerate(rows):
+            row = [
+                latex_escape(condition_label(condition)) if index == 0 else "",
+                metric_label,
+                *(
+                    fmt_float(
+                        artifact["budgets"][material][condition][metric_key],
+                        digits=6,
+                    )
+                    for material in materials
+                ),
+            ]
+            lines.append(" & ".join(row) + r" \\")
+        lines.append(r"\addlinespace")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
@@ -1244,6 +1327,7 @@ def render_tables(repo_root: Path) -> str:
             build_density_capped_compact_table(repo_root),
             build_support_ramped_compact_table(repo_root),
             build_late_confidence_ramped_compact_table(repo_root),
+            build_density_window_compact_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

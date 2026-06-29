@@ -74,6 +74,9 @@ The current pilot is intentionally modest:
 - `support_ramped_compact_induction` is a train-only high-budget tradeoff: it
   matches compact induction through 96 materials, then raises induced-label
   minimum support from `3` to `4` after the abundant-data tier.
+- `density_window_compact_induction` is a train-only fixed-window policy for
+  the high-budget transition: compact below 320 train events, raw from 320 to
+  400, support-ramped compact from 400 to 432, and raw again after 432.
 - `late_confidence_ramped_compact_induction` is a train-only negative/mixed
   control for that tradeoff. It matches support-ramped compact until the train
   split reaches 432 events, then raises induced-label confidence from `0.55` to
@@ -233,6 +236,13 @@ using the same split and accounting discipline.
   events. The result is mostly negative: it improves the support-ramped row at
   120 materials, but raw/density-capped fallback still dominates that row and
   the best signed gain remains below plain compact.
+- `results/tiny_neural_budget_sweep_density_window_compact_f1024.*` -
+  fresh-seed fixed-window high-budget probe on seeds `929 937 941 947 953`.
+  It preserves compact density at 64/80, returns to raw around 96/104/120, and
+  uses support-ramped compact only in the 400--432 train-event transition. The
+  result is mixed but useful: it improves signed LSD at 112 materials over
+  density-capped/raw fallback, preserves raw density at 120, and misses the
+  support-ramped 128-material row.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -819,6 +829,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label f1024_16x8_late_confidence_ramped_compact
 ```
 
+Run the 16x8 1024-feature density-window compact transition probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_density_window_compact_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_density_window_compact_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 929 937 941 947 953 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json \
+  --profile-label f1024_16x8_density_window_compact
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -1123,6 +1153,14 @@ The current artifacts show a useful split:
   gain and `0.006977` signed LSD). Its best signed gain, `0.171098`, also
   remains below plain compact's `0.196875`. Confidence tightening alone is
   therefore a useful negative control, not the next frontier.
+- The density-window compact probe tests whether a fixed transition window is
+  enough. On fresh seeds `929 937 941 947 953`, it matches compact at 64/80,
+  raw at 96/104/120, support-ramped compact at 112, and raw at 128. The window
+  improves the 112-material density over density-capped/raw fallback
+  (`0.004269` versus `0.004001`) and keeps the 120-material raw density
+  (`0.005648` versus support-ramped `0.004899`), but it misses the
+  support-ramped 128-material row (`0.003726` versus `0.004290`). Fixed windows
+  are therefore a sharper control, not the solved selector.
 
 ## Research Thesis
 

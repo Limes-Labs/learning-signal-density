@@ -52,6 +52,10 @@ internal processing cost.
   below the scarcity floor and matches sample-aware induction before the
   compact tier; the diversity penalty is applied only after compact encoding is
   active.
+- `density_window_compact_induction`: a fixed train-only transition schedule
+  that uses compact induction below 320 train events, raw text from 320 to 400,
+  support-ramped compact induction from 400 to 432, and raw text again after
+  432.
 - `mdl_rule_expansion`: train-only empirical rules are scored on validation
   with a description-length penalty, then only selected compact rules are used
   for counterfactual generation.

@@ -26,6 +26,7 @@ AVAILABLE_CONDITIONS = (
     "compact_train_size_gated_induction",
     "compact_diverse_train_size_gated_induction",
     "support_ramped_compact_induction",
+    "density_window_compact_induction",
     "late_confidence_ramped_compact_induction",
     "density_capped_compact_induction",
     "agreement_gated_self_ranked_induction",
@@ -160,6 +161,21 @@ CONDITION_SCOPE = {
         "abundant_data_support_ramp_min_events": 360,
         "abundant_data_min_support": 4,
     },
+    "density_window_compact_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": True,
+        "train_only_induction": True,
+        "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
+        "validation_used_for_policy_selection": False,
+        "compact_original_encoding_at_large_samples": True,
+        "compact_density_window": True,
+        "compact_density_window_max_events": 320,
+        "transition_support_window": True,
+        "transition_support_window_min_events": 400,
+        "transition_support_window_max_events": 432,
+        "abundant_data_raw_fallback": True,
+    },
     "late_confidence_ramped_compact_induction": {
         "oracle_generated_labels": False,
         "train_only_selection": True,
@@ -235,6 +251,9 @@ SUPPORT_RAMPED_COMPACT_MIN_SUPPORT = 4
 LATE_CONFIDENCE_RAMPED_COMPACT_MIN_EVENTS = 432
 LATE_CONFIDENCE_RAMPED_COMPACT_MIN_CONFIDENCE = 0.60
 DENSITY_CAPPED_COMPACT_RAW_MIN_EVENTS = 360
+DENSITY_WINDOW_COMPACT_MAX_EVENTS = 320
+DENSITY_WINDOW_SUPPORT_MIN_EVENTS = 400
+DENSITY_WINDOW_RAW_MIN_EVENTS = 432
 
 
 @dataclass(frozen=True)
@@ -1234,6 +1253,85 @@ def build_pipeline_examples(
                 source_kind = "support_ramped_compact_sample_aware_self_ranked_induced"
             else:
                 source_kind = "compact_sample_aware_self_ranked_induced"
+            (
+                transform_cost_tokens,
+                candidate_ranking_cost_tokens,
+                ranked_candidate_count,
+                ranked_kept_candidate_count,
+                ranked_validation_precision,
+                ranked_unique_modifier_count,
+                ranked_max_modifier_count,
+                ranked_diversity_penalty,
+            ) = _add_ranked_induced_examples(
+                examples=examples,
+                observations=observations,
+                salience_model=salience_model,
+                induction_min_support=effective_min_support,
+                induction_min_confidence=effective_min_confidence,
+                synthetic_budget_ratio=effective_budget_ratio,
+                source_reliability={},
+                base_ranking_cost_tokens=0,
+                source_kind=source_kind,
+                diversity_penalty=0.0,
+                include_original_qa=include_original_qa,
+            )
+
+    elif condition == "density_window_compact_induction":
+        if len(observations) < TRAIN_SIZE_GATED_SAMPLE_AWARE_MIN_EVENTS:
+            examples = [raw_observation_example(item) for item in observations]
+        elif len(observations) >= DENSITY_WINDOW_RAW_MIN_EVENTS:
+            examples = [raw_observation_example(item) for item in observations]
+        elif len(observations) >= DENSITY_WINDOW_SUPPORT_MIN_EVENTS:
+            (
+                effective_min_support,
+                effective_min_confidence,
+                effective_budget_ratio,
+            ) = _support_ramped_compact_ranked_policy(observations)
+            modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
+            exported_ranked_synthetic_budget_ratio = effective_budget_ratio
+            ranked_induction_min_support = effective_min_support
+            ranked_induction_min_confidence = effective_min_confidence
+            include_original_qa = False
+            (
+                transform_cost_tokens,
+                candidate_ranking_cost_tokens,
+                ranked_candidate_count,
+                ranked_kept_candidate_count,
+                ranked_validation_precision,
+                ranked_unique_modifier_count,
+                ranked_max_modifier_count,
+                ranked_diversity_penalty,
+            ) = _add_ranked_induced_examples(
+                examples=examples,
+                observations=observations,
+                salience_model=salience_model,
+                induction_min_support=effective_min_support,
+                induction_min_confidence=effective_min_confidence,
+                synthetic_budget_ratio=effective_budget_ratio,
+                source_reliability={},
+                base_ranking_cost_tokens=0,
+                source_kind="support_ramped_compact_sample_aware_self_ranked_induced",
+                diversity_penalty=0.0,
+                include_original_qa=include_original_qa,
+            )
+        elif len(observations) >= DENSITY_WINDOW_COMPACT_MAX_EVENTS:
+            examples = [raw_observation_example(item) for item in observations]
+        else:
+            (
+                effective_min_support,
+                effective_min_confidence,
+                effective_budget_ratio,
+            ) = _sample_aware_ranked_policy(observations)
+            modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
+            exported_ranked_synthetic_budget_ratio = effective_budget_ratio
+            ranked_induction_min_support = effective_min_support
+            ranked_induction_min_confidence = effective_min_confidence
+            include_original_qa = len(observations) < COMPACT_TRAIN_SIZE_GATED_MIN_EVENTS
+            source_kind = (
+                "sample_aware_self_ranked_induced"
+                if include_original_qa
+                else "compact_sample_aware_self_ranked_induced"
+            )
             (
                 transform_cost_tokens,
                 candidate_ranking_cost_tokens,
