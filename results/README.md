@@ -305,6 +305,16 @@ non-oracle condition at each material budget. It is intentionally marked
 non-deployable and should be interpreted as a selector diagnostic, not a
 candidate learning policy.
 
+Build the generated-label audit used by the paper tables:
+
+```bash
+python3 scripts/build_generated_label_audit.py
+```
+
+This derived artifact uses the synthetic hidden rulebook after the
+selector-transfer sweep has run. It is intentionally non-deployable and should
+be interpreted as a mechanism diagnostic, not a policy selector.
+
 16x8 1024-feature validation-portfolio selector probe:
 
 ```bash

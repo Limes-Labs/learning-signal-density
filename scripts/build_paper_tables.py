@@ -28,6 +28,7 @@ VALIDATION_ABSTAINING_PROXY_ARTIFACT = Path(
 )
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
+GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
 
 FRONTIER_CONDITIONS = [
     "raw_text",
@@ -157,6 +158,20 @@ def validate_train_size_gated_scope(artifact_path: Path, artifact: dict[str, Any
         raise ValueError(f"{artifact_path} must not use oracle labels for the train-size gate")
 
 
+def validate_generated_label_audit_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("claim_scope", {})
+    if scope.get("uses_hidden_rulebook_for_audit") is not True:
+        raise ValueError(f"{artifact_path} must disclose hidden-rulebook audit labels")
+    if scope.get("hidden_rulebook_available_to_policies") is not False:
+        raise ValueError(f"{artifact_path} must not expose the hidden rulebook to policies")
+    if scope.get("heldout_used_for_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use heldout data for selection")
+    if scope.get("deployable_policy") is not False:
+        raise ValueError(f"{artifact_path} must be marked non-deployable")
+    if scope.get("paper_ready_claim") is not False:
+        raise ValueError(f"{artifact_path} must not mark the current result as paper-ready")
+
+
 def load_budget_artifacts(repo_root: Path) -> list[tuple[str, Path, dict[str, Any]]]:
     loaded = []
     for profile_label, relative_path in BUDGET_ARTIFACTS:
@@ -178,6 +193,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "validation_abstaining_proxy": load_json(repo_root / VALIDATION_ABSTAINING_PROXY_ARTIFACT),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
+        "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
     }
     validate_claim_scope(FEATURE_FRONTIER_ARTIFACT, artifacts["feature"])
     validate_claim_scope(PROFILE_FRONTIER_ARTIFACT, artifacts["profile"])
@@ -196,6 +212,10 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_claim_scope(TRAIN_SIZE_GATED_ARTIFACT, artifacts["train_size_gated"])
     validate_train_size_gated_scope(TRAIN_SIZE_GATED_ARTIFACT, artifacts["train_size_gated"])
+    validate_generated_label_audit_scope(
+        GENERATED_LABEL_AUDIT_ARTIFACT,
+        artifacts["generated_label_audit"],
+    )
     return artifacts
 
 
@@ -447,6 +467,44 @@ def build_selector_transfer_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_generated_label_audit_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["generated_label_audit"]
+    conditions = (
+        "sample_aware_self_ranked_induction",
+        "agreement_gated_self_ranked_induction",
+        "validation_ranked_induction",
+        "mdl_rule_expansion",
+        "counterfactual_expansion",
+    )
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Generated-label audit on the selector-transfer seeds. Label precision is computed by comparing generated synthetic labels with the hidden rulebook after the source sweep; the audit is non-deployable and tests whether label correctness alone explains neural gain.}",
+        r"\label{tab:generated-label-audit}",
+        r"\small",
+        r"\setlength{\tabcolsep}{4pt}",
+        r"\begin{tabular}{@{}lrrrrr@{}}",
+        r"\toprule",
+        r"Condition & 24 label prec. & 32 label prec. & 32 gain & 64 label prec. & 64 gain \\",
+        r"\midrule",
+    ]
+    for condition in conditions:
+        audit24 = artifact["audits"]["24"][condition]
+        audit32 = artifact["audits"]["32"][condition]
+        audit64 = artifact["audits"]["64"][condition]
+        row = [
+            latex_escape(condition_label(condition)),
+            fmt_float(audit24["label_precision"], digits=6),
+            fmt_float(audit32["label_precision"], digits=6),
+            fmt_float(audit32["linked_accuracy_improvement_over_majority_mean"], digits=6),
+            fmt_float(audit64["label_precision"], digits=6),
+            fmt_float(audit64["linked_accuracy_improvement_over_majority_mean"], digits=6),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def build_train_size_gated_table(repo_root: Path) -> str:
     artifact = load_supporting_artifacts(repo_root)["train_size_gated"]
     conditions = (
@@ -501,6 +559,7 @@ def render_tables(repo_root: Path) -> str:
             build_policy_envelope_table(repo_root),
             build_validation_portfolio_table(repo_root),
             build_selector_transfer_table(repo_root),
+            build_generated_label_audit_table(repo_root),
             build_train_size_gated_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]

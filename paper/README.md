@@ -26,6 +26,7 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.json`
 - `results/tiny_neural_budget_sweep_selector_transfer_f1024.json`
+- `results/generated_label_audit_selector_transfer_f1024.json`
 - `results/tiny_neural_budget_sweep_train_size_gated_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
@@ -43,6 +44,9 @@ record the validation-example margin used before leaving raw text.
 The selector-transfer artifact must use fresh seeds and keep the same
 heldout-isolation flags, so selector claims are checked beyond the development
 selector artifacts.
+The generated-label audit must disclose hidden-rulebook audit labels, mark the
+hidden rulebook unavailable to policies, keep heldout out of selection, and
+remain non-deployable.
 The train-size gated artifact must use another unseen seed set, mark the
 train-only schedule scope, and keep validation and heldout out of policy
 selection.
