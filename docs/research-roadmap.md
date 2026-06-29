@@ -65,9 +65,12 @@ distribution of generated labels explains part of the remaining gap. A
 validation-coverage proxy now turns that mechanism diagnostic into a deployable
 selector probe on fresh seeds `103 107 109 113 127`, using validation motif
 distribution rather than heldout distribution or validation labels for the
-selector score. A tempered sample-aware ablation then tests whether lowering
-the mid-budget train-only synthetic ratio from `0.75` to `0.50` repairs the
-same 24/32-material failure without validation selection.
+selector score. A coverage-prior selector then adds a 96-train-event raw floor
+and lean candidate set to test whether the 24-material coverage failure is a
+cost-control problem or a deeper selector problem. A tempered sample-aware
+ablation then tests whether lowering the mid-budget train-only synthetic ratio
+from `0.75` to `0.50` repairs the same 24/32-material failure without
+validation selection.
 A compact train-size gated efficiency probe then keeps the same schedule but
 drops original QA duplicates at the large-sample tier, testing whether density
 can improve by removing redundant transformed originals instead of changing
@@ -184,6 +187,14 @@ high-budget tradeoff.
   every 24-material seed and drops to `-0.082759`. The next selector should
   combine motif coverage with a low-budget abstention floor or train-size
   prior before paying for generated-label policies.
+- Treat coverage-prior selection as cost control, not a solved selector. On
+  fresh seeds `601 607 613 617 619`, adding a 96-train-event raw floor and
+  pruning the coverage candidate set removes the 24-material coverage-proxy
+  failure (`0.000000` versus `-0.062069`) and improves signed LSD at 48/64
+  versus the full coverage proxy (`0.004756` versus `0.003147`, and
+  `0.005001` versus `0.003171`). The cheap train-size gate remains denser at
+  those same rows (`0.005552` and `0.006089`), so future selectors must buy
+  either higher gain or lower selection cost than this lean coverage scan.
 - Treat synthetic-budget tempering as partial damage control. On fresh seeds
   `157 163 167 173 179`, lowering the mid-budget sample-aware ratio from
   `0.75` to `0.50` improves 24-material gain from `-0.137931` to `-0.096552`

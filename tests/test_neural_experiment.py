@@ -438,6 +438,73 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
             "validation_motif_coverage_l1_with_pair_coverage_bonus",
         )
 
+    def test_validation_coverage_prior_selector_uses_train_size_floor_before_motif_scan(self) -> None:
+        result = run_neural_seedset(
+            seeds=[109],
+            conditions=["validation_coverage_prior_selector"],
+            material_count=24,
+            epochs=16,
+            hidden_units=8,
+            feature_dimension=1024,
+            learning_rate=0.03,
+        )
+
+        selector = result["conditions"]["validation_coverage_prior_selector"]
+        scope = result["condition_scope"]["validation_coverage_prior_selector"]
+        row = result["per_seed"][0]
+
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_motif_distribution_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_labels_used_for_policy_selection"], False)
+        self.assertEqual(scope["train_size_prior_min_events"], 96)
+        self.assertEqual(scope["lean_coverage_candidate_set"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(selector["portfolio_candidate_count_mean"], 0)
+        self.assertEqual(selector["portfolio_proxy_epochs_mean"], 0)
+        self.assertEqual(selector["portfolio_selection_cost_units_mean"], 0)
+        self.assertEqual(selector["portfolio_selected_condition_counts"], {"raw_text": 1})
+        self.assertEqual(selector["accuracy_improvement_over_majority_mean"], 0.0)
+        self.assertEqual(row["portfolio_selected_condition"], "raw_text")
+        self.assertEqual(
+            row["portfolio_selection_metric"],
+            "validation_motif_coverage_l1_with_train_size_prior_96_and_lean_cost_penalty",
+        )
+
+    def test_validation_coverage_prior_selector_scans_lean_candidates_after_floor(self) -> None:
+        result = run_neural_seedset(
+            seeds=[109],
+            conditions=["validation_coverage_prior_selector"],
+            material_count=48,
+            epochs=16,
+            hidden_units=8,
+            feature_dimension=1024,
+            learning_rate=0.03,
+        )
+
+        selector = result["conditions"]["validation_coverage_prior_selector"]
+        row = result["per_seed"][0]
+
+        self.assertEqual(selector["portfolio_candidate_count_mean"], 3)
+        self.assertEqual(
+            selector["portfolio_candidate_conditions"],
+            [
+                "raw_text",
+                "sample_aware_self_ranked_induction",
+                "validation_ranked_induction",
+            ],
+        )
+        self.assertEqual(
+            row["portfolio_candidate_conditions"],
+            [
+                "raw_text",
+                "sample_aware_self_ranked_induction",
+                "validation_ranked_induction",
+            ],
+        )
+        self.assertGreater(selector["portfolio_selection_cost_units_mean"], 0)
+        self.assertIn(row["portfolio_selected_condition"], row["portfolio_candidate_conditions"])
+        self.assertNotIn("heldout", row["portfolio_selection_metric"])
+
 
 if __name__ == "__main__":
     unittest.main()

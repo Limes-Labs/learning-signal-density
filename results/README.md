@@ -480,6 +480,34 @@ turns the 32-material row positive (`0.010526`) and reaches `0.171428` at 64
 materials, but it overselects MDL rule expansion at 24 materials and falls to
 `-0.082759`. Treat it as mechanism evidence, not as a robust selector.
 
+16x8 1024-feature coverage-prior selector control:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_coverage_prior_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_coverage_prior_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 601 607 613 617 619 \
+  --conditions raw_text sample_aware_self_ranked_induction train_size_gated_sample_aware_induction validation_coverage_proxy_selector validation_coverage_prior_selector validation_abstaining_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_validation_coverage_prior
+```
+
+The coverage-prior selector keeps the validation motif signal but adds a raw
+floor below 96 train events, prunes the candidate set, and uses a small
+compute penalty in the coverage score. On seeds `601 607 613 617 619`, it
+removes the 24-material coverage-proxy failure (`0.000000` versus
+`-0.062069`) and improves signed LSD at 48/64 versus the full coverage proxy.
+It still trails the train-size gate on 48/64 density, so it is cost-control
+evidence rather than a promoted selector.
+
 16x8 1024-feature tempered sample-aware ablation:
 
 ```bash

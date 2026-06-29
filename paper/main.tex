@@ -40,13 +40,15 @@ explain those failures, and even a non-deployable post-hoc policy envelope
 reaches the current target only at 48 materials. A deployable validation
 coverage proxy turns part of that diagnostic into positive fresh-seed evidence
 at 32 materials, but also exposes a 24-material failure, so the selector
-problem remains open. A train-only tempered-budget ablation reduces the
-sample-aware 24--32 material loss, but still does not beat raw-text abstention
-at those scarce budgets. A final compact train-size gate keeps that abstention
-schedule, then improves the 64-material density point by dropping redundant
-original QA examples only at the large-sample tier. A high-budget density cap
-then shows the frontier can switch back to raw text once external evidence is
-abundant, trading absolute gain for better learning-signal density.
+problem remains open. A coverage-prior selector fixes that 24-material
+over-selection and cuts coverage-selection cost, but still does not beat the
+cheap train-size gate on density. A train-only tempered-budget ablation reduces
+the sample-aware 24--32 material loss, but still does not beat raw-text
+abstention at those scarce budgets. A final compact train-size gate keeps that
+abstention schedule, then improves the 64-material density point by dropping
+redundant original QA examples only at the large-sample tier. A high-budget
+density cap then shows the frontier can switch back to raw text once external
+evidence is abundant, trading absolute gain for better learning-signal density.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -168,6 +170,9 @@ coverage: it scores candidate generated-label policies by motif-distribution
 fit to validation, does not use validation labels for the selector score, and
 charges candidate construction plus validation-motif scanning before training
 one final tiny MLP.
+The latest coverage-prior control then adds a 96-train-event raw-text floor,
+prunes the coverage scan to a lean candidate set, and adds a small charged
+compute penalty to the validation-motif coverage score.
 The latest train-only follow-up then lowers the sample-aware mid-budget
 synthetic ratio from 0.75 to 0.50 to test whether fewer generated labels repair
 the same failure without validation selection.
@@ -195,6 +200,7 @@ Table~\ref{tab:selector-transfer-stress},
 Table~\ref{tab:generated-label-audit},
 Table~\ref{tab:generated-coverage-audit},
 Table~\ref{tab:validation-coverage-proxy},
+Table~\ref{tab:validation-coverage-prior},
 Table~\ref{tab:tempered-sample-aware},
 Table~\ref{tab:train-size-gated-baseline},
 Table~\ref{tab:compact-train-size-gated},
@@ -312,6 +318,19 @@ raw text and the train-size gate. The mechanism signal is therefore real enough
 to keep, but the current rule needs a low-budget abstention floor or train-size
 prior before it can be promoted.
 
+Table~\ref{tab:validation-coverage-prior} tests that floor directly on fresh
+seeds 601, 607, 613, 617, and 619. The selector uses raw text below 96 train
+events; above that floor it scans only raw text, sample-aware self-ranked
+induction, and validation-ranked induction, scoring generated-label candidates
+by validation-motif coverage plus a small charged-compute penalty. This removes
+the 24-material coverage-proxy failure, moving the row from -0.062069 to
+0.000000, and improves the coverage-proxy signed LSD at 48 and 64 materials
+from 0.003147 and 0.003171 to 0.004756 and 0.005001. The negative result is
+still decisive: the train-size gate reaches the same 48/64 gains with higher
+signed LSD, 0.005552 and 0.006089, because it avoids selector scanning
+altogether. Coverage-prior selection is therefore cost control, not yet a
+deployable selector frontier.
+
 Table~\ref{tab:tempered-sample-aware} tests whether that floor can be replaced
 by a milder train-only budget change. The tempered policy keeps the
 sample-aware support and confidence rule, but lowers the synthetic budget ratio
@@ -414,6 +433,10 @@ The validation-coverage proxy is a first approximation, and its mixed result
 sharpens the next design constraint: coverage scoring needs to be joined with
 scarce-budget abstention, because distributional fit can still choose a
 generated-label policy when raw text is the better action.
+The coverage-prior selector confirms that this repair is possible but
+incomplete: a train-size floor and lean candidate scan remove one over-selection
+failure and reduce charged cost, yet the selector still has to justify its
+validation-motif scan against a no-scan train-size schedule.
 The tempered sample-aware ablation sharpens the same point from the other
 direction: reducing generated-label count lowers damage, but the better
 decision at 24--32 materials is often not fewer synthetic examples; it is no

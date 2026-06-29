@@ -30,6 +30,7 @@ The generator currently reads:
 - `results/generated_coverage_audit_selector_transfer_f1024.json`
 - `results/tiny_neural_budget_sweep_train_size_gated_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json`
+- `results/tiny_neural_budget_sweep_validation_coverage_prior_f1024.json`
 - `results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json`
 - `results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json`
 - `results/tiny_neural_budget_sweep_density_capped_compact_f1024.json`
@@ -64,6 +65,10 @@ The validation-coverage proxy artifact must use fresh seeds, disclose
 validation motif distribution as the policy-selection signal, keep heldout
 distribution out of selection, and mark that validation labels are not used for
 the selector score.
+The coverage-prior selector artifact must use fresh seeds, disclose the
+validation motif distribution, train-size prior, lean candidate set, and
+compute penalty used for policy selection, keep heldout distribution out of
+selection, and mark that validation labels are not used for the selector score.
 The tempered sample-aware artifact must use fresh seeds, mark train-only
 selection and induction, and keep validation, heldout, and oracle labels out of
 the synthetic-budget policy.
