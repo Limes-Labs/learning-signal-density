@@ -141,6 +141,10 @@ using the same split and accounting discipline.
   selector-family stress test on seeds `37 41 43 47 53`, checking whether the
   deployable selector results transfer beyond the development selector
   artifacts.
+- `results/tiny_neural_budget_sweep_train_size_gated_f1024.*` - second
+  unseen-seed baseline on seeds `59 61 67 71 73`, testing a deployable
+  train-size-only schedule that stays raw below 144 train events and switches
+  to sample-aware self-ranked induction once the train split is large enough.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -537,6 +541,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024_selector_transfer
 ```
 
+Run the 16x8 1024-feature train-size gated baseline on a second unseen seed set:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_train_size_gated_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_train_size_gated_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 59 61 67 71 73 \
+  --conditions raw_text self_ranked_induction sample_aware_self_ranked_induction train_size_gated_sample_aware_induction validation_ranked_induction mdl_rule_expansion validation_abstaining_proxy_selector validation_linear_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_selector_transfer_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_selector_transfer_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_train_size_gated
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -581,6 +605,10 @@ The repo reports three families of measurements:
 - The abstaining-proxy validation selector tests whether requiring a
   three-validation-example margin over raw text reduces downside before paying
   for generated-label policies.
+- The train-size gated sample-aware policy tests a cheaper schedule baseline:
+  raw text below 144 train events and sample-aware self-ranked induction once
+  the train split is large enough. It uses no validation labels or selector
+  search, so it is a baseline future adaptive selectors must beat.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 
@@ -742,6 +770,13 @@ The current artifacts show a useful split:
   `0.142857` with much better 64-material signed LSD. At 32 materials, raw text
   is less negative than every deployable selector. The selector direction is
   therefore not paper-ready without a stronger reliability signal.
+- The train-size gated baseline adds a second unseen seed check on seeds
+  `59 61 67 71 73`. It reaches the same `0.145454` best gain and `0.005090`
+  best signed LSD as fixed sample-aware induction while using raw text at 16,
+  24, and 32 materials. It is still negative at 16 and 32, so it is not a
+  solution; it is a cheap schedule baseline that beats the abstaining proxy on
+  64-material gain and density and exposes how much selector search cost must
+  be justified by any future adaptive rule.
 
 ## Research Thesis
 

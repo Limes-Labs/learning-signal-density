@@ -27,6 +27,7 @@ VALIDATION_ABSTAINING_PROXY_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.json"
 )
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
+TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 
 FRONTIER_CONDITIONS = [
     "raw_text",
@@ -48,6 +49,7 @@ CONDITION_LABELS = {
     "raw_text": "Raw text",
     "sample_aware_self_ranked_induction": "Sample-aware self-ranked",
     "self_ranked_induction": "Self-ranked",
+    "train_size_gated_sample_aware_induction": "Train-size gated sample-aware",
     "validation_abstaining_proxy_selector": "Abstaining proxy selector",
     "validation_linear_proxy_selector": "Linear proxy selector",
     "validation_portfolio_selector": "Validation portfolio selector",
@@ -143,6 +145,18 @@ def validate_abstaining_proxy_scope(artifact_path: Path, artifact: dict[str, Any
         raise ValueError(f"{artifact_path} must not use oracle labels for the abstaining proxy selector")
 
 
+def validate_train_size_gated_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("train_size_gated_sample_aware_induction", {})
+    if scope.get("train_only_selection") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only schedule selection")
+    if scope.get("validation_used_for_policy_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for train-size schedule selection")
+    if scope.get("validation_used_for_transform_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for train-size transform selection")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the train-size gate")
+
+
 def load_budget_artifacts(repo_root: Path) -> list[tuple[str, Path, dict[str, Any]]]:
     loaded = []
     for profile_label, relative_path in BUDGET_ARTIFACTS:
@@ -163,6 +177,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "validation_linear_proxy": load_json(repo_root / VALIDATION_LINEAR_PROXY_ARTIFACT),
         "validation_abstaining_proxy": load_json(repo_root / VALIDATION_ABSTAINING_PROXY_ARTIFACT),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
+        "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
     }
     validate_claim_scope(FEATURE_FRONTIER_ARTIFACT, artifacts["feature"])
     validate_claim_scope(PROFILE_FRONTIER_ARTIFACT, artifacts["profile"])
@@ -179,6 +194,8 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
+    validate_claim_scope(TRAIN_SIZE_GATED_ARTIFACT, artifacts["train_size_gated"])
+    validate_train_size_gated_scope(TRAIN_SIZE_GATED_ARTIFACT, artifacts["train_size_gated"])
     return artifacts
 
 
@@ -430,6 +447,51 @@ def build_selector_transfer_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_train_size_gated_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["train_size_gated"]
+    conditions = (
+        "raw_text",
+        "sample_aware_self_ranked_induction",
+        "train_size_gated_sample_aware_induction",
+        "validation_abstaining_proxy_selector",
+        "validation_portfolio_selector",
+        "counterfactual_expansion",
+    )
+    materials = ("16", "24", "32", "48", "64")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Unseen-seed train-size gated baseline. Seeds 59, 61, 67, 71, and 73 test a deployable train-only schedule that uses raw text below 144 train events and sample-aware self-ranked induction once the train split is large enough. Entries are heldout accuracy improvement over majority; oracle counterfactual expansion is shown only as headroom.}",
+        r"\label{tab:train-size-gated-baseline}",
+        r"\small",
+        r"\setlength{\tabcolsep}{3pt}",
+        r"\begin{tabular}{@{}lrrrrrrr@{}}",
+        r"\toprule",
+        r"Condition & 16 & 24 & 32 & 48 & 64 & Best gain & Best LSD \\",
+        r"\midrule",
+    ]
+    for condition in conditions:
+        thresholds = artifact["thresholds"][condition]
+        row = [
+            latex_escape(condition_label(condition)),
+            *(
+                fmt_float(
+                    artifact["budgets"][material][condition]["accuracy_improvement_over_majority_mean"],
+                    digits=6,
+                )
+                for material in materials
+            ),
+            fmt_float(thresholds["best_signed_gain"], digits=6),
+            fmt_float(
+                thresholds["best_signed_learning_signal_density_per_1m_event_compute"],
+                digits=6,
+            ),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
@@ -439,6 +501,7 @@ def render_tables(repo_root: Path) -> str:
             build_policy_envelope_table(repo_root),
             build_validation_portfolio_table(repo_root),
             build_selector_transfer_table(repo_root),
+            build_train_size_gated_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

@@ -258,6 +258,40 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertEqual(small_sample_aware.ranked_induction_min_support, 2)
         self.assertIn("sample_aware_self_ranked_induced", {example.source_kind for example in small_sample_aware.examples})
 
+    def test_train_size_gated_sample_aware_induction_uses_raw_until_large_train_split(self) -> None:
+        small_world = build_world(seed=61, material_count=32)
+        small_split = split_observations(small_world.observations)
+        small_raw = build_pipeline_examples("raw_text", small_split.train, small_world.rules)
+        small_gated = build_pipeline_examples(
+            "train_size_gated_sample_aware_induction",
+            small_split.train,
+            small_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(small_gated), self._example_signature(small_raw))
+        self.assertEqual(small_gated.ranked_synthetic_budget_ratio, 0.0)
+        self.assertEqual(small_gated.ranked_kept_candidate_count, 0)
+
+        large_world = build_world(seed=61, material_count=48)
+        large_split = split_observations(large_world.observations)
+        large_sample_aware = build_pipeline_examples(
+            "sample_aware_self_ranked_induction",
+            large_split.train,
+            large_world.rules,
+        )
+        large_gated = build_pipeline_examples(
+            "train_size_gated_sample_aware_induction",
+            large_split.train,
+            large_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(large_gated), self._example_signature(large_sample_aware))
+        self.assertEqual(
+            large_gated.ranked_synthetic_budget_ratio,
+            large_sample_aware.ranked_synthetic_budget_ratio,
+        )
+        self.assertGreater(large_gated.ranked_kept_candidate_count, 0)
+
         large_world = build_world(seed=59, material_count=64)
         large_split = split_observations(large_world.observations)
         large_sample_aware = build_pipeline_examples("sample_aware_self_ranked_induction", large_split.train, large_world.rules)

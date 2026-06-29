@@ -487,6 +487,64 @@ class CommittedResultArtifactTests(unittest.TestCase):
             0.114286,
         )
 
+    def test_f1024_train_size_gated_artifact_records_unseen_seed_schedule_probe(self) -> None:
+        gated = json.loads(
+            Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json").read_text()
+        )
+
+        self.assertEqual(gated["seeds"], [59, 61, 67, 71, 73])
+        self.assertEqual(gated["feature_dimension"], 1024)
+        self.assertEqual(gated["profile_label"], "epochs=16_hidden=8_features=1024_train_size_gated")
+        self.assertEqual(
+            gated["comparison_of"],
+            "results/tiny_neural_budget_sweep_selector_transfer_f1024.json",
+        )
+        self.assertEqual(gated["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(gated["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("train_size_gated_sample_aware_induction", gated["conditions"])
+
+        scope = gated["condition_scope"]["train_size_gated_sample_aware_induction"]
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            gated["budgets"]["16"]["train_size_gated_sample_aware_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            -0.031579,
+        )
+        self.assertEqual(
+            gated["budgets"]["32"]["train_size_gated_sample_aware_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            -0.073684,
+        )
+        self.assertEqual(
+            gated["budgets"]["48"]["train_size_gated_sample_aware_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.103448,
+        )
+        self.assertEqual(
+            gated["thresholds"]["train_size_gated_sample_aware_induction"][
+                "first_material_count_reaching_target"
+            ],
+            48,
+        )
+        self.assertEqual(
+            gated["thresholds"]["train_size_gated_sample_aware_induction"]["best_signed_gain"],
+            0.145454,
+        )
+        self.assertGreater(
+            gated["budgets"]["64"]["train_size_gated_sample_aware_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            gated["budgets"]["64"]["validation_abstaining_proxy_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -20,6 +20,7 @@ AVAILABLE_CONDITIONS = (
     "train_calibrated_ranked_induction",
     "self_ranked_induction",
     "sample_aware_self_ranked_induction",
+    "train_size_gated_sample_aware_induction",
     "agreement_gated_self_ranked_induction",
     "diverse_self_ranked_induction",
     "mdl_rule_expansion",
@@ -99,6 +100,14 @@ CONDITION_SCOPE = {
         "validation_used_for_threshold": False,
         "validation_used_for_transform_selection": False,
     },
+    "train_size_gated_sample_aware_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": True,
+        "train_only_induction": True,
+        "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
+        "validation_used_for_policy_selection": False,
+    },
     "agreement_gated_self_ranked_induction": {
         "oracle_generated_labels": False,
         "train_only_selection": True,
@@ -142,6 +151,8 @@ CONDITION_SCOPE = {
         "validation_used_for_transform_selection": False,
     },
 }
+
+TRAIN_SIZE_GATED_SAMPLE_AWARE_MIN_EVENTS = 144
 
 
 @dataclass(frozen=True)
@@ -907,6 +918,41 @@ def build_pipeline_examples(
             source_kind="sample_aware_self_ranked_induced",
             diversity_penalty=0.0,
         )
+
+    elif condition == "train_size_gated_sample_aware_induction":
+        if len(observations) < TRAIN_SIZE_GATED_SAMPLE_AWARE_MIN_EVENTS:
+            examples = [raw_observation_example(item) for item in observations]
+        else:
+            (
+                effective_min_support,
+                effective_min_confidence,
+                effective_budget_ratio,
+            ) = _sample_aware_ranked_policy(observations)
+            modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
+            exported_ranked_synthetic_budget_ratio = effective_budget_ratio
+            ranked_induction_min_support = effective_min_support
+            ranked_induction_min_confidence = effective_min_confidence
+            (
+                transform_cost_tokens,
+                candidate_ranking_cost_tokens,
+                ranked_candidate_count,
+                ranked_kept_candidate_count,
+                ranked_validation_precision,
+                ranked_unique_modifier_count,
+                ranked_max_modifier_count,
+                ranked_diversity_penalty,
+            ) = _add_ranked_induced_examples(
+                examples=examples,
+                observations=observations,
+                salience_model=salience_model,
+                induction_min_support=effective_min_support,
+                induction_min_confidence=effective_min_confidence,
+                synthetic_budget_ratio=effective_budget_ratio,
+                source_reliability={},
+                base_ranking_cost_tokens=0,
+                source_kind="sample_aware_self_ranked_induced",
+                diversity_penalty=0.0,
+            )
 
     elif condition == "agreement_gated_self_ranked_induction":
         (

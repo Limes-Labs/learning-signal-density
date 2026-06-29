@@ -105,6 +105,14 @@
       "validation_used_for_threshold": false,
       "validation_used_for_transform_selection": false
     },
+    "train_size_gated_sample_aware_induction": {
+      "oracle_generated_labels": false,
+      "train_only_induction": true,
+      "train_only_selection": true,
+      "validation_used_for_policy_selection": false,
+      "validation_used_for_threshold": false,
+      "validation_used_for_transform_selection": false
+    },
     "validation_gated_induction": {
       "oracle_generated_labels": false,
       "train_only_induction": true,
@@ -723,7 +731,7 @@
     }
   },
   "epochs": 5,
-  "generated_at": "2026-06-29T00:01:07Z",
+  "generated_at": "2026-06-29T12:07:50Z",
   "material_count": 48,
   "pareto_frontier_conditions": [
     "counterfactual_expansion",

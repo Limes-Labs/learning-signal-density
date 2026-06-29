@@ -73,6 +73,30 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
                 learning_rate=0.03,
             )
 
+    def test_train_size_gated_policy_is_declared_as_train_only_selection(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_json = Path(temp_dir) / "train_size_gate.json"
+            out_md = Path(temp_dir) / "train_size_gate.md"
+            run_neural_seedset(
+                seeds=[17],
+                conditions=["train_size_gated_sample_aware_induction"],
+                output_json=out_json,
+                output_markdown=out_md,
+                material_count=48,
+                epochs=2,
+                hidden_units=4,
+                feature_dimension=32,
+                fresh_seed_confirmation=True,
+            )
+
+            saved = json.loads(out_json.read_text())
+            scope = saved["condition_scope"]["train_size_gated_sample_aware_induction"]
+            self.assertEqual(saved["claim_scope"]["heldout_used_for_selection"], False)
+            self.assertEqual(scope["train_only_selection"], True)
+            self.assertEqual(scope["train_only_induction"], True)
+            self.assertEqual(scope["validation_used_for_transform_selection"], False)
+            self.assertEqual(scope["oracle_generated_labels"], False)
+
     def test_validation_portfolio_selector_charges_candidate_training_without_heldout_selection(self) -> None:
         selector = run_neural_condition(
             seed=17,

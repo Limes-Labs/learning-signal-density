@@ -54,7 +54,10 @@ heldout once. An abstaining-proxy selector adds a raw-text fallback that
 requires three extra validation-correct examples before selecting a non-raw
 policy. A fresh-seed selector-transfer stress test reruns the selector family
 on seeds `37 41 43 47 53` to check whether the development selector result
-survives new worlds.
+survives new worlds. A train-size gated schedule baseline then uses a second
+unseen seed set, `59 61 67 71 73`, to test whether a cheap train-only switch
+from raw text to sample-aware induction is a harder baseline than validation
+portfolio selection.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -137,6 +140,13 @@ survives new worlds.
   selectors), and raw text is less negative than the selector family at 32. A
   future adaptive selector should not be promoted unless it improves both the
   development artifact and this fresh-seed transfer stress test.
+- Treat the train-size gated schedule as the new cheap-selector baseline. On
+  unseen seeds `59 61 67 71 73`, raw text below 144 train events plus
+  sample-aware induction above that threshold reaches the same `0.145454` best
+  gain and `0.005090` best signed LSD as fixed sample-aware induction, without
+  validation selector search. It remains negative at 16 and 32 materials, so it
+  is not a solution; it is the baseline a future adaptive selector must beat
+  after charging its selection cost.
 
 ## Phase 3: Continual-Learning Replay
 
