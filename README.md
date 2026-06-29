@@ -96,6 +96,10 @@ The current pilot is intentionally modest:
   without using heldout distribution or validation labels for the selector
   score. It improves the 32-material confirmation row but exposes a new
   24-material MDL over-selection failure.
+- `validation_coverage_prior_selector` adds a low-budget train-size prior and
+  lean candidate set to that coverage proxy. It uses raw text below 96 train
+  events, then scans only raw, sample-aware self-ranked, and validation-ranked
+  candidates with a small charged-compute penalty in the coverage score.
 - `diverse_self_ranked_induction` applies a diversity penalty to the same
   train-only ranking to test whether balancing modifier/stimulus/family coverage
   improves the fixed synthetic budget.
@@ -184,6 +188,11 @@ using the same split and accounting discipline.
   This is deployable, uses validation motif distribution rather than heldout
   distribution for policy selection, and records a mixed result: positive at
   32 and 64 materials, but harmful at 24 materials.
+- `results/tiny_neural_budget_sweep_validation_coverage_prior_f1024.*` -
+  fresh-seed coverage-prior selector control on seeds `601 607 613 617 619`.
+  It fixes the old coverage proxy's 24-material over-selection and cuts
+  selector cost at 48/64, but the train-size gate still has better density at
+  those high-budget rows.
 - `results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.*` -
   fresh-seed train-only synthetic-budget ablation on seeds `157 163 167 173
   179`. It improves 24/32-material gain relative to fixed sample-aware ranking,
@@ -653,6 +662,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024_validation_coverage_proxy
 ```
 
+Run the 16x8 1024-feature coverage-prior selector control:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_coverage_prior_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_coverage_prior_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 601 607 613 617 619 \
+  --conditions raw_text sample_aware_self_ranked_induction train_size_gated_sample_aware_induction validation_coverage_proxy_selector validation_coverage_prior_selector validation_abstaining_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_validation_coverage_prior
+```
+
 Run the 16x8 1024-feature tempered sample-aware ablation:
 
 ```bash
@@ -1001,6 +1030,14 @@ The current artifacts show a useful split:
   induction (`0.010526` versus `-0.036842`) and reaches `0.171428` at 64, but
   it selects MDL at every 24-material seed and falls to `-0.082759`. Coverage
   is therefore a real signal, but this proxy is not yet a robust selector.
+- The coverage-prior selector tests the next mechanistic fix on fresh seeds
+  `601 607 613 617 619`: raw text below 96 train events, then a lean
+  validation-coverage scan over raw, sample-aware, and validation-ranked
+  candidates. It removes the old 24-material coverage failure (`0.000000`
+  versus `-0.062069`) and improves coverage-proxy density at 48/64
+  (`0.004756` versus `0.003147`, and `0.005001` versus `0.003171`). It still
+  does not beat the train-size gate at 48/64 (`0.005552` and `0.006089`), so
+  the result is a cost-control improvement, not a final selector.
 - The tempered sample-aware ablation lowers the mid-budget synthetic ratio from
   `0.75` to `0.50` on fresh seeds `157 163 167 173 179`. It reduces
   sample-aware damage at 24 materials (`-0.096552` versus `-0.137931`) and 32

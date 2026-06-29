@@ -733,6 +733,86 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_validation_coverage_prior_artifact_records_floor_and_lean_candidate_tradeoff(self) -> None:
+        prior = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_coverage_prior_f1024.json").read_text()
+        )
+
+        self.assertEqual(prior["seeds"], [601, 607, 613, 617, 619])
+        self.assertEqual(prior["material_counts"], [16, 24, 32, 48, 64])
+        self.assertEqual(prior["feature_dimension"], 1024)
+        self.assertEqual(
+            prior["profile_label"],
+            "epochs=16_hidden=8_features=1024_validation_coverage_prior",
+        )
+        self.assertEqual(
+            prior["confirmation_of"],
+            "results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json",
+        )
+        self.assertEqual(
+            prior["comparison_of"],
+            "results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json",
+        )
+        self.assertEqual(prior["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(prior["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_coverage_prior_selector", prior["conditions"])
+
+        scope = prior["condition_scope"]["validation_coverage_prior_selector"]
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_motif_distribution_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_labels_used_for_policy_selection"], False)
+        self.assertEqual(scope["train_size_prior_min_events"], 96)
+        self.assertEqual(scope["lean_coverage_candidate_set"], True)
+        self.assertEqual(scope["coverage_utility_compute_penalty"], 0.00001)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            prior["budgets"]["24"]["validation_coverage_prior_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.0,
+        )
+        self.assertGreater(
+            prior["budgets"]["24"]["validation_coverage_prior_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            prior["budgets"]["24"]["validation_coverage_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertEqual(
+            prior["budgets"]["24"]["validation_coverage_prior_selector"][
+                "portfolio_candidate_count_mean"
+            ],
+            0,
+        )
+        self.assertEqual(
+            prior["budgets"]["48"]["validation_coverage_prior_selector"][
+                "portfolio_candidate_count_mean"
+            ],
+            3,
+        )
+        self.assertGreater(
+            prior["budgets"]["48"]["validation_coverage_prior_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            prior["budgets"]["48"]["validation_coverage_proxy_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            prior["budgets"]["64"]["validation_coverage_prior_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            prior["budgets"]["64"]["train_size_gated_sample_aware_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertEqual(
+            prior["thresholds"]["validation_coverage_prior_selector"]["first_material_count_reaching_target"],
+            48,
+        )
+
     def test_f1024_tempered_sample_aware_artifact_records_train_only_budget_tempering(self) -> None:
         tempered = json.loads(
             Path("results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json").read_text()

@@ -29,6 +29,9 @@ VALIDATION_ABSTAINING_PROXY_ARTIFACT = Path(
 VALIDATION_COVERAGE_PROXY_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json"
 )
+VALIDATION_COVERAGE_PRIOR_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_validation_coverage_prior_f1024.json"
+)
 TEMPERED_SAMPLE_AWARE_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json"
 )
@@ -76,6 +79,7 @@ CONDITION_LABELS = {
     "tempered_sample_aware_self_ranked_induction": "Tempered sample-aware",
     "train_size_gated_sample_aware_induction": "Train-size gated sample-aware",
     "validation_abstaining_proxy_selector": "Abstaining proxy selector",
+    "validation_coverage_prior_selector": "Coverage-prior selector",
     "validation_coverage_proxy_selector": "Validation coverage proxy",
     "validation_linear_proxy_selector": "Linear proxy selector",
     "validation_portfolio_selector": "Validation portfolio selector",
@@ -289,6 +293,26 @@ def validate_validation_coverage_proxy_scope(artifact_path: Path, artifact: dict
         raise ValueError(f"{artifact_path} must not use oracle labels for the coverage proxy selector")
 
 
+def validate_validation_coverage_prior_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("validation_coverage_prior_selector", {})
+    if scope.get("low_fidelity_coverage_proxy_selector") is not True:
+        raise ValueError(f"{artifact_path} must mark the low-fidelity coverage proxy selector")
+    if scope.get("validation_motif_distribution_used_for_policy_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation motif policy selection")
+    if scope.get("validation_labels_used_for_policy_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation labels for coverage-prior selection")
+    if scope.get("validation_used_for_policy_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation policy selection")
+    if scope.get("train_size_prior_min_events") != 96:
+        raise ValueError(f"{artifact_path} must disclose the train-size prior floor")
+    if scope.get("lean_coverage_candidate_set") is not True:
+        raise ValueError(f"{artifact_path} must disclose the lean coverage candidate set")
+    if scope.get("coverage_utility_compute_penalty") != 0.00001:
+        raise ValueError(f"{artifact_path} must disclose the coverage utility compute penalty")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the coverage-prior selector")
+
+
 def validate_generated_label_audit_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("claim_scope", {})
     if scope.get("uses_hidden_rulebook_for_audit") is not True:
@@ -339,6 +363,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "validation_linear_proxy": load_json(repo_root / VALIDATION_LINEAR_PROXY_ARTIFACT),
         "validation_abstaining_proxy": load_json(repo_root / VALIDATION_ABSTAINING_PROXY_ARTIFACT),
         "validation_coverage_proxy": load_json(repo_root / VALIDATION_COVERAGE_PROXY_ARTIFACT),
+        "validation_coverage_prior": load_json(repo_root / VALIDATION_COVERAGE_PRIOR_ARTIFACT),
         "tempered_sample_aware": load_json(repo_root / TEMPERED_SAMPLE_AWARE_ARTIFACT),
         "compact_train_size_gated": load_json(repo_root / COMPACT_TRAIN_SIZE_GATED_ARTIFACT),
         "density_capped_compact": load_json(repo_root / DENSITY_CAPPED_COMPACT_ARTIFACT),
@@ -368,6 +393,11 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_validation_coverage_proxy_scope(
         VALIDATION_COVERAGE_PROXY_ARTIFACT,
         artifacts["validation_coverage_proxy"],
+    )
+    validate_claim_scope(VALIDATION_COVERAGE_PRIOR_ARTIFACT, artifacts["validation_coverage_prior"])
+    validate_validation_coverage_prior_scope(
+        VALIDATION_COVERAGE_PRIOR_ARTIFACT,
+        artifacts["validation_coverage_prior"],
     )
     validate_claim_scope(TEMPERED_SAMPLE_AWARE_ARTIFACT, artifacts["tempered_sample_aware"])
     validate_tempered_sample_aware_scope(
@@ -778,6 +808,52 @@ def build_validation_coverage_proxy_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_validation_coverage_prior_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["validation_coverage_prior"]
+    conditions = (
+        "raw_text",
+        "sample_aware_self_ranked_induction",
+        "train_size_gated_sample_aware_induction",
+        "validation_coverage_proxy_selector",
+        "validation_coverage_prior_selector",
+    )
+    materials = ("16", "24", "32", "48", "64")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Fresh-seed coverage-prior selector control. The deployable selector uses raw text below 96 train events; after that floor, it scans only raw, sample-aware self-ranked, and validation-ranked candidates with a validation-motif coverage score plus a small charged-compute penalty. Entries report heldout accuracy improvement over majority, charged compute units, and signed learning-signal density per one million event-compute units.}",
+        r"\label{tab:validation-coverage-prior}",
+        r"\small",
+        r"\setlength{\tabcolsep}{2pt}",
+        r"\begin{tabular}{@{}llrrrrr@{}}",
+        r"\toprule",
+        r"Condition & Metric & 16 & 24 & 32 & 48 & 64 \\",
+        r"\midrule",
+    ]
+    for condition in conditions:
+        rows = (
+            ("Gain", "accuracy_improvement_over_majority_mean", 6),
+            ("Compute", "charged_compute_units_mean", 1),
+            ("LSD", "signed_learning_signal_density_per_1m_event_compute_mean", 6),
+        )
+        for index, (metric_label, metric_key, digits) in enumerate(rows):
+            row = [
+                latex_escape(condition_label(condition)) if index == 0 else "",
+                metric_label,
+                *(
+                    fmt_float(
+                        artifact["budgets"][material][condition][metric_key],
+                        digits=digits,
+                    )
+                    for material in materials
+                ),
+            ]
+            lines.append(" & ".join(row) + r" \\")
+        lines.append(r"\addlinespace")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def build_tempered_sample_aware_table(repo_root: Path) -> str:
     artifact = load_supporting_artifacts(repo_root)["tempered_sample_aware"]
     conditions = (
@@ -1068,6 +1144,7 @@ def render_tables(repo_root: Path) -> str:
             build_generated_label_audit_table(repo_root),
             build_generated_coverage_audit_table(repo_root),
             build_validation_coverage_proxy_table(repo_root),
+            build_validation_coverage_prior_table(repo_root),
             build_tempered_sample_aware_table(repo_root),
             build_train_size_gated_table(repo_root),
             build_compact_train_size_gated_table(repo_root),

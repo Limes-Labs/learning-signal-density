@@ -37,6 +37,7 @@ VALIDATION_PORTFOLIO_SELECTOR = "validation_portfolio_selector"
 VALIDATION_LINEAR_PROXY_SELECTOR = "validation_linear_proxy_selector"
 VALIDATION_ABSTAINING_PROXY_SELECTOR = "validation_abstaining_proxy_selector"
 VALIDATION_COVERAGE_PROXY_SELECTOR = "validation_coverage_proxy_selector"
+VALIDATION_COVERAGE_PRIOR_SELECTOR = "validation_coverage_prior_selector"
 VALIDATION_PORTFOLIO_CANDIDATES = (
     "raw_text",
     "self_ranked_induction",
@@ -45,10 +46,17 @@ VALIDATION_PORTFOLIO_CANDIDATES = (
     "validation_ranked_induction",
     "mdl_rule_expansion",
 )
+VALIDATION_COVERAGE_PRIOR_CANDIDATES = (
+    "raw_text",
+    "sample_aware_self_ranked_induction",
+    "validation_ranked_induction",
+)
 VALIDATION_LINEAR_PROXY_EPOCHS = 2
 VALIDATION_ABSTAINING_PROXY_EXTRA_CORRECT = 3
 VALIDATION_COVERAGE_PAIR_BONUS = 0.15
 VALIDATION_COVERAGE_MIN_PAIR_COVERAGE = 0.5
+VALIDATION_COVERAGE_PRIOR_MIN_TRAIN_EVENTS = 96
+VALIDATION_COVERAGE_PRIOR_COMPUTE_PENALTY = 0.00001
 GENERATED_SOURCE_KINDS = frozenset({
     "agreement_gated_self_ranked_induced",
     "compact_sample_aware_self_ranked_induced",
@@ -85,8 +93,16 @@ VALIDATION_COVERAGE_PROXY_SCOPE = {
     "validation_motif_distribution_used_for_policy_selection": True,
     "validation_labels_used_for_policy_selection": False,
 }
+VALIDATION_COVERAGE_PRIOR_SCOPE = {
+    **VALIDATION_COVERAGE_PROXY_SCOPE,
+    "train_size_prior": True,
+    "train_size_prior_min_events": VALIDATION_COVERAGE_PRIOR_MIN_TRAIN_EVENTS,
+    "lean_coverage_candidate_set": True,
+    "coverage_utility_compute_penalty": VALIDATION_COVERAGE_PRIOR_COMPUTE_PENALTY,
+}
 VALIDATION_SELECTOR_CONDITIONS = frozenset({
     VALIDATION_ABSTAINING_PROXY_SELECTOR,
+    VALIDATION_COVERAGE_PRIOR_SELECTOR,
     VALIDATION_COVERAGE_PROXY_SELECTOR,
     VALIDATION_PORTFOLIO_SELECTOR,
     VALIDATION_LINEAR_PROXY_SELECTOR,
@@ -142,6 +158,8 @@ def neural_condition_scope(condition: str) -> dict:
         return VALIDATION_ABSTAINING_PROXY_SCOPE
     if condition == VALIDATION_COVERAGE_PROXY_SELECTOR:
         return VALIDATION_COVERAGE_PROXY_SCOPE
+    if condition == VALIDATION_COVERAGE_PRIOR_SELECTOR:
+        return VALIDATION_COVERAGE_PRIOR_SCOPE
     return CONDITION_SCOPE[condition]
 
 
@@ -656,6 +674,135 @@ def _run_validation_coverage_proxy_selector(
     }
 
 
+def _run_validation_coverage_prior_selector(
+    seed: int,
+    material_count: int,
+    epochs: int,
+    hidden_units: int,
+    feature_dimension: int,
+    learning_rate: float,
+) -> dict:
+    world = build_world(seed=seed, material_count=material_count)
+    split = split_observations(world.observations)
+    heldout_examples = build_evaluation_examples(split.heldout)
+    validation_examples = build_evaluation_examples(split.validation)
+    validation_eval_cost = sum(example.token_count for example in validation_examples)
+
+    if len(split.train) < VALIDATION_COVERAGE_PRIOR_MIN_TRAIN_EVENTS:
+        candidate_records: list[dict] = []
+        pipeline = _build_neural_pipeline("raw_text", split, world.rules)
+        selected_condition = "raw_text"
+        selection_cost_units = 0
+        selection_score = 0.0
+        raw_text_abstention = 1
+    else:
+        validation_motifs = _observation_motif_counts(split.validation)
+        validation_pairs = _observation_pair_counts(split.validation)
+        candidate_records = []
+        for candidate_condition in VALIDATION_COVERAGE_PRIOR_CANDIDATES:
+            pipeline = _build_neural_pipeline(candidate_condition, split, world.rules)
+            record = _candidate_coverage_record(
+                condition=candidate_condition,
+                pipeline=pipeline,
+                validation_motifs=validation_motifs,
+                validation_pairs=validation_pairs,
+                validation_eval_cost=validation_eval_cost,
+            )
+            final_compute_units = _pipeline_compute_units(pipeline=pipeline, epochs=epochs)
+            record["final_compute_units"] = final_compute_units
+            record["coverage_utility_score"] = (
+                record["coverage_score"]
+                + VALIDATION_COVERAGE_PRIOR_COMPUTE_PENALTY * final_compute_units
+            )
+            candidate_records.append(record)
+
+        raw = next(record for record in candidate_records if record["condition"] == "raw_text")
+        eligible_non_raw = [
+            record
+            for record in candidate_records
+            if record["condition"] != "raw_text" and record["synthetic_example_count"] > 0
+        ]
+        best_non_raw = min(
+            eligible_non_raw,
+            key=lambda record: (
+                record["coverage_utility_score"],
+                record["coverage_score"],
+                record["coverage_triple_l1_distance"]
+                if record["coverage_triple_l1_distance"] is not None
+                else 1.0,
+                record["final_compute_units"],
+                VALIDATION_COVERAGE_PRIOR_CANDIDATES.index(record["condition"]),
+            ),
+        )
+        raw_text_abstention = (
+            1
+            if best_non_raw["coverage_pair_coverage"] < VALIDATION_COVERAGE_MIN_PAIR_COVERAGE
+            else 0
+        )
+        best = raw if raw_text_abstention else best_non_raw
+        pipeline = best["pipeline"]
+        selected_condition = best["condition"]
+        selection_cost_units = sum(record["candidate_compute_units"] for record in candidate_records)
+        selection_score = best_non_raw["coverage_utility_score"]
+
+    model = TinyMlpClassifier(
+        feature_dimension=feature_dimension,
+        hidden_units=hidden_units,
+        learning_rate=learning_rate,
+    )
+    model.fit(pipeline.examples, epochs=epochs, seed=seed)
+    heldout = model.evaluate(heldout_examples)
+    baseline = majority_baseline(pipeline.examples, heldout_examples)
+    charged_compute_units = _pipeline_compute_units(pipeline=pipeline, epochs=epochs) + selection_cost_units
+    improvement = heldout.accuracy - baseline.accuracy
+    signed_lsd = 1_000_000.0 * improvement / max(1, pipeline.external_event_count * charged_compute_units)
+
+    profile = model.training_profile
+    return {
+        "seed": seed,
+        "condition": VALIDATION_COVERAGE_PRIOR_SELECTOR,
+        "external_events": pipeline.external_event_count,
+        "internal_examples": pipeline.internal_example_count,
+        "internal_tokens": pipeline.internal_token_count,
+        "charged_compute_units": charged_compute_units,
+        "heldout_accuracy": _round(heldout.accuracy),
+        "majority_baseline_accuracy": _round(baseline.accuracy),
+        "accuracy_improvement_over_majority": _round(improvement),
+        "signed_learning_signal_density_per_1m_event_compute": _round(signed_lsd),
+        "neural_parameter_count": profile.parameter_count,
+        "neural_training_step_count": profile.training_step_count,
+        "estimated_neural_training_multiply_adds": profile.estimated_training_multiply_adds,
+        "portfolio_candidate_count": len(candidate_records),
+        "portfolio_selection_cost_units": selection_cost_units,
+        "portfolio_validation_score": _round(selection_score),
+        "portfolio_selected_condition": selected_condition,
+        "portfolio_candidate_conditions": list(VALIDATION_COVERAGE_PRIOR_CANDIDATES),
+        "portfolio_selection_metric": (
+            "validation_motif_coverage_l1_with_train_size_prior_"
+            f"{VALIDATION_COVERAGE_PRIOR_MIN_TRAIN_EVENTS}_and_lean_cost_penalty"
+        ),
+        "portfolio_proxy_epochs": 0,
+        "portfolio_abstention_extra_correct": 0,
+        "portfolio_abstention_margin": _round(VALIDATION_COVERAGE_MIN_PAIR_COVERAGE),
+        "portfolio_raw_text_abstention": raw_text_abstention,
+        "portfolio_candidate_summaries": [
+            {
+                "condition": record["condition"],
+                "coverage_score": _round(record["coverage_score"]),
+                "coverage_utility_score": _round(record["coverage_utility_score"]),
+                "coverage_triple_l1_distance": _round(record["coverage_triple_l1_distance"])
+                if record["coverage_triple_l1_distance"] is not None
+                else None,
+                "coverage_pair_coverage": _round(record["coverage_pair_coverage"]),
+                "synthetic_example_count": record["synthetic_example_count"],
+                "candidate_compute_units": record["candidate_compute_units"],
+                "final_compute_units": record["final_compute_units"],
+            }
+            for record in candidate_records
+        ],
+    }
+
+
 def run_neural_condition(
     seed: int,
     condition: str,
@@ -696,6 +843,15 @@ def run_neural_condition(
         )
     if condition == VALIDATION_COVERAGE_PROXY_SELECTOR:
         return _run_validation_coverage_proxy_selector(
+            seed=seed,
+            material_count=material_count,
+            epochs=epochs,
+            hidden_units=hidden_units,
+            feature_dimension=feature_dimension,
+            learning_rate=learning_rate,
+        )
+    if condition == VALIDATION_COVERAGE_PRIOR_SELECTOR:
+        return _run_validation_coverage_prior_selector(
             seed=seed,
             material_count=material_count,
             epochs=epochs,
@@ -781,7 +937,9 @@ def run_neural_seedset(
             continue
         counts = Counter(row["portfolio_selected_condition"] for row in rows)
         conditions_summary[condition]["portfolio_selected_condition_counts"] = dict(sorted(counts.items()))
-        conditions_summary[condition]["portfolio_candidate_conditions"] = list(VALIDATION_PORTFOLIO_CANDIDATES)
+        conditions_summary[condition]["portfolio_candidate_conditions"] = rows[0][
+            "portfolio_candidate_conditions"
+        ]
         portfolio_selection_counts[condition] = dict(sorted(counts.items()))
 
     result = {
