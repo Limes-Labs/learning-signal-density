@@ -153,7 +153,8 @@ reduces scarce-budget downside.
 Table~\ref{tab:f1024-profile-frontier},
 Table~\ref{tab:validation-selected-reliability-probe},
 Table~\ref{tab:post-hoc-policy-envelope},
-Table~\ref{tab:validation-portfolio-selector}, and
+Table~\ref{tab:validation-portfolio-selector},
+Table~\ref{tab:selector-transfer-stress}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -216,6 +217,17 @@ only at 48, and still has lower 64-material density than fixed self-ranked and
 sample-aware self-ranked induction. The result is therefore a real
 selector-risk improvement, not a breakthrough on scarce-sample reliability.
 
+Table~\ref{tab:selector-transfer-stress} then asks whether that selector story
+survives a fresh-seed stress test on seeds 37, 41, 43, 47, and 53. It mostly
+does not. The abstaining and linear proxy selectors still first reach target at
+48 materials, but their 64-material signed gain falls from 0.153247 on the
+development selector artifact to 0.114286 on fresh seeds. The full portfolio
+selector reaches 0.127273 at 64 materials, but its charged density remains far
+below fixed sample-aware self-ranked induction. At 32 materials, all deployable
+selector variants remain negative, and raw text is less negative than the
+selector family. This is useful negative evidence: the current validation
+signals are not stable enough to drive a deployable adaptive policy.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -236,7 +248,9 @@ The selector probes are useful controls for that plan: the full portfolio shows
 that trying every candidate on validation is too expensive, the linear proxy
 shows that cheaper model hierarchies help, and the abstaining proxy shows that
 simple validation-count caution can reduce downside at 16--24 materials without
-repairing the 32-material failure.
+repairing the 32-material failure. The fresh-seed transfer test adds a stronger
+constraint: future selectors must beat simple fixed policies on new seeds, not
+only on the artifacts that inspired them.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

@@ -137,6 +137,10 @@ using the same split and accounting discipline.
 - `results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.*` -
   raw-abstaining low-fidelity selector probe for the same profile, testing
   whether a three-validation-example margin reduces scarce-budget downside.
+- `results/tiny_neural_budget_sweep_selector_transfer_f1024.*` - fresh-seed
+  selector-family stress test on seeds `37 41 43 47 53`, checking whether the
+  deployable selector results transfer beyond the development selector
+  artifacts.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -513,6 +517,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024_validation_abstaining_proxy
 ```
 
+Run the 16x8 1024-feature fresh-seed selector-transfer stress test:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_selector_transfer_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_selector_transfer_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 37 41 43 47 53 \
+  --conditions raw_text self_ranked_induction sample_aware_self_ranked_induction agreement_gated_self_ranked_induction validation_ranked_induction mdl_rule_expansion validation_abstaining_proxy_selector validation_linear_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_selector_transfer
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -711,6 +735,13 @@ The current artifacts show a useful split:
   materials and lowers the 48-material gain from `0.103` to `0.082759`, so the
   useful next step is a better reliability signal rather than stricter
   abstention alone.
+- The fresh-seed selector-transfer stress test is a negative control for that
+  story. On seeds `37 41 43 47 53`, the abstaining and linear proxy selectors
+  fall to `0.114286` best signed gain, the full portfolio reaches `0.127273`
+  at much lower density, and fixed sample-aware self-ranked induction reaches
+  `0.142857` with much better 64-material signed LSD. At 32 materials, raw text
+  is less negative than every deployable selector. The selector direction is
+  therefore not paper-ready without a stronger reliability signal.
 
 ## Research Thesis
 

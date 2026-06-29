@@ -17,4 +17,6 @@ final heldout evaluation, while still failing at the lowest budgets. The
 abstaining-proxy selector artifact is included as a downside-control probe: it
 falls back to raw text unless a non-raw candidate clears a three-validation
 example margin, improving 16/24-material behavior but still failing at 32
-materials.
+materials. The selector-transfer artifact is included as a fresh-seed stress
+test showing that current deployable selectors do not yet transfer strongly
+enough for paper-ready claims.

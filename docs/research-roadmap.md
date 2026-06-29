@@ -52,7 +52,9 @@ model hierarchy by scoring the same candidates with two-epoch linear fits,
 charging that search, training only one final tiny MLP, and then evaluating
 heldout once. An abstaining-proxy selector adds a raw-text fallback that
 requires three extra validation-correct examples before selecting a non-raw
-policy.
+policy. A fresh-seed selector-transfer stress test reruns the selector family
+on seeds `37 41 43 47 53` to check whether the development selector result
+survives new worlds.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -129,6 +131,12 @@ policy.
   should search for a reliability feature that distinguishes the 32-material
   MDL/raw/self-ranked cases before heldout, not merely raise the abstention
   threshold.
+- Treat selector transfer as the new promotion gate. On fresh seeds `37 41 43
+  47 53`, fixed sample-aware self-ranked induction beats the deployable
+  selector family at 64 materials (`0.142857` versus `0.114286` for the proxy
+  selectors), and raw text is less negative than the selector family at 32. A
+  future adaptive selector should not be promoted unless it improves both the
+  development artifact and this fresh-seed transfer stress test.
 
 ## Phase 3: Continual-Learning Replay
 

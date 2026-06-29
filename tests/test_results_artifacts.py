@@ -438,6 +438,55 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_selector_transfer_artifact_records_fresh_seed_stress_test(self) -> None:
+        transfer = json.loads(
+            Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json").read_text()
+        )
+
+        self.assertEqual(transfer["seeds"], [37, 41, 43, 47, 53])
+        self.assertEqual(transfer["feature_dimension"], 1024)
+        self.assertEqual(transfer["profile_label"], "epochs=16_hidden=8_features=1024_selector_transfer")
+        self.assertEqual(
+            transfer["comparison_of"],
+            "results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.json",
+        )
+        self.assertEqual(transfer["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(transfer["claim_scope"]["fresh_seed_confirmation"], True)
+
+        for condition in (
+            "validation_abstaining_proxy_selector",
+            "validation_linear_proxy_selector",
+            "validation_portfolio_selector",
+            "sample_aware_self_ranked_induction",
+            "counterfactual_expansion",
+        ):
+            self.assertIn(condition, transfer["conditions"])
+
+        abstaining = transfer["budgets"]["32"]["validation_abstaining_proxy_selector"]
+        linear = transfer["budgets"]["32"]["validation_linear_proxy_selector"]
+        portfolio = transfer["budgets"]["64"]["validation_portfolio_selector"]
+        sample = transfer["budgets"]["64"]["sample_aware_self_ranked_induction"]
+
+        self.assertEqual(abstaining["accuracy_improvement_over_majority_mean"], -0.084211)
+        self.assertEqual(linear["accuracy_improvement_over_majority_mean"], -0.084211)
+        self.assertEqual(portfolio["accuracy_improvement_over_majority_mean"], 0.127273)
+        self.assertGreater(
+            sample["accuracy_improvement_over_majority_mean"],
+            transfer["budgets"]["64"]["validation_abstaining_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertEqual(
+            transfer["thresholds"]["validation_abstaining_proxy_selector"][
+                "first_material_count_reaching_target"
+            ],
+            48,
+        )
+        self.assertEqual(
+            transfer["thresholds"]["validation_abstaining_proxy_selector"]["best_signed_gain"],
+            0.114286,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
