@@ -904,6 +904,89 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_density_capped_compact_artifact_records_abundant_raw_fallback(self) -> None:
+        density = json.loads(
+            Path("results/tiny_neural_budget_sweep_density_capped_compact_f1024.json").read_text()
+        )
+
+        self.assertEqual(density["seeds"], [293, 307, 311, 313, 317])
+        self.assertEqual(density["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(density["feature_dimension"], 1024)
+        self.assertEqual(density["profile_label"], "f1024_16x8_density_capped_compact")
+        self.assertEqual(
+            density["confirmation_of"],
+            "results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json",
+        )
+        self.assertEqual(density["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(density["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("density_capped_compact_induction", density["conditions"])
+
+        scope = density["condition_scope"]["density_capped_compact_induction"]
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["compact_original_encoding_at_large_samples"], True)
+        self.assertEqual(scope["abundant_data_raw_fallback"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        for material_count in ("64", "80", "96"):
+            self.assertEqual(
+                density["budgets"][material_count]["density_capped_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                density["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+            self.assertEqual(
+                density["budgets"][material_count]["density_capped_compact_induction"][
+                    "charged_compute_units_mean"
+                ],
+                density["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "charged_compute_units_mean"
+                ],
+            )
+
+        for material_count in ("104", "112", "120", "128"):
+            self.assertEqual(
+                density["budgets"][material_count]["density_capped_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                density["budgets"][material_count]["raw_text"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+            self.assertEqual(
+                density["budgets"][material_count]["density_capped_compact_induction"][
+                    "charged_compute_units_mean"
+                ],
+                density["budgets"][material_count]["raw_text"]["charged_compute_units_mean"],
+            )
+            self.assertGreater(
+                density["budgets"][material_count]["density_capped_compact_induction"][
+                    "signed_learning_signal_density_per_1m_event_compute_mean"
+                ],
+                density["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "signed_learning_signal_density_per_1m_event_compute_mean"
+                ],
+            )
+
+        self.assertEqual(
+            density["budgets"]["128"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            0.003452,
+        )
+        self.assertLess(
+            density["budgets"]["128"]["density_capped_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            density["budgets"]["128"]["compact_train_size_gated_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

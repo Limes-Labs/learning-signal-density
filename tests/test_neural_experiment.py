@@ -123,6 +123,42 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
         self.assertLess(compact["charged_compute_units"], train_gated["charged_compute_units"])
         self.assertEqual(compact["portfolio_candidate_count"], 0)
 
+    def test_density_capped_compact_policy_returns_to_raw_for_abundant_data(self) -> None:
+        density_capped = run_neural_condition(
+            seed=293,
+            condition="density_capped_compact_induction",
+            material_count=104,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw = run_neural_condition(
+            seed=293,
+            condition="raw_text",
+            material_count=104,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        compact = run_neural_condition(
+            seed=293,
+            condition="compact_train_size_gated_induction",
+            material_count=104,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(density_capped["condition"], "density_capped_compact_induction")
+        self.assertEqual(density_capped["internal_examples"], raw["internal_examples"])
+        self.assertEqual(density_capped["internal_tokens"], raw["internal_tokens"])
+        self.assertEqual(density_capped["charged_compute_units"], raw["charged_compute_units"])
+        self.assertLess(density_capped["charged_compute_units"], compact["charged_compute_units"])
+        self.assertEqual(density_capped["portfolio_candidate_count"], 0)
+
     def test_validation_portfolio_selector_charges_candidate_training_without_heldout_selection(self) -> None:
         selector = run_neural_condition(
             seed=17,

@@ -156,6 +156,12 @@ class PipelineAccountingTests(unittest.TestCase):
         alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "compact_train_size_gated_induction")
 
+        normal = build_pipeline_examples("density_capped_compact_induction", split.train, world.rules)
+        alternate = build_pipeline_examples("density_capped_compact_induction", split.train, alternate_rules)
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
+        self.assertEqual(normal_signature, alternate_signature, "density_capped_compact_induction")
+
         normal = build_pipeline_examples("agreement_gated_self_ranked_induction", split.train, world.rules)
         alternate = build_pipeline_examples("agreement_gated_self_ranked_induction", split.train, alternate_rules)
         normal_signature = self._example_signature(normal)
@@ -389,6 +395,71 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertIn("raw", large_source_kinds)
         self.assertNotIn("qa", large_source_kinds)
         self.assertIn("compact_sample_aware_self_ranked_induced", large_source_kinds)
+
+    def test_density_capped_compact_induction_returns_to_raw_when_data_is_abundant(self) -> None:
+        small_world = build_world(seed=71, material_count=32)
+        small_split = split_observations(small_world.observations)
+        small_raw = build_pipeline_examples("raw_text", small_split.train, small_world.rules)
+        small_density_capped = build_pipeline_examples(
+            "density_capped_compact_induction",
+            small_split.train,
+            small_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(small_density_capped), self._example_signature(small_raw))
+        self.assertEqual(small_density_capped.ranked_synthetic_budget_ratio, 0.0)
+
+        mid_world = build_world(seed=71, material_count=48)
+        mid_split = split_observations(mid_world.observations)
+        mid_sample_aware = build_pipeline_examples(
+            "sample_aware_self_ranked_induction",
+            mid_split.train,
+            mid_world.rules,
+        )
+        mid_density_capped = build_pipeline_examples(
+            "density_capped_compact_induction",
+            mid_split.train,
+            mid_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(mid_density_capped), self._example_signature(mid_sample_aware))
+
+        compact_world = build_world(seed=71, material_count=80)
+        compact_split = split_observations(compact_world.observations)
+        compact_baseline = build_pipeline_examples(
+            "compact_train_size_gated_induction",
+            compact_split.train,
+            compact_world.rules,
+        )
+        compact_density_capped = build_pipeline_examples(
+            "density_capped_compact_induction",
+            compact_split.train,
+            compact_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(compact_density_capped), self._example_signature(compact_baseline))
+        self.assertIn(
+            "compact_sample_aware_self_ranked_induced",
+            {example.source_kind for example in compact_density_capped.examples},
+        )
+
+        abundant_world = build_world(seed=71, material_count=104)
+        abundant_split = split_observations(abundant_world.observations)
+        abundant_raw = build_pipeline_examples("raw_text", abundant_split.train, abundant_world.rules)
+        abundant_compact = build_pipeline_examples(
+            "compact_train_size_gated_induction",
+            abundant_split.train,
+            abundant_world.rules,
+        )
+        abundant_density_capped = build_pipeline_examples(
+            "density_capped_compact_induction",
+            abundant_split.train,
+            abundant_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(abundant_density_capped), self._example_signature(abundant_raw))
+        self.assertLess(abundant_density_capped.internal_token_count, abundant_compact.internal_token_count)
+        self.assertEqual(abundant_density_capped.ranked_synthetic_budget_ratio, 0.0)
 
     def test_agreement_gated_self_ranked_induction_uses_train_only_source_agreement(self) -> None:
         world = build_world(seed=59, material_count=32)

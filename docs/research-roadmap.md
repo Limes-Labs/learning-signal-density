@@ -72,6 +72,10 @@ A compact train-size gated efficiency probe then keeps the same schedule but
 drops original QA duplicates at the large-sample tier, testing whether density
 can improve by removing redundant transformed originals instead of changing
 generated labels.
+A density-capped compact probe then extends the budget range through 128
+materials and tests whether the policy should return to raw text once external
+evidence is abundant enough that generated-label transforms no longer pay back
+their charged compute.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -194,6 +198,12 @@ generated labels.
   and `0.004634` signed LSD to `0.140260` gain and `0.007883` signed LSD by
   keeping raw originals but dropping original QA duplicates at the large-sample
   tier.
+- Treat abundant-data raw fallback as a density frontier candidate. On fresh
+  seeds `293 307 311 313 317`, density-capped compact induction matches
+  compact through 96 materials, then returns to raw text from 104 onward. At
+  128 materials it gives up gain (`0.132468` to `0.081818`) but improves signed
+  LSD (`0.001860` to `0.003452`), so future policies should optimize a
+  gain-density Pareto frontier rather than only absolute heldout gain.
 
 ## Phase 3: Continual-Learning Replay
 

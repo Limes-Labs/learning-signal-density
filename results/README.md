@@ -533,5 +533,33 @@ duplicates. On seeds `181 191 193 197 199`, it is identical to the train-size
 gate through 48 materials, then improves the 64-material row from `0.132467`
 gain and `0.004634` signed LSD to `0.140260` gain and `0.007883` signed LSD.
 
+16x8 1024-feature density-capped compact high-budget probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_density_capped_compact_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_density_capped_compact_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 293 307 311 313 317 \
+  --conditions raw_text train_size_gated_sample_aware_induction compact_train_size_gated_induction density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json \
+  --profile-label f1024_16x8_density_capped_compact
+```
+
+The density-capped compact policy is train-only. It matches compact
+train-size gating through 96 materials, then returns to raw text once the train
+split reaches the abundant-data tier. On seeds `293 307 311 313 317`, it
+keeps the compact 64-material signed LSD (`0.007887`) and improves density
+over compact at 104, 112, 120, and 128 materials. The tradeoff is explicit:
+at 128 materials it gives up gain (`0.132468` to `0.081818`) to improve signed
+LSD (`0.001860` to `0.003452`).
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.
