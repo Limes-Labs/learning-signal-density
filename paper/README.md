@@ -20,6 +20,7 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_16x8_f1024.json`
 - `results/tiny_neural_budget_sweep_8x8_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_selected_f1024.json`
+- `results/tiny_neural_budget_sweep_agreement_gated_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked

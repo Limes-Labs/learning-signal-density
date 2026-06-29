@@ -6,7 +6,7 @@ import re
 from typing import Iterable
 
 from .domain import MODIFIERS, Observation, RuleBook
-from .induction import InducedRuleModel, MdlRuleSet, fit_induced_rule_model, fit_mdl_rule_set
+from .induction import InducedPrediction, InducedRuleModel, MdlRuleSet, fit_induced_rule_model, fit_mdl_rule_set
 
 
 AVAILABLE_CONDITIONS = (
@@ -20,6 +20,7 @@ AVAILABLE_CONDITIONS = (
     "train_calibrated_ranked_induction",
     "self_ranked_induction",
     "sample_aware_self_ranked_induction",
+    "agreement_gated_self_ranked_induction",
     "diverse_self_ranked_induction",
     "mdl_rule_expansion",
     "counterfactual_expansion",
@@ -92,6 +93,13 @@ CONDITION_SCOPE = {
         "validation_used_for_transform_selection": False,
     },
     "sample_aware_self_ranked_induction": {
+        "oracle_generated_labels": False,
+        "train_only_selection": True,
+        "train_only_induction": True,
+        "validation_used_for_threshold": False,
+        "validation_used_for_transform_selection": False,
+    },
+    "agreement_gated_self_ranked_induction": {
         "oracle_generated_labels": False,
         "train_only_selection": True,
         "train_only_induction": True,
@@ -424,6 +432,165 @@ def _add_ranked_induced_examples(
     )
 
 
+def _prediction_from_counts(source: str, counts: Counter[bool]) -> InducedPrediction | None:
+    support = sum(counts.values())
+    if not support:
+        return None
+    true_count = counts[True]
+    false_count = counts[False]
+    label = true_count >= false_count
+    label_count = true_count if label else false_count
+    return InducedPrediction(
+        label=label,
+        confidence=label_count / support,
+        support=support,
+        source=source,
+    )
+
+
+def _source_projection_predictions(
+    salience_model: InducedRuleModel,
+    family: str,
+    stimulus: str,
+    modifier: str,
+) -> tuple[InducedPrediction, ...]:
+    predictions = [
+        _prediction_from_counts(
+            "exact",
+            salience_model.exact_counts.get((family, stimulus, modifier), Counter()),
+        ),
+        _prediction_from_counts(
+            "family_stimulus",
+            salience_model.pair_counts.get((family, stimulus), Counter()),
+        ),
+        _prediction_from_counts(
+            "modifier_stimulus",
+            salience_model.modifier_stimulus_counts.get((modifier, stimulus), Counter()),
+        ),
+        _prediction_from_counts(
+            "family_modifier",
+            salience_model.family_modifier_counts.get((family, modifier), Counter()),
+        ),
+    ]
+    return tuple(prediction for prediction in predictions if prediction is not None)
+
+
+def _agreement_prediction(
+    salience_model: InducedRuleModel,
+    family: str,
+    stimulus: str,
+    modifier: str,
+    induction_min_support: int,
+    induction_min_confidence: float,
+) -> InducedPrediction | None:
+    eligible = tuple(
+        prediction
+        for prediction in _source_projection_predictions(salience_model, family, stimulus, modifier)
+        if prediction.support >= induction_min_support
+        and prediction.confidence >= induction_min_confidence
+        and prediction.source != "exact"
+    )
+    if len(eligible) < 2:
+        return None
+    labels = {prediction.label for prediction in eligible}
+    if len(labels) != 1:
+        return None
+    support = sum(prediction.support for prediction in eligible)
+    confidence = sum(prediction.confidence * prediction.support for prediction in eligible) / support
+    return InducedPrediction(
+        label=eligible[0].label,
+        confidence=confidence,
+        support=support,
+        source="agreement:" + "+".join(prediction.source for prediction in eligible),
+    )
+
+
+def _add_agreement_gated_ranked_induced_examples(
+    examples: list[TrainingExample],
+    observations: tuple[Observation, ...],
+    salience_model: InducedRuleModel,
+    induction_min_support: int,
+    induction_min_confidence: float,
+    synthetic_budget_ratio: float,
+) -> tuple[int, int, int, int, float, int, int, float]:
+    transform_cost_tokens = 0
+    candidate_ranking_cost_tokens = 0
+    candidates: list[_RankedInducedCandidate] = []
+
+    for item in observations:
+        examples.append(raw_observation_example(item))
+        question = qa_example(item)
+        examples.append(question)
+        transform_cost_tokens += question.token_count
+        item_salience_bonus = 0.05 if _is_high_value(item, salience_model) else 0.0
+        for modifier in MODIFIERS:
+            if modifier == item.modifier:
+                continue
+            prediction = _agreement_prediction(
+                salience_model=salience_model,
+                family=item.family,
+                stimulus=item.stimulus,
+                modifier=modifier,
+                induction_min_support=induction_min_support,
+                induction_min_confidence=induction_min_confidence,
+            )
+            if prediction is None:
+                continue
+            synthetic = Observation(
+                observation_id=f"{item.observation_id}-agreement-induced-{modifier}",
+                material=item.material,
+                family=item.family,
+                stimulus=item.stimulus,
+                modifier=modifier,
+                label=prediction.label,
+            )
+            generated = qa_example(synthetic, source_kind="agreement_gated_self_ranked_induced")
+            candidate_ranking_cost_tokens += generated.token_count
+            support_bonus = min(prediction.support, 16) / 32
+            score = prediction.confidence + support_bonus + item_salience_bonus
+            candidates.append(
+                _RankedInducedCandidate(
+                    example=generated,
+                    prediction=prediction,
+                    score=score,
+                    validation_precision=prediction.confidence,
+                    family=synthetic.family,
+                    stimulus=synthetic.stimulus,
+                    modifier=synthetic.modifier,
+                )
+            )
+
+    candidates.sort(
+        key=lambda candidate: (
+            -candidate.score,
+            -candidate.prediction.confidence,
+            -candidate.prediction.support,
+            candidate.example.source_observation_id,
+            candidate.example.text,
+        )
+    )
+    synthetic_budget = max(1, int(len(observations) * synthetic_budget_ratio))
+    kept = candidates[:synthetic_budget]
+    examples.extend(candidate.example for candidate in kept)
+    transform_cost_tokens += sum(candidate.example.token_count for candidate in kept)
+    ranked_validation_precision = (
+        sum(candidate.validation_precision for candidate in kept) / len(kept)
+        if kept
+        else 0.0
+    )
+    kept_modifier_counts = Counter(candidate.modifier for candidate in kept)
+    return (
+        transform_cost_tokens,
+        candidate_ranking_cost_tokens,
+        len(candidates),
+        len(kept),
+        ranked_validation_precision,
+        len(kept_modifier_counts),
+        max(kept_modifier_counts.values(), default=0),
+        0.0,
+    )
+
+
 def _add_validation_ranked_induced_examples(
     examples: list[TrainingExample],
     observations: tuple[Observation, ...],
@@ -739,6 +906,34 @@ def build_pipeline_examples(
             base_ranking_cost_tokens=0,
             source_kind="sample_aware_self_ranked_induced",
             diversity_penalty=0.0,
+        )
+
+    elif condition == "agreement_gated_self_ranked_induction":
+        (
+            effective_min_support,
+            effective_min_confidence,
+            effective_budget_ratio,
+        ) = _sample_aware_ranked_policy(observations)
+        modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in observations)
+        exported_ranked_synthetic_budget_ratio = effective_budget_ratio
+        ranked_induction_min_support = effective_min_support
+        ranked_induction_min_confidence = effective_min_confidence
+        (
+            transform_cost_tokens,
+            candidate_ranking_cost_tokens,
+            ranked_candidate_count,
+            ranked_kept_candidate_count,
+            ranked_validation_precision,
+            ranked_unique_modifier_count,
+            ranked_max_modifier_count,
+            ranked_diversity_penalty,
+        ) = _add_agreement_gated_ranked_induced_examples(
+            examples=examples,
+            observations=observations,
+            salience_model=salience_model,
+            induction_min_support=effective_min_support,
+            induction_min_confidence=effective_min_confidence,
+            synthetic_budget_ratio=effective_budget_ratio,
         )
 
     elif condition == "diverse_self_ranked_induction":
