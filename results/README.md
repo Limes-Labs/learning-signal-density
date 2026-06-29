@@ -305,5 +305,29 @@ non-oracle condition at each material budget. It is intentionally marked
 non-deployable and should be interpreted as a selector diagnostic, not a
 candidate learning policy.
 
+16x8 1024-feature validation-portfolio selector probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_portfolio_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_portfolio_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --conditions raw_text self_ranked_induction sample_aware_self_ranked_induction agreement_gated_self_ranked_induction validation_ranked_induction mdl_rule_expansion validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_agreement_gated_f1024.json \
+  --comparison-of results/policy_envelope_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_validation_portfolio
+```
+
+The portfolio selector trains and validates six non-oracle candidate policies,
+charges that whole selection search, and only then evaluates the selected model
+on heldout examples. It does not use heldout labels for selection.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

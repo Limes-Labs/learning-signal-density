@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from .experiment import DEFAULT_SEEDS
-from .neural_experiment import DEFAULT_NEURAL_CONDITIONS, run_neural_seedset
+from .neural_experiment import DEFAULT_NEURAL_CONDITIONS, neural_condition_scope, run_neural_seedset
 from .sweep import DEFAULT_MATERIAL_COUNTS
 
 
@@ -58,6 +58,7 @@ def run_neural_budget_sweep(
     fresh_seed_confirmation: bool = False,
 ) -> dict:
     budget_results: dict[str, dict] = {}
+    portfolio_selection_counts_by_budget: dict[str, dict] = {}
     for material_count in material_counts:
         result = run_neural_seedset(
             seeds=seeds,
@@ -72,6 +73,8 @@ def run_neural_budget_sweep(
             fresh_seed_confirmation=fresh_seed_confirmation,
         )
         budget_results[str(material_count)] = result["conditions"]
+        if result.get("portfolio_selection_counts"):
+            portfolio_selection_counts_by_budget[str(material_count)] = result["portfolio_selection_counts"]
 
     thresholds = _threshold_summary(
         budget_results=budget_results,
@@ -86,6 +89,7 @@ def run_neural_budget_sweep(
         "material_counts": list(material_counts),
         "seeds": list(seeds),
         "conditions": list(conditions),
+        "condition_scope": {condition: neural_condition_scope(condition) for condition in conditions},
         "epochs": epochs,
         "hidden_units": hidden_units,
         "feature_dimension": feature_dimension,
@@ -101,6 +105,7 @@ def run_neural_budget_sweep(
         },
         "thresholds": thresholds,
         "budgets": budget_results,
+        "portfolio_selection_counts_by_budget": portfolio_selection_counts_by_budget,
     }
     if confirmation_of is not None:
         result["confirmation_of"] = confirmation_of

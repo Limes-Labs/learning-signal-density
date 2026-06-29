@@ -297,6 +297,37 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_validation_portfolio_artifact_records_deployable_selector_probe(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_portfolio_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "epochs=16_hidden=8_features=1024_validation_portfolio")
+        self.assertEqual(selector["comparison_of"], "results/policy_envelope_f1024.json")
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_portfolio_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["validation_portfolio_selector"]
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        for material in ("16", "24", "32", "48", "64"):
+            row = selector["budgets"][material]["validation_portfolio_selector"]
+            self.assertEqual(row["portfolio_candidate_count_mean"], 6)
+            self.assertGreater(row["portfolio_selection_cost_units_mean"], 0)
+            self.assertIn("portfolio_selected_condition_counts", row)
+
+        self.assertEqual(
+            selector["thresholds"]["validation_portfolio_selector"]["first_material_count_reaching_target"],
+            48,
+        )
+        self.assertLess(
+            selector["thresholds"]["validation_portfolio_selector"]["best_signed_gain"],
+            selector["thresholds"]["self_ranked_induction"]["best_signed_gain"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

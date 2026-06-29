@@ -44,7 +44,10 @@ policies repair the low-budget generated-label failure. A train-only
 agreement-gated rerun tests whether independent induced-rule projections are a
 cheap enough reliability signal. A post-hoc non-oracle policy envelope now
 quantifies the remaining selector problem while explicitly marking itself
-non-deployable because it uses completed heldout results.
+non-deployable because it uses completed heldout results. A validation-portfolio
+selector probe tests the deployable version of that idea by training six
+non-oracle candidate policies, choosing on validation, charging the full search,
+and then evaluating heldout once.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -102,6 +105,11 @@ non-deployable because it uses completed heldout results.
   this selection uses heldout results after the fact, it is not deployable, but
   it defines the target for a preregistered adaptive selector using only
   train/validation signals.
+- Treat naive validation portfolios as too expensive. The first deployable
+  selector matches the envelope at 16 materials but stays negative at 24 and
+  32, peaks below fixed self-ranked induction, and has much lower signed LSD
+  because every candidate training is charged. The next selector should learn a
+  cheaper abstain/compress/rank rule instead of brute-force trying every policy.
 
 ## Phase 3: Continual-Learning Replay
 

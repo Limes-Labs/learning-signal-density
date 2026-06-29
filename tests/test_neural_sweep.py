@@ -64,6 +64,31 @@ class NeuralBudgetSweepTests(unittest.TestCase):
             self.assertIn("Profile label: `epochs=2_hidden=4`", markdown)
             self.assertIn("Comparison target: `results/baseline_profile.json`", markdown)
 
+    def test_neural_budget_sweep_preserves_portfolio_selection_counts_by_budget(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_json = Path(temp_dir) / "neural_budget_sweep.json"
+            out_md = Path(temp_dir) / "neural_budget_sweep.md"
+
+            run_neural_budget_sweep(
+                material_counts=[16],
+                seeds=[17],
+                conditions=["validation_portfolio_selector"],
+                output_json=out_json,
+                output_markdown=out_md,
+                epochs=2,
+                hidden_units=4,
+                feature_dimension=32,
+                learning_rate=0.03,
+                target_signed_gain=0.03,
+            )
+
+            saved = json.loads(out_json.read_text())
+            selector = saved["budgets"]["16"]["validation_portfolio_selector"]
+            self.assertEqual(selector["portfolio_candidate_count_mean"], 6)
+            self.assertIn("portfolio_selected_condition_counts", selector)
+            self.assertIn("16", saved["portfolio_selection_counts_by_budget"])
+            self.assertIn("validation_portfolio_selector", saved["portfolio_selection_counts_by_budget"]["16"])
+
 
 if __name__ == "__main__":
     unittest.main()

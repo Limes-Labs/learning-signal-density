@@ -73,6 +73,65 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
                 learning_rate=0.03,
             )
 
+    def test_validation_portfolio_selector_charges_candidate_training_without_heldout_selection(self) -> None:
+        selector = run_neural_condition(
+            seed=17,
+            condition="validation_portfolio_selector",
+            material_count=16,
+            epochs=2,
+            hidden_units=4,
+            feature_dimension=32,
+            learning_rate=0.03,
+        )
+        raw = run_neural_condition(
+            seed=17,
+            condition="raw_text",
+            material_count=16,
+            epochs=2,
+            hidden_units=4,
+            feature_dimension=32,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(selector["condition"], "validation_portfolio_selector")
+        self.assertGreater(selector["portfolio_candidate_count"], 1)
+        self.assertGreater(selector["portfolio_selection_cost_units"], raw["charged_compute_units"])
+        self.assertGreater(selector["charged_compute_units"], raw["charged_compute_units"])
+        self.assertGreater(selector["estimated_neural_training_multiply_adds"], raw["estimated_neural_training_multiply_adds"])
+        self.assertIn(
+            selector["portfolio_selected_condition"],
+            selector["portfolio_candidate_conditions"],
+        )
+        self.assertNotEqual(selector["portfolio_selected_condition"], "counterfactual_expansion")
+        self.assertNotIn("heldout", selector["portfolio_selection_metric"])
+
+    def test_validation_portfolio_selector_scope_is_declared_in_neural_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_json = Path(temp_dir) / "selector.json"
+            out_md = Path(temp_dir) / "selector.md"
+            run_neural_seedset(
+                seeds=[17],
+                conditions=["validation_portfolio_selector"],
+                output_json=out_json,
+                output_markdown=out_md,
+                material_count=16,
+                epochs=2,
+                hidden_units=4,
+                feature_dimension=32,
+                fresh_seed_confirmation=True,
+            )
+
+            saved = json.loads(out_json.read_text())
+            scope = saved["condition_scope"]["validation_portfolio_selector"]
+            self.assertEqual(saved["claim_scope"]["heldout_used_for_selection"], False)
+            self.assertEqual(scope["validation_used_for_policy_selection"], True)
+            self.assertEqual(scope["oracle_generated_labels"], False)
+            self.assertEqual(
+                saved["conditions"]["validation_portfolio_selector"]["portfolio_candidate_count_mean"],
+                6,
+            )
+            self.assertIn("portfolio_selected_condition_counts", saved["conditions"]["validation_portfolio_selector"])
+
 
 if __name__ == "__main__":
     unittest.main()
