@@ -52,6 +52,9 @@ The current pilot is intentionally modest:
 - `agreement_gated_self_ranked_induction` keeps train-only generated labels
   only when independent induced-rule projections agree, testing whether source
   agreement is enough reliability signal without validation labels.
+- A post-hoc policy envelope selects the best non-oracle condition at each
+  budget from completed heldout results. It is explicitly not deployable; it is
+  a diagnostic upper bound for the adaptive policy-selection problem.
 - `diverse_self_ranked_induction` applies a diversity penalty to the same
   train-only ranking to test whether balancing modifier/stimulus/family coverage
   improves the fixed synthetic budget.
@@ -109,6 +112,10 @@ using the same split and accounting discipline.
   profile.
 - `results/tiny_neural_budget_sweep_agreement_gated_f1024.*` - train-only
   source-agreement reliability probe for the same `16x8` 1024-feature profile.
+- `results/policy_envelope_f1024.*` - derived post-hoc non-oracle policy
+  envelope over the same reliability probe. This artifact uses heldout results
+  after the fact, marks itself non-deployable, and exists to quantify the
+  selector problem for the paper.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -132,6 +139,7 @@ python3 -m unittest discover -s tests
 Regenerate the manuscript result tables from checked-in JSON artifacts:
 
 ```bash
+python3 scripts/build_policy_envelope.py
 python3 scripts/build_paper_tables.py
 ```
 
@@ -418,6 +426,12 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024_agreement_gated
 ```
 
+Build the post-hoc policy envelope used by the paper tables:
+
+```bash
+python3 scripts/build_policy_envelope.py
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -449,6 +463,10 @@ The repo reports three families of measurements:
   confidence/support is strongest.
 - MDL rule expansion tests whether compressing the transform policy itself can
   reduce synthetic-example cost without quietly using the hidden rulebook.
+- The post-hoc policy envelope is an analysis artifact, not a method: it uses
+  completed heldout results to choose the best non-oracle condition at each
+  budget, marks that heldout policy selection explicitly, and should only be
+  used to define the next adaptive selector target.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 
@@ -576,6 +594,13 @@ The current artifacts show a useful split:
   reaches target only at 64 materials. This suggests the 24/32-material failure
   is not solved by simply reducing training steps; it likely needs a better
   generated-label policy or reliability gate.
+- The post-hoc non-oracle policy envelope confirms that this is a selector
+  problem, not only a condition-design problem. It chooses MDL rule expansion at
+  16 materials, raw text at 24, MDL again at 32, validation-ranked induction at
+  48, and self-ranked induction at 64. Because this selection uses completed
+  heldout results, it is not deployable; even so, the target is first reached
+  only at 48 materials. The next useful experiment should learn that switching
+  rule from train/validation signals before heldout is opened.
 
 ## Research Thesis
 

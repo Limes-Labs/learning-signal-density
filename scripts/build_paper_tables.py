@@ -18,6 +18,7 @@ FEATURE_FRONTIER_ARTIFACT = Path("results/tiny_neural_feature_sweep_wide.json")
 PROFILE_FRONTIER_ARTIFACT = Path("results/tiny_neural_profile_sweep_f1024.json")
 VALIDATION_SELECTED_ARTIFACT = Path("results/tiny_neural_budget_sweep_validation_selected_f1024.json")
 AGREEMENT_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_agreement_gated_f1024.json")
+POLICY_ENVELOPE_ARTIFACT = Path("results/policy_envelope_f1024.json")
 
 FRONTIER_CONDITIONS = [
     "raw_text",
@@ -95,6 +96,20 @@ def validate_claim_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
         raise ValueError(f"{artifact_path} must not mark the current result as paper-ready")
 
 
+def validate_policy_envelope_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("claim_scope", {})
+    if scope.get("post_hoc_envelope") is not True:
+        raise ValueError(f"{artifact_path} must be marked as a post-hoc envelope")
+    if scope.get("heldout_used_for_policy_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose heldout policy selection")
+    if scope.get("deployable_policy") is not False:
+        raise ValueError(f"{artifact_path} must not be marked as deployable")
+    if scope.get("paper_ready_claim") is not False:
+        raise ValueError(f"{artifact_path} must not mark the current result as paper-ready")
+    if artifact.get("oracle_condition") in artifact.get("conditions_considered", []):
+        raise ValueError(f"{artifact_path} must exclude the oracle from non-oracle conditions")
+
+
 def load_budget_artifacts(repo_root: Path) -> list[tuple[str, Path, dict[str, Any]]]:
     loaded = []
     for profile_label, relative_path in BUDGET_ARTIFACTS:
@@ -110,11 +125,13 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "profile": load_json(repo_root / PROFILE_FRONTIER_ARTIFACT),
         "validation_selected": load_json(repo_root / VALIDATION_SELECTED_ARTIFACT),
         "agreement_gated": load_json(repo_root / AGREEMENT_GATED_ARTIFACT),
+        "policy_envelope": load_json(repo_root / POLICY_ENVELOPE_ARTIFACT),
     }
     validate_claim_scope(FEATURE_FRONTIER_ARTIFACT, artifacts["feature"])
     validate_claim_scope(PROFILE_FRONTIER_ARTIFACT, artifacts["profile"])
     validate_claim_scope(VALIDATION_SELECTED_ARTIFACT, artifacts["validation_selected"])
     validate_claim_scope(AGREEMENT_GATED_ARTIFACT, artifacts["agreement_gated"])
+    validate_policy_envelope_scope(POLICY_ENVELOPE_ARTIFACT, artifacts["policy_envelope"])
     return artifacts
 
 
@@ -240,12 +257,44 @@ def build_low_budget_failure_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_policy_envelope_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["policy_envelope"]
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Post-hoc policy envelope for the 16x8 f1024 reliability probe. The envelope is non-deployable because it selects the best non-oracle condition at each budget using completed heldout results; oracle counterfactual expansion is shown only as headroom.}",
+        r"\label{tab:post-hoc-policy-envelope}",
+        r"\begin{tabular}{@{}rlrrrr@{}}",
+        r"\toprule",
+        r"Budget & Envelope condition & Gain & Compute & Oracle gain & Gap \\",
+        r"\midrule",
+    ]
+    for material in artifact["material_counts"]:
+        row = artifact["best_by_material"][str(material)]
+        lines.append(
+            " & ".join(
+                [
+                    str(material),
+                    latex_escape(row["condition_label"]),
+                    fmt_float(row["signed_gain"]),
+                    latex_escape(fmt_ops(row["charged_compute_units"])),
+                    fmt_float(row["oracle_signed_gain"]),
+                    fmt_float(row["oracle_gap_signed_gain"]),
+                ]
+            )
+            + r" \\"
+        )
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
             build_macros(repo_root),
             build_frontier_table(repo_root),
             build_validation_selected_table(repo_root),
+            build_policy_envelope_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

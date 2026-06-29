@@ -42,7 +42,9 @@ training budget can reduce scarce-sample overfitting, and a charged
 validation-selected rerun tests whether validation-ranked or MDL rule-selection
 policies repair the low-budget generated-label failure. A train-only
 agreement-gated rerun tests whether independent induced-rule projections are a
-cheap enough reliability signal.
+cheap enough reliability signal. A post-hoc non-oracle policy envelope now
+quantifies the remaining selector problem while explicitly marking itself
+non-deployable because it uses completed heldout results.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -94,6 +96,12 @@ cheap enough reliability signal.
   at 16 materials, and has much lower peak signed gain. Independent projection
   agreement is therefore not enough without better uncertainty calibration or
   coverage control.
+- Treat policy selection as the next bottleneck. The post-hoc non-oracle
+  envelope switches from MDL at 16 materials to raw text at 24, MDL at 32,
+  validation-ranked induction at 48, and self-ranked induction at 64. Because
+  this selection uses heldout results after the fact, it is not deployable, but
+  it defines the target for a preregistered adaptive selector using only
+  train/validation signals.
 
 ## Phase 3: Continual-Learning Replay
 
