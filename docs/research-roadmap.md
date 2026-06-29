@@ -76,6 +76,9 @@ A density-capped compact probe then extends the budget range through 128
 materials and tests whether the policy should return to raw text once external
 evidence is abundant enough that generated-label transforms no longer pay back
 their charged compute.
+A support-ramped compact probe then tests the middle of that high-budget
+frontier, keeping compact induction but raising induced-label minimum support
+from `3` to `4` after the abundant-data tier.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -204,6 +207,15 @@ their charged compute.
   128 materials it gives up gain (`0.132468` to `0.081818`) but improves signed
   LSD (`0.001860` to `0.003452`), so future policies should optimize a
   gain-density Pareto frontier rather than only absolute heldout gain.
+- Treat abundant-data support floors as another Pareto axis, not a full
+  replacement for raw fallback. On fresh seeds `401 409 419 421 431`,
+  support-ramped compact induction matches compact through 96 materials, then
+  raises induced-label support to `4`. At 104 materials it improves signed LSD
+  over both compact and raw fallback (`0.003735` versus `0.002857` and
+  `0.002145`). At 128 materials it recovers more gain than raw fallback
+  (`0.184416` versus `0.154545`), but raw fallback remains denser (`0.006521`
+  versus `0.005153`). Future selectors should choose among raw, compact, and
+  higher-support compact views according to the target point on the frontier.
 
 ## Phase 3: Continual-Learning Replay
 

@@ -162,6 +162,12 @@ class PipelineAccountingTests(unittest.TestCase):
         alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "density_capped_compact_induction")
 
+        normal = build_pipeline_examples("support_ramped_compact_induction", split.train, world.rules)
+        alternate = build_pipeline_examples("support_ramped_compact_induction", split.train, alternate_rules)
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
+        self.assertEqual(normal_signature, alternate_signature, "support_ramped_compact_induction")
+
         normal = build_pipeline_examples("agreement_gated_self_ranked_induction", split.train, world.rules)
         alternate = build_pipeline_examples("agreement_gated_self_ranked_induction", split.train, alternate_rules)
         normal_signature = self._example_signature(normal)
@@ -460,6 +466,54 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertEqual(self._example_signature(abundant_density_capped), self._example_signature(abundant_raw))
         self.assertLess(abundant_density_capped.internal_token_count, abundant_compact.internal_token_count)
         self.assertEqual(abundant_density_capped.ranked_synthetic_budget_ratio, 0.0)
+
+    def test_support_ramped_compact_induction_raises_support_at_abundant_samples(self) -> None:
+        pre_ramp_world = build_world(seed=73, material_count=96)
+        pre_ramp_split = split_observations(pre_ramp_world.observations)
+        pre_ramp_compact = build_pipeline_examples(
+            "compact_train_size_gated_induction",
+            pre_ramp_split.train,
+            pre_ramp_world.rules,
+        )
+        pre_ramp_support_ramped = build_pipeline_examples(
+            "support_ramped_compact_induction",
+            pre_ramp_split.train,
+            pre_ramp_world.rules,
+        )
+
+        self.assertEqual(
+            self._example_signature(pre_ramp_support_ramped),
+            self._example_signature(pre_ramp_compact),
+        )
+        self.assertEqual(pre_ramp_support_ramped.ranked_induction_min_support, 3)
+
+        abundant_world = build_world(seed=73, material_count=104)
+        abundant_split = split_observations(abundant_world.observations)
+        abundant_compact = build_pipeline_examples(
+            "compact_train_size_gated_induction",
+            abundant_split.train,
+            abundant_world.rules,
+        )
+        abundant_support_ramped = build_pipeline_examples(
+            "support_ramped_compact_induction",
+            abundant_split.train,
+            abundant_world.rules,
+        )
+        source_kinds = {example.source_kind for example in abundant_support_ramped.examples}
+
+        self.assertEqual(abundant_support_ramped.external_event_count, abundant_compact.external_event_count)
+        self.assertEqual(abundant_support_ramped.ranked_synthetic_budget_ratio, 1.0)
+        self.assertEqual(abundant_support_ramped.ranked_induction_min_support, 4)
+        self.assertEqual(abundant_support_ramped.ranked_induction_min_confidence, 0.55)
+        self.assertLessEqual(
+            abundant_support_ramped.ranked_kept_candidate_count,
+            abundant_compact.ranked_kept_candidate_count,
+        )
+        self.assertLess(abundant_support_ramped.internal_example_count, abundant_compact.internal_example_count)
+        self.assertLess(abundant_support_ramped.internal_token_count, abundant_compact.internal_token_count)
+        self.assertIn("raw", source_kinds)
+        self.assertNotIn("qa", source_kinds)
+        self.assertIn("support_ramped_compact_sample_aware_self_ranked_induced", source_kinds)
 
     def test_agreement_gated_self_ranked_induction_uses_train_only_source_agreement(self) -> None:
         world = build_world(seed=59, material_count=32)

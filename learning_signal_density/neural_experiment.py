@@ -57,6 +57,7 @@ GENERATED_SOURCE_KINDS = frozenset({
     "mdl_counterfactual",
     "sample_aware_self_ranked_induced",
     "self_ranked_induced",
+    "support_ramped_compact_sample_aware_self_ranked_induced",
     "validation_ranked_induced",
 })
 FIELD_PATTERN = re.compile(r"\b(family|modifier|stimulus)=([A-Za-z0-9_]+)")

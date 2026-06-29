@@ -53,6 +53,18 @@ The current pilot is intentionally modest:
   sample-aware ranking. It lowers the mid-budget synthetic ratio from `0.75` to
   `0.50` below 144 train events, testing whether smaller generated-label
   budgets repair the 24--32 material failure without validation selection.
+- `train_size_gated_sample_aware_induction` uses raw text below 144 train
+  events, then switches to sample-aware self-ranked induction after the train
+  split is large enough.
+- `compact_train_size_gated_induction` keeps that train-size schedule but drops
+  original QA duplicates at the large-sample tier, testing whether generated
+  labels can be made denser without changing their labels.
+- `density_capped_compact_induction` keeps compact induction only while it
+  remains density-efficient, then returns to raw text after the abundant-data
+  tier.
+- `support_ramped_compact_induction` is a train-only high-budget tradeoff: it
+  matches compact induction through 96 materials, then raises induced-label
+  minimum support from `3` to `4` after the abundant-data tier.
 - `agreement_gated_self_ranked_induction` keeps train-only generated labels
   only when independent induced-rule projections agree, testing whether source
   agreement is enough reliability signal without validation labels.
@@ -185,6 +197,13 @@ using the same split and accounting discipline.
   matches compact train-size gating through 96 materials, then returns to raw
   text once the train split is abundant, improving density while giving up
   some absolute gain.
+- `results/tiny_neural_budget_sweep_support_ramped_compact_f1024.*` -
+  fresh-seed high-budget support-ramp probe on seeds `401 409 419 421 431`.
+  It matches compact and density-capped compact through 96 materials, then
+  raises induced-label support at the abundant-data tier. The result is mixed:
+  it improves compact density after 104 materials and recovers more gain than
+  raw fallback at several high-budget points, but raw fallback still has higher
+  signed LSD at 128.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -684,6 +703,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label f1024_16x8_density_capped_compact
 ```
 
+Run the 16x8 1024-feature support-ramped compact high-budget probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_support_ramped_compact_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 401 409 419 421 431 \
+  --conditions raw_text train_size_gated_sample_aware_induction compact_train_size_gated_induction support_ramped_compact_induction density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_density_capped_compact_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_density_capped_compact_f1024.json \
+  --profile-label f1024_16x8_support_ramped_compact
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -956,6 +995,15 @@ The current artifacts show a useful split:
   trades gain (`0.132468` to `0.081818`) for higher signed LSD (`0.001860` to
   `0.003452`), showing that the density frontier can switch back to raw data
   when external evidence is abundant.
+- The support-ramped compact probe tests the middle of that tradeoff on fresh
+  seeds `401 409 419 421 431`. It matches compact through 96 materials, then
+  raises generated-label minimum support from `3` to `4`. At 104 materials it
+  improves signed LSD over both plain compact and raw fallback (`0.003735`
+  versus `0.002857` and `0.002145`). At 128 materials it recovers more gain
+  than raw fallback (`0.184416` versus `0.154545`) and much more than plain
+  compact (`0.119481`), but raw fallback remains denser (`0.006521` versus
+  `0.005153`). The useful claim is a Pareto tradeoff, not a universal
+  improvement.
 
 ## Research Thesis
 

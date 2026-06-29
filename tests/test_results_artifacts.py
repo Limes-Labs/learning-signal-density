@@ -987,6 +987,128 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_support_ramped_compact_artifact_records_abundant_support_tradeoff(self) -> None:
+        support_ramped = json.loads(
+            Path("results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json").read_text()
+        )
+
+        self.assertEqual(support_ramped["seeds"], [401, 409, 419, 421, 431])
+        self.assertEqual(support_ramped["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(support_ramped["feature_dimension"], 1024)
+        self.assertEqual(support_ramped["profile_label"], "f1024_16x8_support_ramped_compact")
+        self.assertEqual(
+            support_ramped["confirmation_of"],
+            "results/tiny_neural_budget_sweep_density_capped_compact_f1024.json",
+        )
+        self.assertEqual(
+            support_ramped["comparison_of"],
+            "results/tiny_neural_budget_sweep_density_capped_compact_f1024.json",
+        )
+        self.assertEqual(support_ramped["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(support_ramped["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("support_ramped_compact_induction", support_ramped["conditions"])
+
+        scope = support_ramped["condition_scope"]["support_ramped_compact_induction"]
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["compact_original_encoding_at_large_samples"], True)
+        self.assertEqual(scope["abundant_data_support_ramp"], True)
+        self.assertEqual(scope["abundant_data_support_ramp_min_events"], 360)
+        self.assertEqual(scope["abundant_data_min_support"], 4)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        for material_count in ("64", "80", "96"):
+            self.assertEqual(
+                support_ramped["budgets"][material_count]["support_ramped_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                support_ramped["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+            self.assertEqual(
+                support_ramped["budgets"][material_count]["support_ramped_compact_induction"][
+                    "charged_compute_units_mean"
+                ],
+                support_ramped["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "charged_compute_units_mean"
+                ],
+            )
+
+        for material_count in ("104", "112", "120", "128"):
+            self.assertLess(
+                support_ramped["budgets"][material_count]["support_ramped_compact_induction"][
+                    "charged_compute_units_mean"
+                ],
+                support_ramped["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "charged_compute_units_mean"
+                ],
+            )
+
+        self.assertEqual(
+            support_ramped["budgets"]["104"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            0.003735,
+        )
+        self.assertGreater(
+            support_ramped["budgets"]["104"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            support_ramped["budgets"]["104"]["compact_train_size_gated_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertGreater(
+            support_ramped["budgets"]["104"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            support_ramped["budgets"]["104"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        for material_count in ("112", "128"):
+            self.assertGreater(
+                support_ramped["budgets"][material_count]["support_ramped_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                support_ramped["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+            self.assertGreater(
+                support_ramped["budgets"][material_count]["support_ramped_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                support_ramped["budgets"][material_count]["density_capped_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+            self.assertGreater(
+                support_ramped["budgets"][material_count]["support_ramped_compact_induction"][
+                    "signed_learning_signal_density_per_1m_event_compute_mean"
+                ],
+                support_ramped["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "signed_learning_signal_density_per_1m_event_compute_mean"
+                ],
+            )
+        self.assertEqual(
+            support_ramped["budgets"]["128"]["support_ramped_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.184416,
+        )
+        self.assertLess(
+            support_ramped["budgets"]["128"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            support_ramped["budgets"]["128"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
