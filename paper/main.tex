@@ -178,6 +178,9 @@ QA duplicates.
 A high-budget extension then tests a density-capped schedule through 128
 materials: it keeps compact induction through 96 materials and returns to raw
 text once the train split reaches the abundant-data tier.
+A second high-budget extension tests the middle of that gain-density tradeoff:
+it keeps compact induction but raises the induced-label minimum support from 3
+to 4 after the abundant-data tier.
 
 \section{Results}
 
@@ -192,7 +195,8 @@ Table~\ref{tab:validation-coverage-proxy},
 Table~\ref{tab:tempered-sample-aware},
 Table~\ref{tab:train-size-gated-baseline},
 Table~\ref{tab:compact-train-size-gated},
-Table~\ref{tab:density-capped-compact}, and
+Table~\ref{tab:density-capped-compact},
+Table~\ref{tab:support-ramped-compact}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -347,6 +351,18 @@ that raw text dominates. It is that a useful policy should choose between raw,
 compact, and fuller generated-label views according to the gain-density
 frontier, not only according to heldout accuracy.
 
+Table~\ref{tab:support-ramped-compact} tests a middle policy on fresh seeds
+401, 409, 419, 421, and 431. The support-ramped condition matches compact
+induction through 96 materials, then requires support 4 instead of support 3
+for induced labels. The result is a Pareto tradeoff, not a universal
+improvement. At 104 materials it improves signed LSD over both plain compact
+and raw fallback, 0.003735 versus 0.002857 and 0.002145, while keeping higher
+gain than raw. At 128 materials it recovers more signed gain than both raw
+fallback and plain compact, 0.184416 versus 0.154545 and 0.119481, but raw
+fallback remains denser, 0.006521 versus 0.005153. This makes the high-budget
+selector target more precise: the choice is not just synthesize or abstain, but
+which support floor buys the desired point on the gain-density frontier.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -396,6 +412,10 @@ generated labels that improve accuracy can become density-inefficient once raw
 external evidence is plentiful enough. The next selector therefore needs a
 utility model over both gain and charged compute, not just a classifier for
 ``should synthesize''.
+The support-ramped compact probe adds another constraint to that utility model:
+increasing induced-label support can recover high-budget gain-density tradeoffs
+that raw fallback discards, but it still does not dominate raw on density
+alone.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

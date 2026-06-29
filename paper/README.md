@@ -33,6 +33,7 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json`
 - `results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json`
 - `results/tiny_neural_budget_sweep_density_capped_compact_f1024.json`
+- `results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked
@@ -72,6 +73,10 @@ tier.
 The density-capped compact artifact must use fresh seeds, mark train-only
 selection and induction, keep validation and heldout out of policy selection,
 and disclose both the compact large-sample tier and abundant-data raw fallback.
+The support-ramped compact artifact must use fresh seeds, mark train-only
+selection and induction, keep validation and heldout out of policy selection,
+and disclose both the compact large-sample tier and abundant-data support
+ramp.
 
 ## Release Checklist
 

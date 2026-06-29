@@ -159,6 +159,30 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
         self.assertLess(density_capped["charged_compute_units"], compact["charged_compute_units"])
         self.assertEqual(density_capped["portfolio_candidate_count"], 0)
 
+    def test_support_ramped_compact_policy_declares_train_only_support_ramp(self) -> None:
+        result = run_neural_seedset(
+            seeds=[401],
+            conditions=["support_ramped_compact_induction"],
+            material_count=104,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=64,
+            fresh_seed_confirmation=True,
+        )
+
+        scope = result["condition_scope"]["support_ramped_compact_induction"]
+        stats = result["conditions"]["support_ramped_compact_induction"]
+
+        self.assertEqual(result["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["compact_original_encoding_at_large_samples"], True)
+        self.assertEqual(scope["abundant_data_min_support"], 4)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(stats["portfolio_candidate_count_mean"], 0)
+
     def test_validation_portfolio_selector_charges_candidate_training_without_heldout_selection(self) -> None:
         selector = run_neural_condition(
             seed=17,
