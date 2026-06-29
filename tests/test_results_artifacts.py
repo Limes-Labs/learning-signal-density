@@ -378,6 +378,66 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_validation_abstaining_proxy_artifact_records_raw_text_abstention_probe(self) -> None:
+        abstaining = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.json").read_text()
+        )
+        proxy = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.json").read_text()
+        )
+
+        self.assertEqual(abstaining["feature_dimension"], 1024)
+        self.assertEqual(
+            abstaining["profile_label"],
+            "epochs=16_hidden=8_features=1024_validation_abstaining_proxy",
+        )
+        self.assertEqual(
+            abstaining["comparison_of"],
+            "results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.json",
+        )
+        self.assertEqual(abstaining["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(abstaining["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_abstaining_proxy_selector", abstaining["conditions"])
+
+        scope = abstaining["condition_scope"]["validation_abstaining_proxy_selector"]
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["low_fidelity_proxy_selector"], True)
+        self.assertEqual(scope["raw_text_abstention"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        for material in ("16", "24", "32", "48", "64"):
+            row = abstaining["budgets"][material]["validation_abstaining_proxy_selector"]
+            self.assertEqual(row["portfolio_candidate_count_mean"], 6)
+            self.assertEqual(row["portfolio_proxy_epochs_mean"], 2)
+            self.assertEqual(row["portfolio_abstention_extra_correct_mean"], 3)
+            self.assertGreaterEqual(row["portfolio_raw_text_abstention_mean"], 0)
+            self.assertIn("portfolio_selected_condition_counts", row)
+            self.assertLessEqual(
+                row["charged_compute_units_mean"],
+                proxy["budgets"][material]["validation_linear_proxy_selector"]["charged_compute_units_mean"],
+            )
+
+        self.assertEqual(
+            abstaining["thresholds"]["validation_abstaining_proxy_selector"][
+                "first_material_count_reaching_target"
+            ],
+            48,
+        )
+        self.assertEqual(
+            abstaining["budgets"]["16"]["validation_abstaining_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.0,
+        )
+        self.assertGreater(
+            abstaining["budgets"]["24"]["validation_abstaining_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            proxy["budgets"]["24"]["validation_linear_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

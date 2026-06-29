@@ -63,6 +63,9 @@ The current pilot is intentionally modest:
   it scores the same candidate policies with a two-epoch linear proxy, charges
   those proxy fits, trains one final tiny MLP, and evaluates heldout only after
   selection.
+- `validation_abstaining_proxy_selector` adds a raw-text fallback to the
+  linear-proxy selector: a non-raw policy must beat raw text by three
+  validation examples before the selector leaves raw text.
 - `diverse_self_ranked_induction` applies a diversity penalty to the same
   train-only ranking to test whether balancing modifier/stimulus/family coverage
   improves the fixed synthetic budget.
@@ -131,6 +134,9 @@ using the same split and accounting discipline.
   low-fidelity validation selector probe for the same profile, using a
   two-epoch linear proxy to choose one final tiny-MLP policy before heldout
   evaluation.
+- `results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.*` -
+  raw-abstaining low-fidelity selector probe for the same profile, testing
+  whether a three-validation-example margin reduces scarce-budget downside.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -487,6 +493,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024_validation_linear_proxy
 ```
 
+Run the 16x8 1024-feature abstaining-proxy validation selector probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --conditions raw_text self_ranked_induction sample_aware_self_ranked_induction agreement_gated_self_ranked_induction validation_ranked_induction mdl_rule_expansion validation_abstaining_proxy_selector validation_linear_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_validation_abstaining_proxy
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -528,6 +554,9 @@ The repo reports three families of measurements:
 - The linear-proxy validation selector tests whether a cheaper model hierarchy
   can preserve selector signal while charging the proxy search and one selected
   final MLP training run.
+- The abstaining-proxy validation selector tests whether requiring a
+  three-validation-example margin over raw text reduces downside before paying
+  for generated-label policies.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 
@@ -675,6 +704,13 @@ The current artifacts show a useful split:
   portfolio selector's `0.000627` to `0.002091`, and cuts charged compute at 64
   from `734.1k` to `316.9k`. It is still negative at 16, 24, and 32 materials
   and remains less density-efficient than the best fixed train-only policies.
+- The abstaining-proxy selector improves downside control but not the core
+  frontier. It moves the proxy result from `-0.105` to `0.000` at 16 materials
+  and from `-0.041` to `0.006897` at 24 materials, while keeping the same
+  `0.153` gain and `0.002091` signed LSD at 64. It still fails at 32
+  materials and lowers the 48-material gain from `0.103` to `0.082759`, so the
+  useful next step is a better reliability signal rather than stricter
+  abstention alone.
 
 ## Research Thesis
 

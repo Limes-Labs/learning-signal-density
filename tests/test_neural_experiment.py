@@ -208,6 +208,71 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
                 saved["conditions"]["validation_linear_proxy_selector"],
             )
 
+    def test_validation_abstaining_proxy_selector_requires_extra_validation_examples_before_leaving_raw_text(self) -> None:
+        selector = run_neural_condition(
+            seed=17,
+            condition="validation_abstaining_proxy_selector",
+            material_count=16,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=32,
+            learning_rate=0.03,
+        )
+        proxy = run_neural_condition(
+            seed=17,
+            condition="validation_linear_proxy_selector",
+            material_count=16,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=32,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(selector["condition"], "validation_abstaining_proxy_selector")
+        self.assertEqual(selector["portfolio_candidate_count"], 6)
+        self.assertEqual(selector["portfolio_proxy_epochs"], 2)
+        self.assertEqual(selector["portfolio_abstention_extra_correct"], 3)
+        self.assertGreater(selector["portfolio_abstention_margin"], 0)
+        self.assertEqual(selector["portfolio_raw_text_abstention"], 1)
+        self.assertEqual(selector["portfolio_selected_condition"], "raw_text")
+        self.assertLessEqual(selector["charged_compute_units"], proxy["charged_compute_units"])
+        self.assertIn("raw_text_abstention", selector["portfolio_selection_metric"])
+        self.assertNotIn("heldout", selector["portfolio_selection_metric"])
+
+    def test_validation_abstaining_proxy_selector_scope_is_declared_in_neural_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_json = Path(temp_dir) / "abstaining_proxy_selector.json"
+            out_md = Path(temp_dir) / "abstaining_proxy_selector.md"
+            run_neural_seedset(
+                seeds=[17],
+                conditions=["validation_abstaining_proxy_selector"],
+                output_json=out_json,
+                output_markdown=out_md,
+                material_count=16,
+                epochs=2,
+                hidden_units=4,
+                feature_dimension=32,
+                fresh_seed_confirmation=True,
+            )
+
+            saved = json.loads(out_json.read_text())
+            scope = saved["condition_scope"]["validation_abstaining_proxy_selector"]
+            self.assertEqual(saved["claim_scope"]["heldout_used_for_selection"], False)
+            self.assertEqual(scope["validation_used_for_policy_selection"], True)
+            self.assertEqual(scope["low_fidelity_proxy_selector"], True)
+            self.assertEqual(scope["raw_text_abstention"], True)
+            self.assertEqual(scope["oracle_generated_labels"], False)
+            self.assertEqual(
+                saved["conditions"]["validation_abstaining_proxy_selector"][
+                    "portfolio_abstention_extra_correct_mean"
+                ],
+                3,
+            )
+            self.assertIn(
+                "portfolio_selected_condition_counts",
+                saved["conditions"]["validation_abstaining_proxy_selector"],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

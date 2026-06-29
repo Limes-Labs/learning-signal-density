@@ -13,4 +13,8 @@ as a negative-control selector experiment: it charges the full candidate search
 and does not use heldout labels for selection. The linear-proxy selector
 artifact is included as a partial selector-cost improvement: it replaces full
 candidate MLP training with charged two-epoch linear proxy fits before one
-final heldout evaluation, while still failing at the lowest budgets.
+final heldout evaluation, while still failing at the lowest budgets. The
+abstaining-proxy selector artifact is included as a downside-control probe: it
+falls back to raw text unless a non-raw candidate clears a three-validation
+example margin, improving 16/24-material behavior but still failing at 32
+materials.
