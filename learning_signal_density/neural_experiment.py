@@ -59,11 +59,14 @@ VALIDATION_COVERAGE_PRIOR_MIN_TRAIN_EVENTS = 96
 VALIDATION_COVERAGE_PRIOR_COMPUTE_PENALTY = 0.00001
 GENERATED_SOURCE_KINDS = frozenset({
     "agreement_gated_self_ranked_induced",
+    "compact_diverse_sample_aware_self_ranked_induced",
     "compact_sample_aware_self_ranked_induced",
     "counterfactual",
+    "diverse_self_ranked_induced",
     "induced_counterfactual",
     "late_confidence_ramped_compact_sample_aware_self_ranked_induced",
     "mdl_counterfactual",
+    "sample_aware_diverse_self_ranked_induced",
     "sample_aware_self_ranked_induced",
     "self_ranked_induced",
     "support_ramped_compact_sample_aware_self_ranked_induced",

@@ -33,6 +33,7 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_validation_coverage_prior_f1024.json`
 - `results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json`
 - `results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json`
+- `results/tiny_neural_budget_sweep_diversity_interaction_f1024.json`
 - `results/tiny_neural_budget_sweep_density_capped_compact_f1024.json`
 - `results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json`
 - `results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json`
@@ -75,6 +76,11 @@ the synthetic-budget policy.
 The compact train-size gated artifact must use fresh seeds, mark train-only
 selection and induction, keep validation and heldout out of policy selection,
 and disclose that original QA duplicates are dropped only at the large-sample
+tier.
+The diversity-interaction artifact must use fresh seeds, mark train-only
+selection and induction for both sample-aware diversity and compact diversity,
+keep validation and heldout out of policy selection, and disclose that compact
+diversity applies its diversity penalty only after the compact large-sample
 tier.
 The density-capped compact artifact must use fresh seeds, mark train-only
 selection and induction, keep validation and heldout out of policy selection,

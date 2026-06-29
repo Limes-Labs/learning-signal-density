@@ -49,6 +49,12 @@ The current pilot is intentionally modest:
 - `sample_aware_self_ranked_induction` uses the same train-only ranking, but
   adapts the synthetic budget and minimum support to the size of the train
   split so scarce external data is not overwhelmed by generated labels.
+- `diverse_self_ranked_induction` applies a diversity penalty to the same
+  train-only ranking to test whether balancing modifier/stimulus/family
+  coverage improves the fixed synthetic budget.
+- `sample_aware_diverse_self_ranked_induction` combines the sample-aware
+  budget policy with that diversity penalty, testing whether coverage balance
+  helps after the budget is made train-size aware.
 - `tempered_sample_aware_self_ranked_induction` is a train-only ablation of
   sample-aware ranking. It lowers the mid-budget synthetic ratio from `0.75` to
   `0.50` below 144 train events, testing whether smaller generated-label
@@ -59,6 +65,9 @@ The current pilot is intentionally modest:
 - `compact_train_size_gated_induction` keeps that train-size schedule but drops
   original QA duplicates at the large-sample tier, testing whether generated
   labels can be made denser without changing their labels.
+- `compact_diverse_train_size_gated_induction` keeps compact train-size gating
+  but applies diversity only after the compact large-sample tier, separating
+  candidate-order coverage from representation cost.
 - `density_capped_compact_induction` keeps compact induction only while it
   remains density-efficient, then returns to raw text after the abundant-data
   tier.
@@ -100,9 +109,6 @@ The current pilot is intentionally modest:
   lean candidate set to that coverage proxy. It uses raw text below 96 train
   events, then scans only raw, sample-aware self-ranked, and validation-ranked
   candidates with a small charged-compute penalty in the coverage score.
-- `diverse_self_ranked_induction` applies a diversity penalty to the same
-  train-only ranking to test whether balancing modifier/stimulus/family coverage
-  improves the fixed synthetic budget.
 - `mdl_rule_expansion` learns a compact set of train-only empirical rules,
   selects them on validation with a description-length penalty, and charges
   rule search, validation scoring, and rule-description costs.
@@ -205,6 +211,10 @@ using the same split and accounting discipline.
   fresh-seed train-only efficiency probe on seeds `181 191 193 197 199`. It
   matches the train-size gate through 48 materials, then drops original QA
   duplicates at the large-sample tier and improves 64-material signed LSD.
+- `results/tiny_neural_budget_sweep_diversity_interaction_f1024.*` -
+  fresh-seed train-only diversity interaction probe on seeds `701 709 719 727
+  733`. It shows that diversity improves the 64-material sample-aware row, but
+  compact diversity does not beat the compact density frontier.
 - `results/tiny_neural_budget_sweep_density_capped_compact_f1024.*` -
   fresh-seed high-budget density probe on seeds `293 307 311 313 317`. It
   matches compact train-size gating through 96 materials, then returns to raw
@@ -722,6 +732,33 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label f1024_16x8_compact_train_size_gated
 ```
 
+Run the 16x8 1024-feature diversity interaction probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_diversity_interaction_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_diversity_interaction_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 701 709 719 727 733 \
+  --conditions raw_text self_ranked_induction sample_aware_self_ranked_induction diverse_self_ranked_induction sample_aware_diverse_self_ranked_induction train_size_gated_sample_aware_induction compact_train_size_gated_induction compact_diverse_train_size_gated_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_diversity_interaction
+```
+
+The diversity interaction probe is train-only. On seeds `701 709 719 727
+733`, sample-aware diversity improves the 64-material sample-aware row from
+`0.158441` gain and `0.005544` signed LSD to `0.168831` and `0.005908`, but
+compact diversity lowers the compact 64-material row from `0.135065` gain and
+`0.007594` signed LSD to `0.116883` and `0.006573`. Diversity is useful inside
+the full sample-aware view, but it is not the compact density frontier.
+
 Run the 16x8 1024-feature density-capped compact high-budget probe:
 
 ```bash
@@ -1056,6 +1093,13 @@ The current artifacts show a useful split:
   materials, then improves the 64-material row from `0.132467` gain and
   `0.004634` signed LSD to `0.140260` gain and `0.007883` signed LSD by
   dropping original QA duplicates while keeping train-only generated labels.
+- The diversity interaction probe adds fresh seeds `701 709 719 727 733`. It
+  improves the 64-material sample-aware row from `0.158441` gain and
+  `0.005544` signed LSD to `0.168831` and `0.005908`, but compact diversity
+  loses to compact train-size gating (`0.116883` gain and `0.006573` signed
+  LSD versus `0.135065` and `0.007594`). Diversity is a candidate-ordering
+  help inside the full sample-aware view, not a replacement for compact
+  representation savings.
 - The density-capped compact probe extends the budget range to 128 materials
   on fresh seeds `293 307 311 313 317`. It keeps compact induction through 96
   materials, then returns to raw text from 104 onward. At 128 materials this

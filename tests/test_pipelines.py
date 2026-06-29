@@ -150,11 +150,27 @@ class PipelineAccountingTests(unittest.TestCase):
         alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "sample_aware_self_ranked_induction")
 
+        normal = build_pipeline_examples("sample_aware_diverse_self_ranked_induction", split.train, world.rules)
+        alternate = build_pipeline_examples(
+            "sample_aware_diverse_self_ranked_induction",
+            split.train,
+            alternate_rules,
+        )
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
+        self.assertEqual(normal_signature, alternate_signature, "sample_aware_diverse_self_ranked_induction")
+
         normal = build_pipeline_examples("compact_train_size_gated_induction", split.train, world.rules)
         alternate = build_pipeline_examples("compact_train_size_gated_induction", split.train, alternate_rules)
         normal_signature = self._example_signature(normal)
         alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "compact_train_size_gated_induction")
+
+        normal = build_pipeline_examples("compact_diverse_train_size_gated_induction", split.train, world.rules)
+        alternate = build_pipeline_examples("compact_diverse_train_size_gated_induction", split.train, alternate_rules)
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
+        self.assertEqual(normal_signature, alternate_signature, "compact_diverse_train_size_gated_induction")
 
         normal = build_pipeline_examples("density_capped_compact_induction", split.train, world.rules)
         alternate = build_pipeline_examples("density_capped_compact_induction", split.train, alternate_rules)
@@ -282,6 +298,33 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertEqual(small_sample_aware.ranked_induction_min_support, 2)
         self.assertIn("sample_aware_self_ranked_induced", {example.source_kind for example in small_sample_aware.examples})
 
+    def test_sample_aware_diverse_induction_combines_budget_policy_with_diversity(self) -> None:
+        world = build_world(seed=59, material_count=48)
+        split = split_observations(world.observations)
+        sample_aware = build_pipeline_examples("sample_aware_self_ranked_induction", split.train, world.rules)
+        sample_aware_diverse = build_pipeline_examples(
+            "sample_aware_diverse_self_ranked_induction",
+            split.train,
+            world.rules,
+        )
+
+        self.assertEqual(sample_aware_diverse.external_event_count, sample_aware.external_event_count)
+        self.assertEqual(sample_aware_diverse.ranked_synthetic_budget_ratio, sample_aware.ranked_synthetic_budget_ratio)
+        self.assertEqual(sample_aware_diverse.ranked_kept_candidate_count, sample_aware.ranked_kept_candidate_count)
+        self.assertEqual(sample_aware_diverse.ranked_induction_min_support, sample_aware.ranked_induction_min_support)
+        self.assertEqual(
+            sample_aware_diverse.ranked_induction_min_confidence,
+            sample_aware.ranked_induction_min_confidence,
+        )
+        self.assertEqual(sample_aware_diverse.train_calibration_event_count, 0)
+        self.assertEqual(sample_aware_diverse.validation_calibration_event_count, 0)
+        self.assertGreater(sample_aware_diverse.ranked_diversity_penalty, 0.0)
+        self.assertLessEqual(sample_aware_diverse.ranked_max_modifier_count, sample_aware.ranked_max_modifier_count)
+        self.assertIn(
+            "sample_aware_diverse_self_ranked_induced",
+            {example.source_kind for example in sample_aware_diverse.examples},
+        )
+
     def test_tempered_sample_aware_induction_reduces_mid_budget_synthetic_ratio(self) -> None:
         mid_world = build_world(seed=157, material_count=32)
         mid_split = split_observations(mid_world.observations)
@@ -407,6 +450,59 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertIn("raw", large_source_kinds)
         self.assertNotIn("qa", large_source_kinds)
         self.assertIn("compact_sample_aware_self_ranked_induced", large_source_kinds)
+
+    def test_compact_diverse_train_size_gated_induction_applies_diversity_only_after_compaction(self) -> None:
+        small_world = build_world(seed=61, material_count=32)
+        small_split = split_observations(small_world.observations)
+        small_raw = build_pipeline_examples("raw_text", small_split.train, small_world.rules)
+        small_compact_diverse = build_pipeline_examples(
+            "compact_diverse_train_size_gated_induction",
+            small_split.train,
+            small_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(small_compact_diverse), self._example_signature(small_raw))
+        self.assertEqual(small_compact_diverse.ranked_synthetic_budget_ratio, 0.0)
+
+        mid_world = build_world(seed=61, material_count=48)
+        mid_split = split_observations(mid_world.observations)
+        mid_sample_aware = build_pipeline_examples(
+            "sample_aware_self_ranked_induction",
+            mid_split.train,
+            mid_world.rules,
+        )
+        mid_compact_diverse = build_pipeline_examples(
+            "compact_diverse_train_size_gated_induction",
+            mid_split.train,
+            mid_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(mid_compact_diverse), self._example_signature(mid_sample_aware))
+        self.assertEqual(mid_compact_diverse.ranked_diversity_penalty, 0.0)
+
+        large_world = build_world(seed=59, material_count=64)
+        large_split = split_observations(large_world.observations)
+        large_compact = build_pipeline_examples(
+            "compact_train_size_gated_induction",
+            large_split.train,
+            large_world.rules,
+        )
+        large_compact_diverse = build_pipeline_examples(
+            "compact_diverse_train_size_gated_induction",
+            large_split.train,
+            large_world.rules,
+        )
+        large_source_kinds = {example.source_kind for example in large_compact_diverse.examples}
+
+        self.assertEqual(large_compact_diverse.external_event_count, large_compact.external_event_count)
+        self.assertEqual(large_compact_diverse.internal_example_count, large_compact.internal_example_count)
+        self.assertEqual(large_compact_diverse.ranked_synthetic_budget_ratio, large_compact.ranked_synthetic_budget_ratio)
+        self.assertEqual(large_compact_diverse.ranked_kept_candidate_count, large_compact.ranked_kept_candidate_count)
+        self.assertGreater(large_compact_diverse.ranked_diversity_penalty, 0.0)
+        self.assertLessEqual(large_compact_diverse.ranked_max_modifier_count, large_compact.ranked_max_modifier_count)
+        self.assertIn("raw", large_source_kinds)
+        self.assertNotIn("qa", large_source_kinds)
+        self.assertIn("compact_diverse_sample_aware_self_ranked_induced", large_source_kinds)
 
     def test_density_capped_compact_induction_returns_to_raw_when_data_is_abundant(self) -> None:
         small_world = build_world(seed=71, material_count=32)

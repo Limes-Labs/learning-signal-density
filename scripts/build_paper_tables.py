@@ -38,6 +38,9 @@ TEMPERED_SAMPLE_AWARE_ARTIFACT = Path(
 COMPACT_TRAIN_SIZE_GATED_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json"
 )
+DIVERSITY_INTERACTION_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_diversity_interaction_f1024.json"
+)
 DENSITY_CAPPED_COMPACT_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_density_capped_compact_f1024.json"
 )
@@ -67,11 +70,14 @@ LOW_BUDGET_MATERIALS = ["16", "24", "32"]
 CONDITION_LABELS = {
     "agreement_gated_self_ranked_induction": "Agreement-gated",
     "counterfactual_expansion": "Oracle counterfactual",
+    "compact_diverse_train_size_gated_induction": "Compact diverse",
     "compact_train_size_gated_induction": "Compact train-size gated",
     "density_capped_compact_induction": "Density-capped compact",
+    "diverse_self_ranked_induction": "Diverse self-ranked",
     "late_confidence_ramped_compact_induction": "Late-confidence compact",
     "mdl_rule_expansion": "MDL rule expansion",
     "qa_expansion": "QA expansion",
+    "sample_aware_diverse_self_ranked_induction": "Sample-aware diverse",
     "raw_text": "Raw text",
     "sample_aware_self_ranked_induction": "Sample-aware self-ranked",
     "self_ranked_induction": "Self-ranked",
@@ -201,6 +207,40 @@ def validate_compact_train_size_gated_scope(artifact_path: Path, artifact: dict[
         raise ValueError(f"{artifact_path} must mark the compact large-sample encoding")
     if scope.get("oracle_generated_labels") is not False:
         raise ValueError(f"{artifact_path} must not use oracle labels for the compact gate")
+
+
+def validate_diversity_interaction_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    sample_diverse = artifact.get("condition_scope", {}).get(
+        "sample_aware_diverse_self_ranked_induction",
+        {},
+    )
+    if sample_diverse.get("train_only_selection") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only sample-aware diversity selection")
+    if sample_diverse.get("train_only_induction") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only sample-aware diversity induction")
+    if sample_diverse.get("validation_used_for_transform_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for sample-aware diversity")
+    if sample_diverse.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for sample-aware diversity")
+
+    compact_diverse = artifact.get("condition_scope", {}).get(
+        "compact_diverse_train_size_gated_induction",
+        {},
+    )
+    if compact_diverse.get("train_only_selection") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only compact-diversity selection")
+    if compact_diverse.get("train_only_induction") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only compact-diversity induction")
+    if compact_diverse.get("validation_used_for_policy_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for compact-diversity selection")
+    if compact_diverse.get("validation_used_for_transform_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for compact-diversity transforms")
+    if compact_diverse.get("compact_original_encoding_at_large_samples") is not True:
+        raise ValueError(f"{artifact_path} must mark compact-diversity large-sample encoding")
+    if compact_diverse.get("diversity_penalty_after_compaction") is not True:
+        raise ValueError(f"{artifact_path} must mark the post-compaction diversity penalty")
+    if compact_diverse.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for compact diversity")
 
 
 def validate_density_capped_compact_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
@@ -366,6 +406,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "validation_coverage_prior": load_json(repo_root / VALIDATION_COVERAGE_PRIOR_ARTIFACT),
         "tempered_sample_aware": load_json(repo_root / TEMPERED_SAMPLE_AWARE_ARTIFACT),
         "compact_train_size_gated": load_json(repo_root / COMPACT_TRAIN_SIZE_GATED_ARTIFACT),
+        "diversity_interaction": load_json(repo_root / DIVERSITY_INTERACTION_ARTIFACT),
         "density_capped_compact": load_json(repo_root / DENSITY_CAPPED_COMPACT_ARTIFACT),
         "support_ramped_compact": load_json(repo_root / SUPPORT_RAMPED_COMPACT_ARTIFACT),
         "late_confidence_ramped_compact": load_json(
@@ -408,6 +449,11 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_compact_train_size_gated_scope(
         COMPACT_TRAIN_SIZE_GATED_ARTIFACT,
         artifacts["compact_train_size_gated"],
+    )
+    validate_claim_scope(DIVERSITY_INTERACTION_ARTIFACT, artifacts["diversity_interaction"])
+    validate_diversity_interaction_scope(
+        DIVERSITY_INTERACTION_ARTIFACT,
+        artifacts["diversity_interaction"],
     )
     validate_claim_scope(DENSITY_CAPPED_COMPACT_ARTIFACT, artifacts["density_capped_compact"])
     validate_density_capped_compact_scope(
@@ -998,6 +1044,52 @@ def build_compact_train_size_gated_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_diversity_interaction_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["diversity_interaction"]
+    conditions = (
+        "self_ranked_induction",
+        "diverse_self_ranked_induction",
+        "sample_aware_self_ranked_induction",
+        "sample_aware_diverse_self_ranked_induction",
+        "compact_train_size_gated_induction",
+        "compact_diverse_train_size_gated_induction",
+    )
+    materials = ("16", "24", "32", "48", "64")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Diversity interaction on fresh seeds 701, 709, 719, 727, and 733. All non-raw rows are train-only generated-label policies. The table separates candidate-order diversity from representation cost: sample-aware diversity improves the 64-material non-oracle gain over sample-aware self-ranked induction, while compact diversity loses to the compact train-size gate on the density frontier.}",
+        r"\label{tab:diversity-interaction}",
+        r"\small",
+        r"\setlength{\tabcolsep}{1.5pt}",
+        r"\begin{tabular}{@{}llrrrrr@{}}",
+        r"\toprule",
+        r"Condition & Metric & 16 & 24 & 32 & 48 & 64 \\",
+        r"\midrule",
+    ]
+    for condition in conditions:
+        rows = (
+            ("Gain", "accuracy_improvement_over_majority_mean", 6),
+            ("LSD", "signed_learning_signal_density_per_1m_event_compute_mean", 6),
+        )
+        for index, (metric_label, metric_key, digits) in enumerate(rows):
+            row = [
+                latex_escape(condition_label(condition)) if index == 0 else "",
+                metric_label,
+                *(
+                    fmt_float(
+                        artifact["budgets"][material][condition][metric_key],
+                        digits=digits,
+                    )
+                    for material in materials
+                ),
+            ]
+            lines.append(" & ".join(row) + r" \\")
+        lines.append(r"\addlinespace")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def build_density_capped_compact_table(repo_root: Path) -> str:
     artifact = load_supporting_artifacts(repo_root)["density_capped_compact"]
     conditions = (
@@ -1148,6 +1240,7 @@ def render_tables(repo_root: Path) -> str:
             build_tempered_sample_aware_table(repo_root),
             build_train_size_gated_table(repo_root),
             build_compact_train_size_gated_table(repo_root),
+            build_diversity_interaction_table(repo_root),
             build_density_capped_compact_table(repo_root),
             build_support_ramped_compact_table(repo_root),
             build_late_confidence_ramped_compact_table(repo_root),

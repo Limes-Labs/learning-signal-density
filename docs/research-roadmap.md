@@ -75,6 +75,9 @@ A compact train-size gated efficiency probe then keeps the same schedule but
 drops original QA duplicates at the large-sample tier, testing whether density
 can improve by removing redundant transformed originals instead of changing
 generated labels.
+A diversity interaction probe then tests candidate-order coverage separately
+from representation cost: plain diversity, sample-aware diversity, and compact
+diversity are rerun together on fresh seeds.
 A density-capped compact probe then extends the budget range through 128
 materials and tests whether the policy should return to raw text once external
 evidence is abundant enough that generated-label transforms no longer pay back
@@ -215,6 +218,13 @@ high-budget tradeoff.
   and `0.004634` signed LSD to `0.140260` gain and `0.007883` signed LSD by
   keeping raw originals but dropping original QA duplicates at the large-sample
   tier.
+- Treat diversity as a candidate-ordering control, not a density fix by itself.
+  On fresh seeds `701 709 719 727 733`, sample-aware diversity improves the
+  64-material sample-aware row from `0.158441` gain and `0.005544` signed LSD
+  to `0.168831` and `0.005908`, while compact diversity loses to the compact
+  train-size gate (`0.116883` and `0.006573` versus `0.135065` and
+  `0.007594`). Future policies should keep diversity as a possible accuracy
+  signal only when its representation cost is already justified.
 - Treat abundant-data raw fallback as a density frontier candidate. On fresh
   seeds `293 307 311 313 317`, density-capped compact induction matches
   compact through 96 materials, then returns to raw text from 104 onward. At

@@ -561,6 +561,32 @@ duplicates. On seeds `181 191 193 197 199`, it is identical to the train-size
 gate through 48 materials, then improves the 64-material row from `0.132467`
 gain and `0.004634` signed LSD to `0.140260` gain and `0.007883` signed LSD.
 
+16x8 1024-feature diversity interaction probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_diversity_interaction_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_diversity_interaction_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 701 709 719 727 733 \
+  --conditions raw_text self_ranked_induction sample_aware_self_ranked_induction diverse_self_ranked_induction sample_aware_diverse_self_ranked_induction train_size_gated_sample_aware_induction compact_train_size_gated_induction compact_diverse_train_size_gated_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_diversity_interaction
+```
+
+The diversity interaction probe is train-only. It shows that modifier/stimulus
+coverage balancing can help the full sample-aware view at 64 materials
+(`0.168831` gain and `0.005908` signed LSD versus `0.158441` and `0.005544`),
+but it hurts the compact density frontier (`0.116883` gain and `0.006573`
+signed LSD versus compact's `0.135065` and `0.007594`).
+
 16x8 1024-feature density-capped compact high-budget probe:
 
 ```bash
