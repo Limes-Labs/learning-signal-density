@@ -20,6 +20,9 @@ VALIDATION_SELECTED_ARTIFACT = Path("results/tiny_neural_budget_sweep_validation
 AGREEMENT_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_agreement_gated_f1024.json")
 POLICY_ENVELOPE_ARTIFACT = Path("results/policy_envelope_f1024.json")
 VALIDATION_PORTFOLIO_ARTIFACT = Path("results/tiny_neural_budget_sweep_validation_portfolio_f1024.json")
+VALIDATION_LINEAR_PROXY_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.json"
+)
 
 FRONTIER_CONDITIONS = [
     "raw_text",
@@ -41,6 +44,7 @@ CONDITION_LABELS = {
     "raw_text": "Raw text",
     "sample_aware_self_ranked_induction": "Sample-aware self-ranked",
     "self_ranked_induction": "Self-ranked",
+    "validation_linear_proxy_selector": "Linear proxy selector",
     "validation_portfolio_selector": "Validation portfolio selector",
     "validation_ranked_induction": "Validation-ranked",
 }
@@ -112,6 +116,16 @@ def validate_policy_envelope_scope(artifact_path: Path, artifact: dict[str, Any]
         raise ValueError(f"{artifact_path} must exclude the oracle from non-oracle conditions")
 
 
+def validate_linear_proxy_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("validation_linear_proxy_selector", {})
+    if scope.get("low_fidelity_proxy_selector") is not True:
+        raise ValueError(f"{artifact_path} must mark the low-fidelity proxy selector")
+    if scope.get("validation_used_for_policy_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation policy selection")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the proxy selector")
+
+
 def load_budget_artifacts(repo_root: Path) -> list[tuple[str, Path, dict[str, Any]]]:
     loaded = []
     for profile_label, relative_path in BUDGET_ARTIFACTS:
@@ -129,6 +143,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "agreement_gated": load_json(repo_root / AGREEMENT_GATED_ARTIFACT),
         "policy_envelope": load_json(repo_root / POLICY_ENVELOPE_ARTIFACT),
         "validation_portfolio": load_json(repo_root / VALIDATION_PORTFOLIO_ARTIFACT),
+        "validation_linear_proxy": load_json(repo_root / VALIDATION_LINEAR_PROXY_ARTIFACT),
     }
     validate_claim_scope(FEATURE_FRONTIER_ARTIFACT, artifacts["feature"])
     validate_claim_scope(PROFILE_FRONTIER_ARTIFACT, artifacts["profile"])
@@ -136,6 +151,8 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_claim_scope(AGREEMENT_GATED_ARTIFACT, artifacts["agreement_gated"])
     validate_policy_envelope_scope(POLICY_ENVELOPE_ARTIFACT, artifacts["policy_envelope"])
     validate_claim_scope(VALIDATION_PORTFOLIO_ARTIFACT, artifacts["validation_portfolio"])
+    validate_claim_scope(VALIDATION_LINEAR_PROXY_ARTIFACT, artifacts["validation_linear_proxy"])
+    validate_linear_proxy_scope(VALIDATION_LINEAR_PROXY_ARTIFACT, artifacts["validation_linear_proxy"])
     return artifacts
 
 
@@ -301,37 +318,42 @@ def fmt_selection_counts(counts: dict[str, int]) -> str:
 
 def build_validation_portfolio_table(repo_root: Path) -> str:
     support = load_supporting_artifacts(repo_root)
-    selector = support["validation_portfolio"]
     envelope = support["policy_envelope"]
+    selectors = [
+        ("Linear proxy selector", support["validation_linear_proxy"], "validation_linear_proxy_selector"),
+        ("Validation portfolio selector", support["validation_portfolio"], "validation_portfolio_selector"),
+    ]
     lines = [
         r"\begin{table}[htbp]",
         r"\centering",
-        r"\caption{Validation portfolio selector versus the post-hoc envelope. The selector trains and validates six non-oracle candidate policies per seed, charges that portfolio search, and then evaluates heldout once; the envelope is heldout-selected and non-deployable.}",
+        r"\caption{Validation selector probes versus the post-hoc envelope. The linear proxy selector scores each candidate with a two-epoch linear classifier before training one tiny MLP; the full portfolio selector trains and validates every candidate tiny MLP. Both charge selection and evaluate heldout once; the envelope is heldout-selected and non-deployable.}",
         r"\label{tab:validation-portfolio-selector}",
         r"\small",
         r"\setlength{\tabcolsep}{3pt}",
-        r"\begin{tabular}{@{}rrrrr>{\raggedright\arraybackslash}p{0.34\linewidth}@{}}",
+        r"\begin{tabular}{@{}rlrrrr>{\raggedright\arraybackslash}p{0.26\linewidth}@{}}",
         r"\toprule",
-        r"Budget & Sel. gain & Sel. LSD & Cost & Env. gain & Choices \\",
+        r"Budget & Selector & Gain & LSD & Cost & Env. gain & Choices \\",
         r"\midrule",
     ]
-    for material in selector["material_counts"]:
+    for material in support["validation_linear_proxy"]["material_counts"]:
         material_key = str(material)
-        row = selector["budgets"][material_key]["validation_portfolio_selector"]
         envelope_row = envelope["best_by_material"][material_key]
-        lines.append(
-            " & ".join(
-                [
-                    str(material),
-                    fmt_float(row["accuracy_improvement_over_majority_mean"]),
-                    fmt_float(row["signed_learning_signal_density_per_1m_event_compute_mean"], digits=6),
-                    latex_escape(fmt_ops(row["charged_compute_units_mean"])),
-                    fmt_float(envelope_row["signed_gain"]),
-                    latex_escape(fmt_selection_counts(row["portfolio_selected_condition_counts"])),
-                ]
+        for selector_label, selector_artifact, condition in selectors:
+            row = selector_artifact["budgets"][material_key][condition]
+            lines.append(
+                " & ".join(
+                    [
+                        str(material),
+                        latex_escape(selector_label),
+                        fmt_float(row["accuracy_improvement_over_majority_mean"]),
+                        fmt_float(row["signed_learning_signal_density_per_1m_event_compute_mean"], digits=6),
+                        latex_escape(fmt_ops(row["charged_compute_units_mean"])),
+                        fmt_float(envelope_row["signed_gain"]),
+                        latex_escape(fmt_selection_counts(row["portfolio_selected_condition_counts"])),
+                    ]
+                )
+                + r" \\"
             )
-            + r" \\"
-        )
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
     return "\n".join(lines)
 

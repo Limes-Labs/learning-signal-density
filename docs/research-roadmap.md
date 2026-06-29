@@ -47,7 +47,10 @@ quantifies the remaining selector problem while explicitly marking itself
 non-deployable because it uses completed heldout results. A validation-portfolio
 selector probe tests the deployable version of that idea by training six
 non-oracle candidate policies, choosing on validation, charging the full search,
-and then evaluating heldout once.
+and then evaluating heldout once. A linear-proxy selector probe tests a cheaper
+model hierarchy by scoring the same candidates with two-epoch linear fits,
+charging that search, training only one final tiny MLP, and then evaluating
+heldout once.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -110,6 +113,13 @@ and then evaluating heldout once.
   32, peaks below fixed self-ranked induction, and has much lower signed LSD
   because every candidate training is charged. The next selector should learn a
   cheaper abstain/compress/rank rule instead of brute-force trying every policy.
+- Treat low-fidelity selector hierarchy as partial progress, not the answer.
+  The linear-proxy selector improves over the full validation portfolio at 48
+  and 64 materials and raises 64-material signed LSD from `0.000627` to
+  `0.002091`, but it is still negative at 16, 24, and 32 materials and remains
+  less density-efficient than fixed self-ranked or sample-aware self-ranked
+  induction. The next selector needs a cheaper pre-filter or abstention signal
+  before paying for even proxy fits.
 
 ## Phase 3: Continual-Learning Replay
 

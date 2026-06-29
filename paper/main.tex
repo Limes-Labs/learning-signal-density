@@ -143,6 +143,9 @@ does explicit reliability selection repair the scarce-sample generated-label
 failure? To test that, the 16x8 profile is rerun with a train-only agreement
 gate, charged validation-ranked induction, and MDL rule expansion beside the
 train-only ranked policies and oracle counterfactual headroom.
+The latest selector extension replaces the expensive full validation portfolio
+with a two-epoch linear proxy that scores the same candidate policies before
+training only one final MLP.
 
 \section{Results}
 
@@ -192,18 +195,21 @@ problem sharper: a useful policy must learn when to abstain, when to compress
 rules, and when to rank generated labels using only train signals or explicitly
 charged validation signals.
 
-Table~\ref{tab:validation-portfolio-selector} turns that diagnostic into a
-deployable selector test. For each seed and budget, the selector trains six
-non-oracle candidate policies, evaluates them on validation examples, chooses
-by validation improvement over majority, charges the full portfolio search, and
-then evaluates the selected model on heldout examples once. The result is
-partially encouraging but not a breakthrough. At 16 materials it matches the
-post-hoc envelope's positive signed gain, mostly by selecting raw text. At 24
-and 32 materials it still remains negative. At 64 materials it reaches 0.109
-signed gain, but this is below self-ranked induction's 0.153 and its charged
-LSD is only 0.000627 because six candidate trainings were paid. Validation is
-therefore informative but too expensive and too noisy in this simple portfolio
-form.
+Table~\ref{tab:validation-portfolio-selector} turns that diagnostic into two
+deployable selector tests. The full portfolio trains six non-oracle candidate
+MLPs, evaluates them on validation examples, chooses by validation improvement
+over majority, charges the whole search, and then evaluates heldout once. The
+linear proxy selector scores the same candidate policies with a two-epoch
+linear classifier, charges those proxy fits, trains only the selected tiny MLP,
+and then opens heldout once. The proxy improves the deployable selector
+frontier, but it is still not a solved policy. At 48 materials it reaches 0.103
+signed gain versus 0.076 for the full portfolio; at 64 materials it reaches
+0.153 signed gain versus 0.109, while improving charged signed LSD from
+0.000627 to 0.002091. However, it remains negative at 16, 24, and 32 materials,
+first reaches the target only at 48, and still has lower 64-material density
+than fixed self-ranked and sample-aware self-ranked induction. The result is
+therefore a real selector-cost improvement, not a breakthrough on scarce-sample
+reliability.
 
 \section{Discussion}
 
@@ -221,9 +227,10 @@ The post-hoc envelope also turns the problem into a selector-learning question:
 future experiments should preregister train/validation features that predict
 whether raw text, compact rules, validation-ranked candidates, or train-only
 ranked candidates are appropriate before heldout evaluation is opened.
-The first deployable validation portfolio selector is a useful negative control
-for that plan: it proves that simply trying every candidate on validation is
-not enough once selector cost is included.
+The selector probes are useful controls for that plan: the full portfolio shows
+that trying every candidate on validation is too expensive, while the linear
+proxy shows that cheaper model hierarchies help but still need an abstain or
+pre-filter rule at 16--32 materials.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be
