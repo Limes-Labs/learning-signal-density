@@ -65,7 +65,9 @@ distribution of generated labels explains part of the remaining gap. A
 validation-coverage proxy now turns that mechanism diagnostic into a deployable
 selector probe on fresh seeds `103 107 109 113 127`, using validation motif
 distribution rather than heldout distribution or validation labels for the
-selector score.
+selector score. A tempered sample-aware ablation then tests whether lowering
+the mid-budget train-only synthetic ratio from `0.75` to `0.50` repairs the
+same 24/32-material failure without validation selection.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -168,6 +170,13 @@ selector score.
   every 24-material seed and drops to `-0.082759`. The next selector should
   combine motif coverage with a low-budget abstention floor or train-size
   prior before paying for generated-label policies.
+- Treat synthetic-budget tempering as partial damage control. On fresh seeds
+  `157 163 167 173 179`, lowering the mid-budget sample-aware ratio from
+  `0.75` to `0.50` improves 24-material gain from `-0.137931` to `-0.096552`
+  and 32-material gain from `-0.152632` to `-0.078947`, while preserving the
+  high-budget gains. It still loses to the train-size raw fallback at 24 and
+  32, so the next policy needs a principled abstention signal, not only a
+  smaller generated-label budget.
 - Treat the train-size gated schedule as the new cheap-selector baseline. On
   unseen seeds `59 61 67 71 73`, raw text below 144 train events plus
   sample-aware induction above that threshold reaches the same `0.145454` best

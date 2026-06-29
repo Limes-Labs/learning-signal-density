@@ -49,6 +49,10 @@ The current pilot is intentionally modest:
 - `sample_aware_self_ranked_induction` uses the same train-only ranking, but
   adapts the synthetic budget and minimum support to the size of the train
   split so scarce external data is not overwhelmed by generated labels.
+- `tempered_sample_aware_self_ranked_induction` is a train-only ablation of
+  sample-aware ranking. It lowers the mid-budget synthetic ratio from `0.75` to
+  `0.50` below 144 train events, testing whether smaller generated-label
+  budgets repair the 24--32 material failure without validation selection.
 - `agreement_gated_self_ranked_induction` keeps train-only generated labels
   only when independent induced-rule projections agree, testing whether source
   agreement is enough reliability signal without validation labels.
@@ -164,6 +168,10 @@ using the same split and accounting discipline.
   This is deployable, uses validation motif distribution rather than heldout
   distribution for policy selection, and records a mixed result: positive at
   32 and 64 materials, but harmful at 24 materials.
+- `results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.*` -
+  fresh-seed train-only synthetic-budget ablation on seeds `157 163 167 173
+  179`. It improves 24/32-material gain relative to fixed sample-aware ranking,
+  but still loses to the train-size raw fallback at those scarce budgets.
 - `results/tiny_neural_budget_sweep_train_size_gated_f1024.*` - second
   unseen-seed baseline on seeds `59 61 67 71 73`, testing a deployable
   train-size-only schedule that stays raw below 144 train events and switches
@@ -607,6 +615,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024_validation_coverage_proxy
 ```
 
+Run the 16x8 1024-feature tempered sample-aware ablation:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 157 163 167 173 179 \
+  --conditions raw_text qa_expansion sample_aware_self_ranked_induction tempered_sample_aware_self_ranked_induction train_size_gated_sample_aware_induction validation_coverage_proxy_selector validation_abstaining_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_train_size_gated_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_tempered_sample_aware
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -655,6 +683,9 @@ The repo reports three families of measurements:
   heldout-coverage audit can be approximated by validation motif distribution
   before heldout is opened. It uses no validation labels for its selector score,
   but still charges candidate construction and validation-motif scanning.
+- The tempered sample-aware policy tests whether lowering the mid-budget
+  generated-label ratio reduces scarce-budget damage without adding validation
+  selection, heldout access, or selector-search cost.
 - The train-size gated sample-aware policy tests a cheaper schedule baseline:
   raw text below 144 train events and sample-aware self-ranked induction once
   the train split is large enough. It uses no validation labels or selector
@@ -844,6 +875,12 @@ The current artifacts show a useful split:
   induction (`0.010526` versus `-0.036842`) and reaches `0.171428` at 64, but
   it selects MDL at every 24-material seed and falls to `-0.082759`. Coverage
   is therefore a real signal, but this proxy is not yet a robust selector.
+- The tempered sample-aware ablation lowers the mid-budget synthetic ratio from
+  `0.75` to `0.50` on fresh seeds `157 163 167 173 179`. It reduces
+  sample-aware damage at 24 materials (`-0.096552` versus `-0.137931`) and 32
+  materials (`-0.078947` versus `-0.152632`) while preserving the 48/64
+  high-budget gains. It still loses to the train-size raw fallback at 24 and
+  32, so budget tempering is useful but not enough.
 - The train-size gated baseline adds a second unseen seed check on seeds
   `59 61 67 71 73`. It reaches the same `0.145454` best gain and `0.005090`
   best signed LSD as fixed sample-aware induction while using raw text at 16,
