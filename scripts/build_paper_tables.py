@@ -17,6 +17,7 @@ BUDGET_ARTIFACTS = [
 FEATURE_FRONTIER_ARTIFACT = Path("results/tiny_neural_feature_sweep_wide.json")
 PROFILE_FRONTIER_ARTIFACT = Path("results/tiny_neural_profile_sweep_f1024.json")
 VALIDATION_SELECTED_ARTIFACT = Path("results/tiny_neural_budget_sweep_validation_selected_f1024.json")
+AGREEMENT_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_agreement_gated_f1024.json")
 
 FRONTIER_CONDITIONS = [
     "raw_text",
@@ -31,6 +32,7 @@ LOW_BUDGET_CONDITIONS = [
 LOW_BUDGET_MATERIALS = ["16", "24", "32"]
 
 CONDITION_LABELS = {
+    "agreement_gated_self_ranked_induction": "Agreement-gated",
     "counterfactual_expansion": "Oracle counterfactual",
     "mdl_rule_expansion": "MDL rule expansion",
     "qa_expansion": "QA expansion",
@@ -107,10 +109,12 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "feature": load_json(repo_root / FEATURE_FRONTIER_ARTIFACT),
         "profile": load_json(repo_root / PROFILE_FRONTIER_ARTIFACT),
         "validation_selected": load_json(repo_root / VALIDATION_SELECTED_ARTIFACT),
+        "agreement_gated": load_json(repo_root / AGREEMENT_GATED_ARTIFACT),
     }
     validate_claim_scope(FEATURE_FRONTIER_ARTIFACT, artifacts["feature"])
     validate_claim_scope(PROFILE_FRONTIER_ARTIFACT, artifacts["profile"])
     validate_claim_scope(VALIDATION_SELECTED_ARTIFACT, artifacts["validation_selected"])
+    validate_claim_scope(AGREEMENT_GATED_ARTIFACT, artifacts["agreement_gated"])
     return artifacts
 
 
@@ -170,10 +174,11 @@ def build_frontier_table(repo_root: Path) -> str:
 
 
 def build_validation_selected_table(repo_root: Path) -> str:
-    artifact = load_supporting_artifacts(repo_root)["validation_selected"]
+    artifact = load_supporting_artifacts(repo_root)["agreement_gated"]
     conditions = (
         "self_ranked_induction",
         "sample_aware_self_ranked_induction",
+        "agreement_gated_self_ranked_induction",
         "validation_ranked_induction",
         "mdl_rule_expansion",
         "counterfactual_expansion",
@@ -182,7 +187,7 @@ def build_validation_selected_table(repo_root: Path) -> str:
     lines = [
         r"\begin{table}[htbp]",
         r"\centering",
-        r"\caption{Charged reliability-selection probe at the 16x8 f1024 profile. Entries are heldout accuracy improvement over the majority baseline; first target uses \LsdPaperTargetGain{} signed gain.}",
+        r"\caption{Reliability-policy probe at the 16x8 f1024 profile. Entries are heldout accuracy improvement over the majority baseline; first target uses \LsdPaperTargetGain{} signed gain.}",
         r"\label{tab:validation-selected-reliability-probe}",
         r"\begin{tabular}{@{}llrrrrr@{}}",
         r"\toprule",

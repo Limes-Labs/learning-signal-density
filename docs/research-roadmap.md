@@ -40,7 +40,9 @@ frontier plus 256-feature and 1024-feature budget reruns for the efficient
 `16x8` budget confirmation. A further `8x8` ablation tests whether lower
 training budget can reduce scarce-sample overfitting, and a charged
 validation-selected rerun tests whether validation-ranked or MDL rule-selection
-policies repair the low-budget generated-label failure.
+policies repair the low-budget generated-label failure. A train-only
+agreement-gated rerun tests whether independent induced-rule projections are a
+cheap enough reliability signal.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -87,6 +89,11 @@ policies repair the low-budget generated-label failure.
   train-only ranked policies. MDL rule expansion is less negative at 32
   materials but still below target and lower at peak gain, so the next policy
   needs better scarce-sample reliability without excessive selection cost.
+- Treat source agreement alone as insufficient. The agreement-gated train-only
+  probe reaches target only at 48 materials, is worse than sample-aware ranking
+  at 16 materials, and has much lower peak signed gain. Independent projection
+  agreement is therefore not enough without better uncertainty calibration or
+  coverage control.
 
 ## Phase 3: Continual-Learning Replay
 

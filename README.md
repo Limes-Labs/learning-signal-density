@@ -49,6 +49,9 @@ The current pilot is intentionally modest:
 - `sample_aware_self_ranked_induction` uses the same train-only ranking, but
   adapts the synthetic budget and minimum support to the size of the train
   split so scarce external data is not overwhelmed by generated labels.
+- `agreement_gated_self_ranked_induction` keeps train-only generated labels
+  only when independent induced-rule projections agree, testing whether source
+  agreement is enough reliability signal without validation labels.
 - `diverse_self_ranked_induction` applies a diversity penalty to the same
   train-only ranking to test whether balancing modifier/stimulus/family coverage
   improves the fixed synthetic budget.
@@ -104,6 +107,8 @@ using the same split and accounting discipline.
 - `results/tiny_neural_budget_sweep_validation_selected_f1024.*` - charged
   validation-ranked and MDL rule-selection probe for the `16x8` 1024-feature
   profile.
+- `results/tiny_neural_budget_sweep_agreement_gated_f1024.*` - train-only
+  source-agreement reliability probe for the same `16x8` 1024-feature profile.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -391,6 +396,26 @@ python3 -m learning_signal_density.neural_sweep \
   --confirmation-of results/tiny_neural_budget_sweep_16x8_f1024.json \
   --comparison-of results/tiny_neural_budget_sweep_16x8_f1024.json \
   --profile-label epochs=16_hidden=8_features=1024_validation_selected
+```
+
+Run the 16x8 1024-feature agreement-gated reliability probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_agreement_gated_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_agreement_gated_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --conditions raw_text self_ranked_induction sample_aware_self_ranked_induction agreement_gated_self_ranked_induction validation_ranked_induction mdl_rule_expansion counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_selected_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_selected_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_agreement_gated
 ```
 
 ## Metrics

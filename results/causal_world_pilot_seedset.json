@@ -7,6 +7,13 @@
     "synthetic_domain": true
   },
   "condition_scope": {
+    "agreement_gated_self_ranked_induction": {
+      "oracle_generated_labels": false,
+      "train_only_induction": true,
+      "train_only_selection": true,
+      "validation_used_for_threshold": false,
+      "validation_used_for_transform_selection": false
+    },
     "counterfactual_expansion": {
       "oracle_generated_labels": true,
       "train_only_induction": false,
@@ -716,7 +723,7 @@
     }
   },
   "epochs": 5,
-  "generated_at": "2026-06-27T17:54:41Z",
+  "generated_at": "2026-06-29T00:01:07Z",
   "material_count": 48,
   "pareto_frontier_conditions": [
     "counterfactual_expansion",

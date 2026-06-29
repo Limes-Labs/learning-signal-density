@@ -251,6 +251,52 @@ class CommittedResultArtifactTests(unittest.TestCase):
             validation_selected["budgets"]["64"]["self_ranked_induction"]["charged_compute_units_mean"],
         )
 
+    def test_f1024_agreement_gated_budget_artifact_records_train_only_reliability_probe(self) -> None:
+        agreement_gated = json.loads(
+            Path("results/tiny_neural_budget_sweep_agreement_gated_f1024.json").read_text()
+        )
+
+        self.assertEqual(agreement_gated["feature_dimension"], 1024)
+        self.assertEqual(agreement_gated["profile_label"], "epochs=16_hidden=8_features=1024_agreement_gated")
+        self.assertEqual(agreement_gated["comparison_of"], "results/tiny_neural_budget_sweep_validation_selected_f1024.json")
+        self.assertEqual(agreement_gated["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(agreement_gated["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("agreement_gated_self_ranked_induction", agreement_gated["conditions"])
+        self.assertEqual(
+            agreement_gated["thresholds"]["agreement_gated_self_ranked_induction"][
+                "first_material_count_reaching_target"
+            ],
+            48,
+        )
+        self.assertLess(
+            agreement_gated["budgets"]["16"]["agreement_gated_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            agreement_gated["budgets"]["16"]["sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertEqual(
+            agreement_gated["budgets"]["32"]["agreement_gated_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            agreement_gated["budgets"]["32"]["sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertLess(
+            agreement_gated["thresholds"]["agreement_gated_self_ranked_induction"]["best_signed_gain"],
+            agreement_gated["thresholds"]["self_ranked_induction"]["best_signed_gain"],
+        )
+        self.assertLess(
+            agreement_gated["budgets"]["32"]["agreement_gated_self_ranked_induction"][
+                "charged_compute_units_mean"
+            ],
+            agreement_gated["budgets"]["32"]["sample_aware_self_ranked_induction"][
+                "charged_compute_units_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -138,9 +138,9 @@ The latest ablation path asks two practical efficiency questions. First, once
 is actually needed? The tested profiles compare 32x8, 16x8, and 8x8 MLPs at
 1024 features over 16, 24, 32, 48, and 64 external-material budgets. Second,
 does explicit reliability selection repair the scarce-sample generated-label
-failure? To test that, the 16x8 profile is rerun with charged validation-ranked
-induction and MDL rule expansion beside the train-only ranked policies and
-oracle counterfactual headroom.
+failure? To test that, the 16x8 profile is rerun with a train-only agreement
+gate, charged validation-ranked induction, and MDL rule expansion beside the
+train-only ranked policies and oracle counterfactual headroom.
 
 \section{Results}
 
@@ -162,7 +162,10 @@ by shrinking the optimizer budget: all ranked 16x8 and 8x8 rows still fail at
 32 materials, even when sample-aware ranking is positive at 16 and 24 for the
 8x8 profile.
 
-The validation-selected rerun sharpens that failure mode. Charged
+The reliability-policy rerun sharpens that failure mode. A train-only agreement
+gate, which keeps only induced labels supported by agreeing rule projections,
+does not solve the problem: it is worse than sample-aware ranking at 16
+materials, tied with it at 32, and has much lower peak signed gain. Charged
 validation-ranked induction slightly improves the 48-material point relative to
 self-ranked induction, but it does not move the first target below 48 and it
 does not repair the 32-material failure. MDL rule expansion is more conservative

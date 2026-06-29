@@ -150,6 +150,12 @@ class PipelineAccountingTests(unittest.TestCase):
         alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "sample_aware_self_ranked_induction")
 
+        normal = build_pipeline_examples("agreement_gated_self_ranked_induction", split.train, world.rules)
+        alternate = build_pipeline_examples("agreement_gated_self_ranked_induction", split.train, alternate_rules)
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
+        self.assertEqual(normal_signature, alternate_signature, "agreement_gated_self_ranked_induction")
+
     def test_mdl_rule_expansion_requires_explicit_validation_split(self) -> None:
         world = build_world(seed=44, material_count=40)
         split = split_observations(world.observations)
@@ -257,6 +263,23 @@ class PipelineAccountingTests(unittest.TestCase):
         large_sample_aware = build_pipeline_examples("sample_aware_self_ranked_induction", large_split.train, large_world.rules)
         self.assertEqual(large_sample_aware.ranked_synthetic_budget_ratio, 1.0)
         self.assertEqual(large_sample_aware.ranked_induction_min_support, 3)
+
+    def test_agreement_gated_self_ranked_induction_uses_train_only_source_agreement(self) -> None:
+        world = build_world(seed=59, material_count=32)
+        split = split_observations(world.observations)
+        sample_aware = build_pipeline_examples("sample_aware_self_ranked_induction", split.train, world.rules)
+        agreement_gated = build_pipeline_examples("agreement_gated_self_ranked_induction", split.train, world.rules)
+
+        self.assertEqual(agreement_gated.external_event_count, sample_aware.external_event_count)
+        self.assertEqual(agreement_gated.train_calibration_event_count, 0)
+        self.assertEqual(agreement_gated.validation_calibration_event_count, 0)
+        self.assertGreater(agreement_gated.ranked_candidate_count, agreement_gated.ranked_kept_candidate_count)
+        self.assertGreater(agreement_gated.ranked_kept_candidate_count, 0)
+        self.assertLessEqual(agreement_gated.ranked_kept_candidate_count, sample_aware.ranked_kept_candidate_count)
+        self.assertGreater(agreement_gated.candidate_ranking_cost_tokens, 0)
+        self.assertEqual(agreement_gated.ranked_induction_min_support, 2)
+        self.assertEqual(agreement_gated.ranked_induction_min_confidence, 0.55)
+        self.assertIn("agreement_gated_self_ranked_induced", {example.source_kind for example in agreement_gated.examples})
 
 
 if __name__ == "__main__":
