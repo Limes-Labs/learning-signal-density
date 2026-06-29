@@ -10,4 +10,7 @@ also include a post-hoc policy envelope from `results/policy_envelope_f1024.json
 that envelope is explicitly non-deployable and is included only as a selector
 diagnostic. The deployable validation-portfolio selector artifact is included
 as a negative-control selector experiment: it charges the full candidate search
-and does not use heldout labels for selection.
+and does not use heldout labels for selection. The linear-proxy selector
+artifact is included as a partial selector-cost improvement: it replaces full
+candidate MLP training with charged two-epoch linear proxy fits before one
+final heldout evaluation, while still failing at the lowest budgets.

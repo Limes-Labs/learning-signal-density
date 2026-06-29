@@ -132,6 +132,82 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
             )
             self.assertIn("portfolio_selected_condition_counts", saved["conditions"]["validation_portfolio_selector"])
 
+    def test_validation_linear_proxy_selector_charges_proxy_search_but_avoids_portfolio_neural_training(self) -> None:
+        proxy = run_neural_condition(
+            seed=17,
+            condition="validation_linear_proxy_selector",
+            material_count=16,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=32,
+            learning_rate=0.03,
+        )
+        portfolio = run_neural_condition(
+            seed=17,
+            condition="validation_portfolio_selector",
+            material_count=16,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=32,
+            learning_rate=0.03,
+        )
+        raw = run_neural_condition(
+            seed=17,
+            condition="raw_text",
+            material_count=16,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=32,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(proxy["condition"], "validation_linear_proxy_selector")
+        self.assertEqual(proxy["portfolio_candidate_count"], 6)
+        self.assertEqual(proxy["portfolio_proxy_epochs"], 2)
+        self.assertGreater(proxy["portfolio_selection_cost_units"], raw["charged_compute_units"])
+        self.assertLess(proxy["charged_compute_units"], portfolio["charged_compute_units"])
+        self.assertLess(
+            proxy["estimated_neural_training_multiply_adds"],
+            portfolio["estimated_neural_training_multiply_adds"],
+        )
+        self.assertIn(proxy["portfolio_selected_condition"], proxy["portfolio_candidate_conditions"])
+        self.assertNotIn("heldout", proxy["portfolio_selection_metric"])
+
+    def test_validation_linear_proxy_selector_scope_is_declared_in_neural_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_json = Path(temp_dir) / "proxy_selector.json"
+            out_md = Path(temp_dir) / "proxy_selector.md"
+            run_neural_seedset(
+                seeds=[17],
+                conditions=["validation_linear_proxy_selector"],
+                output_json=out_json,
+                output_markdown=out_md,
+                material_count=16,
+                epochs=2,
+                hidden_units=4,
+                feature_dimension=32,
+                fresh_seed_confirmation=True,
+            )
+
+            saved = json.loads(out_json.read_text())
+            scope = saved["condition_scope"]["validation_linear_proxy_selector"]
+            self.assertEqual(saved["claim_scope"]["heldout_used_for_selection"], False)
+            self.assertEqual(scope["validation_used_for_policy_selection"], True)
+            self.assertEqual(scope["low_fidelity_proxy_selector"], True)
+            self.assertEqual(scope["oracle_generated_labels"], False)
+            self.assertEqual(
+                saved["conditions"]["validation_linear_proxy_selector"]["portfolio_candidate_count_mean"],
+                6,
+            )
+            self.assertEqual(
+                saved["conditions"]["validation_linear_proxy_selector"]["portfolio_proxy_epochs_mean"],
+                2,
+            )
+            self.assertIn(
+                "portfolio_selected_condition_counts",
+                saved["conditions"]["validation_linear_proxy_selector"],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

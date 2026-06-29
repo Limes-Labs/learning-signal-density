@@ -328,6 +328,56 @@ class CommittedResultArtifactTests(unittest.TestCase):
             selector["thresholds"]["self_ranked_induction"]["best_signed_gain"],
         )
 
+    def test_f1024_validation_linear_proxy_artifact_records_low_fidelity_selector_probe(self) -> None:
+        proxy = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.json").read_text()
+        )
+        portfolio = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_portfolio_f1024.json").read_text()
+        )
+
+        self.assertEqual(proxy["feature_dimension"], 1024)
+        self.assertEqual(proxy["profile_label"], "epochs=16_hidden=8_features=1024_validation_linear_proxy")
+        self.assertEqual(proxy["comparison_of"], "results/tiny_neural_budget_sweep_validation_portfolio_f1024.json")
+        self.assertEqual(proxy["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(proxy["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_linear_proxy_selector", proxy["conditions"])
+
+        scope = proxy["condition_scope"]["validation_linear_proxy_selector"]
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["low_fidelity_proxy_selector"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        for material in ("16", "24", "32", "48", "64"):
+            row = proxy["budgets"][material]["validation_linear_proxy_selector"]
+            self.assertEqual(row["portfolio_candidate_count_mean"], 6)
+            self.assertEqual(row["portfolio_proxy_epochs_mean"], 2)
+            self.assertGreater(row["portfolio_selection_cost_units_mean"], 0)
+            self.assertIn("portfolio_selected_condition_counts", row)
+            self.assertLess(
+                row["portfolio_selection_cost_units_mean"],
+                portfolio["budgets"][material]["validation_portfolio_selector"][
+                    "portfolio_selection_cost_units_mean"
+                ],
+            )
+
+        self.assertEqual(
+            proxy["thresholds"]["validation_linear_proxy_selector"]["first_material_count_reaching_target"],
+            48,
+        )
+        self.assertGreater(
+            proxy["thresholds"]["validation_linear_proxy_selector"]["best_signed_gain"],
+            portfolio["thresholds"]["validation_portfolio_selector"]["best_signed_gain"],
+        )
+        self.assertGreater(
+            proxy["budgets"]["64"]["validation_linear_proxy_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            portfolio["budgets"]["64"]["validation_portfolio_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

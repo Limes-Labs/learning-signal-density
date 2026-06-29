@@ -59,6 +59,10 @@ The current pilot is intentionally modest:
   probe: it trains six non-oracle candidate policies, chooses by validation
   improvement over majority, charges the full portfolio search, and evaluates
   heldout only after selection.
+- `validation_linear_proxy_selector` is the cheaper deployable selector probe:
+  it scores the same candidate policies with a two-epoch linear proxy, charges
+  those proxy fits, trains one final tiny MLP, and evaluates heldout only after
+  selection.
 - `diverse_self_ranked_induction` applies a diversity penalty to the same
   train-only ranking to test whether balancing modifier/stimulus/family coverage
   improves the fixed synthetic budget.
@@ -123,6 +127,10 @@ using the same split and accounting discipline.
 - `results/tiny_neural_budget_sweep_validation_portfolio_f1024.*` - deployable
   validation-portfolio selector probe for the same `16x8` 1024-feature profile,
   with portfolio training and validation selection costs charged.
+- `results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.*` -
+  low-fidelity validation selector probe for the same profile, using a
+  two-epoch linear proxy to choose one final tiny-MLP policy before heldout
+  evaluation.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -459,6 +467,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024_validation_portfolio
 ```
 
+Run the 16x8 1024-feature linear-proxy validation selector probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --conditions raw_text self_ranked_induction sample_aware_self_ranked_induction agreement_gated_self_ranked_induction validation_ranked_induction mdl_rule_expansion validation_linear_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_portfolio_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_portfolio_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_validation_linear_proxy
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -497,6 +525,9 @@ The repo reports three families of measurements:
 - The validation portfolio selector is a deployable selector probe, but it is
   expensive: it trains all candidate policies for validation scoring and
   charges that search before heldout evaluation.
+- The linear-proxy validation selector tests whether a cheaper model hierarchy
+  can preserve selector signal while charging the proxy search and one selected
+  final MLP training run.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 
@@ -638,6 +669,12 @@ The current artifacts show a useful split:
   64-material signed LSD falls to `0.000627` because six candidate trainings
   are charged. The result is useful because it rules out a naive "try every
   policy on validation" fix.
+- The linear-proxy selector improves that deployable selector frontier without
+  pretending the low-budget problem is solved. It reaches `0.103` signed gain
+  at 48 materials and `0.153` at 64, improves 64-material signed LSD from the
+  portfolio selector's `0.000627` to `0.002091`, and cuts charged compute at 64
+  from `734.1k` to `316.9k`. It is still negative at 16, 24, and 32 materials
+  and remains less density-efficient than the best fixed train-only policies.
 
 ## Research Thesis
 
