@@ -44,7 +44,9 @@ problem remains open. A train-only tempered-budget ablation reduces the
 sample-aware 24--32 material loss, but still does not beat raw-text abstention
 at those scarce budgets. A final compact train-size gate keeps that abstention
 schedule, then improves the 64-material density point by dropping redundant
-original QA examples only at the large-sample tier.
+original QA examples only at the large-sample tier. A high-budget density cap
+then shows the frontier can switch back to raw text once external evidence is
+abundant, trading absolute gain for better learning-signal density.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -173,6 +175,9 @@ The latest efficiency follow-up keeps the train-size abstention schedule but
 changes the large-sample representation: above 224 train events it retains raw
 original observations and ranked generated examples, while dropping original
 QA duplicates.
+A high-budget extension then tests a density-capped schedule through 128
+materials: it keeps compact induction through 96 materials and returns to raw
+text once the train split reaches the abundant-data tier.
 
 \section{Results}
 
@@ -186,7 +191,8 @@ Table~\ref{tab:generated-coverage-audit},
 Table~\ref{tab:validation-coverage-proxy},
 Table~\ref{tab:tempered-sample-aware},
 Table~\ref{tab:train-size-gated-baseline},
-Table~\ref{tab:compact-train-size-gated}, and
+Table~\ref{tab:compact-train-size-gated},
+Table~\ref{tab:density-capped-compact}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -329,6 +335,18 @@ to 0.140260, and signed LSD rises from 0.004634 to 0.007883. This is a useful
 efficiency result, not a scarce-budget solution: it does not change the 16--32
 material rows, and it relies on the same train-only abstention schedule.
 
+Table~\ref{tab:density-capped-compact} extends the question beyond the original
+64-material frontier. The density-capped policy keeps compact induction through
+96 materials, then returns to raw text from 104 materials onward. On fresh
+seeds 293, 307, 311, 313, and 317, this keeps the compact 64- and 80-material
+density gains and exposes a high-budget tradeoff. At 128 materials, compact
+induction has higher signed gain than the density cap, 0.132468 versus
+0.081818, but the density cap has higher signed LSD, 0.003452 versus 0.001860,
+because it avoids the generated-label transform cost. The conclusion is not
+that raw text dominates. It is that a useful policy should choose between raw,
+compact, and fuller generated-label views according to the gain-density
+frontier, not only according to heldout accuracy.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -373,6 +391,11 @@ The compact train-size gate adds the large-sample complement: once generated
 labels are useful, retaining every original representation is also a policy
 choice, and dropping redundant original QA views can improve density without
 changing the train-only generated labels.
+The density-capped compact probe adds the abundant-data complement: even
+generated labels that improve accuracy can become density-inefficient once raw
+external evidence is plentiful enough. The next selector therefore needs a
+utility model over both gain and charged compute, not just a classifier for
+``should synthesize''.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

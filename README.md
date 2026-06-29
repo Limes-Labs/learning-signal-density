@@ -180,6 +180,11 @@ using the same split and accounting discipline.
   fresh-seed train-only efficiency probe on seeds `181 191 193 197 199`. It
   matches the train-size gate through 48 materials, then drops original QA
   duplicates at the large-sample tier and improves 64-material signed LSD.
+- `results/tiny_neural_budget_sweep_density_capped_compact_f1024.*` -
+  fresh-seed high-budget density probe on seeds `293 307 311 313 317`. It
+  matches compact train-size gating through 96 materials, then returns to raw
+  text once the train split is abundant, improving density while giving up
+  some absolute gain.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -659,6 +664,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label f1024_16x8_compact_train_size_gated
 ```
 
+Run the 16x8 1024-feature density-capped compact high-budget probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_density_capped_compact_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_density_capped_compact_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 293 307 311 313 317 \
+  --conditions raw_text train_size_gated_sample_aware_induction compact_train_size_gated_induction density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json \
+  --profile-label f1024_16x8_density_capped_compact
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -718,6 +743,10 @@ The repo reports three families of measurements:
   at 224 or more train events drops original QA duplicates while retaining raw
   originals and ranked generated examples. It tests whether density can improve
   by removing redundant transformed originals rather than by changing labels.
+- The density-capped compact policy extends that schedule to abundant-data
+  budgets: after the train split reaches 360 events, it returns to raw text
+  because generated-label transforms can lose the signed-density frontier even
+  when they still improve absolute gain.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 
@@ -921,6 +950,12 @@ The current artifacts show a useful split:
   materials, then improves the 64-material row from `0.132467` gain and
   `0.004634` signed LSD to `0.140260` gain and `0.007883` signed LSD by
   dropping original QA duplicates while keeping train-only generated labels.
+- The density-capped compact probe extends the budget range to 128 materials
+  on fresh seeds `293 307 311 313 317`. It keeps compact induction through 96
+  materials, then returns to raw text from 104 onward. At 128 materials this
+  trades gain (`0.132468` to `0.081818`) for higher signed LSD (`0.001860` to
+  `0.003452`), showing that the density frontier can switch back to raw data
+  when external evidence is abundant.
 
 ## Research Thesis
 
