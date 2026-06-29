@@ -34,9 +34,10 @@ fresh-seed confirmation, explicit heldout isolation, and generated tables
 pulled from committed JSON. The strongest current positive result is not a
 frontier-model claim. It is a reusable measurement protocol plus a concrete
 finding: representation width and model profile can improve density, but
-scarce-sample generated-label noise remains visible at 24 and 32 external
-materials; even a non-deployable post-hoc policy envelope reaches the current
-target only at 48 materials.
+scarce-sample generated-label failures remain visible at 24 and 32 external
+materials; a hidden-rulebook audit shows that label correctness alone does not
+explain those failures, and even a non-deployable post-hoc policy envelope
+reaches the current target only at 48 materials.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -149,6 +150,10 @@ training only one final MLP, then test whether a raw-text abstention margin
 reduces scarce-budget downside. A final train-size gated baseline removes
 validation selection entirely: it uses raw text below 144 train events and
 sample-aware self-ranked induction only after the train split is large enough.
+The latest diagnostic then audits generated synthetic labels against the hidden
+rulebook after the selector-transfer sweep has run. This audit is
+non-deployable by construction, but it separates label correctness from
+downstream neural gain.
 
 \section{Results}
 
@@ -157,6 +162,7 @@ Table~\ref{tab:validation-selected-reliability-probe},
 Table~\ref{tab:post-hoc-policy-envelope},
 Table~\ref{tab:validation-portfolio-selector},
 Table~\ref{tab:selector-transfer-stress},
+Table~\ref{tab:generated-label-audit},
 Table~\ref{tab:train-size-gated-baseline}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
@@ -231,6 +237,18 @@ selector variants remain negative, and raw text is less negative than the
 selector family. This is useful negative evidence: the current validation
 signals are not stable enough to drive a deployable adaptive policy.
 
+Table~\ref{tab:generated-label-audit} narrows that reliability problem. At 32
+materials, agreement-gated generated labels are 0.917241 correct against the
+hidden rulebook, but their linked neural gain is still -0.131579; sample-aware
+labels are less precise at 0.675862 and also lose more at -0.173684. Oracle
+counterfactual labels are perfectly correct and yet reach only 0.015790 signed
+gain at the same budget. At 64 materials the contrast is sharper:
+agreement-gated labels are more precise than sample-aware labels, 0.954783
+versus 0.829565, but produce lower gain, 0.080519 versus 0.142857. This means
+the scarce-budget failure is not reducible to generated-label correctness.
+Coverage, distribution shift, interaction with the tiny learner, and charged
+selection cost remain live mechanisms.
+
 Table~\ref{tab:train-size-gated-baseline} checks a simpler alternative on a
 second unseen seed set: use raw text below 144 train events, then switch to
 sample-aware self-ranked induction. This train-only schedule reaches the target
@@ -266,6 +284,9 @@ constraint: future selectors must beat simple fixed policies on new seeds, not
 only on the artifacts that inspired them. The train-size gated baseline makes
 that constraint sharper: selector search has to buy more than a cheap
 train-size schedule that abstains from generated labels at scarce budgets.
+The generated-label audit adds one more constraint: a policy that optimizes
+only synthetic-label precision can still lose if the labels cover the wrong
+regions or interact poorly with the learner.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

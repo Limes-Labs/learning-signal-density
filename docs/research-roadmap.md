@@ -57,7 +57,9 @@ on seeds `37 41 43 47 53` to check whether the development selector result
 survives new worlds. A train-size gated schedule baseline then uses a second
 unseen seed set, `59 61 67 71 73`, to test whether a cheap train-only switch
 from raw text to sample-aware induction is a harder baseline than validation
-portfolio selection.
+portfolio selection. A hidden-rulebook generated-label audit then checks the
+selector-transfer synthetic labels after the fact and shows that label precision
+alone does not explain the remaining neural-gain bottleneck.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -140,6 +142,13 @@ portfolio selection.
   selectors), and raw text is less negative than the selector family at 32. A
   future adaptive selector should not be promoted unless it improves both the
   development artifact and this fresh-seed transfer stress test.
+- Treat generated-label precision as necessary but not sufficient. The
+  hidden-rulebook audit finds `0.917241` precision for agreement-gated labels
+  at 32 materials, yet the linked neural gain is `-0.131579`; at 64 materials,
+  agreement-gated precision is higher than sample-aware precision
+  (`0.954783` versus `0.829565`) while gain is lower (`0.080519` versus
+  `0.142857`). Future policies must measure coverage, distribution, and learner
+  interaction rather than optimizing label precision alone.
 - Treat the train-size gated schedule as the new cheap-selector baseline. On
   unseen seeds `59 61 67 71 73`, raw text below 144 train events plus
   sample-aware induction above that threshold reaches the same `0.145454` best

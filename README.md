@@ -66,6 +66,10 @@ The current pilot is intentionally modest:
 - `validation_abstaining_proxy_selector` adds a raw-text fallback to the
   linear-proxy selector: a non-raw policy must beat raw text by three
   validation examples before the selector leaves raw text.
+- A hidden-rulebook generated-label audit is included as a non-deployable
+  diagnostic. It checks whether generated synthetic labels are correct after
+  the selector-transfer sweep has run, then links that precision to the neural
+  gains in the source artifact.
 - `diverse_self_ranked_induction` applies a diversity penalty to the same
   train-only ranking to test whether balancing modifier/stimulus/family coverage
   improves the fixed synthetic budget.
@@ -141,6 +145,10 @@ using the same split and accounting discipline.
   selector-family stress test on seeds `37 41 43 47 53`, checking whether the
   deployable selector results transfer beyond the development selector
   artifacts.
+- `results/generated_label_audit_selector_transfer_f1024.*` - hidden-rulebook
+  generated-label audit for the selector-transfer seeds. This is explicitly
+  non-deployable and exists to test whether label precision alone explains
+  neural gain.
 - `results/tiny_neural_budget_sweep_train_size_gated_f1024.*` - second
   unseen-seed baseline on seeds `59 61 67 71 73`, testing a deployable
   train-size-only schedule that stays raw below 144 train events and switches
@@ -169,6 +177,7 @@ Regenerate the manuscript result tables from checked-in JSON artifacts:
 
 ```bash
 python3 scripts/build_policy_envelope.py
+python3 scripts/build_generated_label_audit.py
 python3 scripts/build_paper_tables.py
 ```
 
@@ -770,6 +779,15 @@ The current artifacts show a useful split:
   `0.142857` with much better 64-material signed LSD. At 32 materials, raw text
   is less negative than every deployable selector. The selector direction is
   therefore not paper-ready without a stronger reliability signal.
+- The generated-label audit narrows the selector-transfer failure. At 32
+  materials, agreement-gated generated labels are `0.917241` correct against
+  the hidden rulebook but still have `-0.131579` signed gain; oracle
+  counterfactual labels are perfectly correct and only reach `0.015790` signed
+  gain at the same budget. At 64 materials, agreement-gated labels are more
+  precise than sample-aware labels (`0.954783` versus `0.829565`) but have
+  lower gain (`0.080519` versus `0.142857`). Label correctness is therefore
+  necessary but not sufficient; coverage, distribution, learner interaction,
+  and charged selection cost remain live bottlenecks.
 - The train-size gated baseline adds a second unseen seed check on seeds
   `59 61 67 71 73`. It reaches the same `0.145454` best gain and `0.005090`
   best signed LSD as fixed sample-aware induction while using raw text at 16,

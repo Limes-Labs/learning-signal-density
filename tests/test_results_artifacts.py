@@ -545,6 +545,62 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_generated_label_audit_artifact_records_label_precision_not_gain_mechanism(self) -> None:
+        audit = json.loads(Path("results/generated_label_audit_selector_transfer_f1024.json").read_text())
+
+        self.assertEqual(audit["seeds"], [37, 41, 43, 47, 53])
+        self.assertEqual(audit["material_counts"], [16, 24, 32, 48, 64])
+        self.assertEqual(
+            audit["source_artifacts"],
+            ["results/tiny_neural_budget_sweep_selector_transfer_f1024.json"],
+        )
+        self.assertEqual(audit["claim_scope"]["uses_hidden_rulebook_for_audit"], True)
+        self.assertEqual(audit["claim_scope"]["deployable_policy"], False)
+        self.assertEqual(audit["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(audit["claim_scope"]["paper_ready_claim"], False)
+
+        material32 = audit["audits"]["32"]
+        self.assertIsNone(material32["raw_text"]["label_precision"])
+        self.assertEqual(
+            material32["agreement_gated_self_ranked_induction"]["label_precision"],
+            0.917241,
+        )
+        self.assertEqual(
+            material32["agreement_gated_self_ranked_induction"][
+                "linked_accuracy_improvement_over_majority_mean"
+            ],
+            -0.131579,
+        )
+        self.assertEqual(
+            material32["sample_aware_self_ranked_induction"]["label_precision"],
+            0.675862,
+        )
+        self.assertEqual(
+            material32["sample_aware_self_ranked_induction"][
+                "linked_accuracy_improvement_over_majority_mean"
+            ],
+            -0.173684,
+        )
+        self.assertEqual(material32["counterfactual_expansion"]["label_precision"], 1.0)
+        self.assertEqual(
+            material32["counterfactual_expansion"]["linked_accuracy_improvement_over_majority_mean"],
+            0.01579,
+        )
+
+        material64 = audit["audits"]["64"]
+        self.assertGreater(
+            material64["agreement_gated_self_ranked_induction"]["label_precision"],
+            material64["sample_aware_self_ranked_induction"]["label_precision"],
+        )
+        self.assertLess(
+            material64["agreement_gated_self_ranked_induction"][
+                "linked_accuracy_improvement_over_majority_mean"
+            ],
+            material64["sample_aware_self_ranked_induction"][
+                "linked_accuracy_improvement_over_majority_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
