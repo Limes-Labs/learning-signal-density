@@ -19,6 +19,7 @@ PROFILE_FRONTIER_ARTIFACT = Path("results/tiny_neural_profile_sweep_f1024.json")
 VALIDATION_SELECTED_ARTIFACT = Path("results/tiny_neural_budget_sweep_validation_selected_f1024.json")
 AGREEMENT_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_agreement_gated_f1024.json")
 POLICY_ENVELOPE_ARTIFACT = Path("results/policy_envelope_f1024.json")
+VALIDATION_PORTFOLIO_ARTIFACT = Path("results/tiny_neural_budget_sweep_validation_portfolio_f1024.json")
 
 FRONTIER_CONDITIONS = [
     "raw_text",
@@ -40,6 +41,7 @@ CONDITION_LABELS = {
     "raw_text": "Raw text",
     "sample_aware_self_ranked_induction": "Sample-aware self-ranked",
     "self_ranked_induction": "Self-ranked",
+    "validation_portfolio_selector": "Validation portfolio selector",
     "validation_ranked_induction": "Validation-ranked",
 }
 
@@ -126,12 +128,14 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "validation_selected": load_json(repo_root / VALIDATION_SELECTED_ARTIFACT),
         "agreement_gated": load_json(repo_root / AGREEMENT_GATED_ARTIFACT),
         "policy_envelope": load_json(repo_root / POLICY_ENVELOPE_ARTIFACT),
+        "validation_portfolio": load_json(repo_root / VALIDATION_PORTFOLIO_ARTIFACT),
     }
     validate_claim_scope(FEATURE_FRONTIER_ARTIFACT, artifacts["feature"])
     validate_claim_scope(PROFILE_FRONTIER_ARTIFACT, artifacts["profile"])
     validate_claim_scope(VALIDATION_SELECTED_ARTIFACT, artifacts["validation_selected"])
     validate_claim_scope(AGREEMENT_GATED_ARTIFACT, artifacts["agreement_gated"])
     validate_policy_envelope_scope(POLICY_ENVELOPE_ARTIFACT, artifacts["policy_envelope"])
+    validate_claim_scope(VALIDATION_PORTFOLIO_ARTIFACT, artifacts["validation_portfolio"])
     return artifacts
 
 
@@ -288,6 +292,50 @@ def build_policy_envelope_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def fmt_selection_counts(counts: dict[str, int]) -> str:
+    return "; ".join(
+        f"{condition_label(condition)} {count}/5"
+        for condition, count in sorted(counts.items(), key=lambda item: (-item[1], condition_label(item[0])))
+    )
+
+
+def build_validation_portfolio_table(repo_root: Path) -> str:
+    support = load_supporting_artifacts(repo_root)
+    selector = support["validation_portfolio"]
+    envelope = support["policy_envelope"]
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Validation portfolio selector versus the post-hoc envelope. The selector trains and validates six non-oracle candidate policies per seed, charges that portfolio search, and then evaluates heldout once; the envelope is heldout-selected and non-deployable.}",
+        r"\label{tab:validation-portfolio-selector}",
+        r"\small",
+        r"\setlength{\tabcolsep}{3pt}",
+        r"\begin{tabular}{@{}rrrrr>{\raggedright\arraybackslash}p{0.34\linewidth}@{}}",
+        r"\toprule",
+        r"Budget & Sel. gain & Sel. LSD & Cost & Env. gain & Choices \\",
+        r"\midrule",
+    ]
+    for material in selector["material_counts"]:
+        material_key = str(material)
+        row = selector["budgets"][material_key]["validation_portfolio_selector"]
+        envelope_row = envelope["best_by_material"][material_key]
+        lines.append(
+            " & ".join(
+                [
+                    str(material),
+                    fmt_float(row["accuracy_improvement_over_majority_mean"]),
+                    fmt_float(row["signed_learning_signal_density_per_1m_event_compute_mean"], digits=6),
+                    latex_escape(fmt_ops(row["charged_compute_units_mean"])),
+                    fmt_float(envelope_row["signed_gain"]),
+                    latex_escape(fmt_selection_counts(row["portfolio_selected_condition_counts"])),
+                ]
+            )
+            + r" \\"
+        )
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
@@ -295,6 +343,7 @@ def render_tables(repo_root: Path) -> str:
             build_frontier_table(repo_root),
             build_validation_selected_table(repo_root),
             build_policy_envelope_table(repo_root),
+            build_validation_portfolio_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

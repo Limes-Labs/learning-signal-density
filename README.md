@@ -55,6 +55,10 @@ The current pilot is intentionally modest:
 - A post-hoc policy envelope selects the best non-oracle condition at each
   budget from completed heldout results. It is explicitly not deployable; it is
   a diagnostic upper bound for the adaptive policy-selection problem.
+- `validation_portfolio_selector` is the first deployable neural selector
+  probe: it trains six non-oracle candidate policies, chooses by validation
+  improvement over majority, charges the full portfolio search, and evaluates
+  heldout only after selection.
 - `diverse_self_ranked_induction` applies a diversity penalty to the same
   train-only ranking to test whether balancing modifier/stimulus/family coverage
   improves the fixed synthetic budget.
@@ -116,6 +120,9 @@ using the same split and accounting discipline.
   envelope over the same reliability probe. This artifact uses heldout results
   after the fact, marks itself non-deployable, and exists to quantify the
   selector problem for the paper.
+- `results/tiny_neural_budget_sweep_validation_portfolio_f1024.*` - deployable
+  validation-portfolio selector probe for the same `16x8` 1024-feature profile,
+  with portfolio training and validation selection costs charged.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -432,6 +439,26 @@ Build the post-hoc policy envelope used by the paper tables:
 python3 scripts/build_policy_envelope.py
 ```
 
+Run the 16x8 1024-feature validation-portfolio selector probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_portfolio_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_portfolio_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 17 19 23 29 31 \
+  --conditions raw_text self_ranked_induction sample_aware_self_ranked_induction agreement_gated_self_ranked_induction validation_ranked_induction mdl_rule_expansion validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_agreement_gated_f1024.json \
+  --comparison-of results/policy_envelope_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_validation_portfolio
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -467,6 +494,9 @@ The repo reports three families of measurements:
   completed heldout results to choose the best non-oracle condition at each
   budget, marks that heldout policy selection explicitly, and should only be
   used to define the next adaptive selector target.
+- The validation portfolio selector is a deployable selector probe, but it is
+  expensive: it trains all candidate policies for validation scoring and
+  charges that search before heldout evaluation.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 
@@ -601,6 +631,13 @@ The current artifacts show a useful split:
   heldout results, it is not deployable; even so, the target is first reached
   only at 48 materials. The next useful experiment should learn that switching
   rule from train/validation signals before heldout is opened.
+- The validation-portfolio selector is the first deployable attempt at that
+  switching rule. It reaches target at 48 materials and matches the post-hoc
+  envelope at 16 materials, but it remains negative at 24 and 32, peaks at
+  `0.109` signed gain versus `0.153` for fixed self-ranked induction, and its
+  64-material signed LSD falls to `0.000627` because six candidate trainings
+  are charged. The result is useful because it rules out a naive "try every
+  policy on validation" fix.
 
 ## Research Thesis
 
