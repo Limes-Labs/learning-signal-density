@@ -24,6 +24,7 @@ The generator currently reads:
 - `results/policy_envelope_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_portfolio_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.json`
+- `results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked
@@ -35,6 +36,8 @@ The validation-portfolio artifact must disclose validation policy selection,
 avoid heldout selection, and charge the candidate portfolio search. The
 linear-proxy selector artifact must additionally mark the low-fidelity proxy
 selector scope and charge the proxy fits before final heldout evaluation.
+The abstaining-proxy selector artifact must also mark raw-text abstention and
+record the validation-example margin used before leaving raw text.
 
 ## Release Checklist
 

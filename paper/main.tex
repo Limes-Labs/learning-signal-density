@@ -143,9 +143,10 @@ does explicit reliability selection repair the scarce-sample generated-label
 failure? To test that, the 16x8 profile is rerun with a train-only agreement
 gate, charged validation-ranked induction, and MDL rule expansion beside the
 train-only ranked policies and oracle counterfactual headroom.
-The latest selector extension replaces the expensive full validation portfolio
+The latest selector extensions replace the expensive full validation portfolio
 with a two-epoch linear proxy that scores the same candidate policies before
-training only one final MLP.
+training only one final MLP, then test whether a raw-text abstention margin
+reduces scarce-budget downside.
 
 \section{Results}
 
@@ -195,21 +196,25 @@ problem sharper: a useful policy must learn when to abstain, when to compress
 rules, and when to rank generated labels using only train signals or explicitly
 charged validation signals.
 
-Table~\ref{tab:validation-portfolio-selector} turns that diagnostic into two
+Table~\ref{tab:validation-portfolio-selector} turns that diagnostic into three
 deployable selector tests. The full portfolio trains six non-oracle candidate
 MLPs, evaluates them on validation examples, chooses by validation improvement
 over majority, charges the whole search, and then evaluates heldout once. The
 linear proxy selector scores the same candidate policies with a two-epoch
 linear classifier, charges those proxy fits, trains only the selected tiny MLP,
-and then opens heldout once. The proxy improves the deployable selector
+and then opens heldout once. The abstaining proxy adds a raw-text fallback: a
+non-raw candidate must beat raw text by three validation examples before the
+selector leaves raw text. The plain proxy improves the deployable selector
 frontier, but it is still not a solved policy. At 48 materials it reaches 0.103
 signed gain versus 0.076 for the full portfolio; at 64 materials it reaches
 0.153 signed gain versus 0.109, while improving charged signed LSD from
-0.000627 to 0.002091. However, it remains negative at 16, 24, and 32 materials,
-first reaches the target only at 48, and still has lower 64-material density
-than fixed self-ranked and sample-aware self-ranked induction. The result is
-therefore a real selector-cost improvement, not a breakthrough on scarce-sample
-reliability.
+0.000627 to 0.002091. The abstaining proxy improves downside control at scarce
+budgets: it moves 16 materials from -0.105 to 0.000 signed gain and 24
+materials from -0.041 to 0.006897. However, it still remains negative at 32
+materials, lowers the 48-material gain to 0.082759, first reaches the target
+only at 48, and still has lower 64-material density than fixed self-ranked and
+sample-aware self-ranked induction. The result is therefore a real
+selector-risk improvement, not a breakthrough on scarce-sample reliability.
 
 \section{Discussion}
 
@@ -228,9 +233,10 @@ future experiments should preregister train/validation features that predict
 whether raw text, compact rules, validation-ranked candidates, or train-only
 ranked candidates are appropriate before heldout evaluation is opened.
 The selector probes are useful controls for that plan: the full portfolio shows
-that trying every candidate on validation is too expensive, while the linear
-proxy shows that cheaper model hierarchies help but still need an abstain or
-pre-filter rule at 16--32 materials.
+that trying every candidate on validation is too expensive, the linear proxy
+shows that cheaper model hierarchies help, and the abstaining proxy shows that
+simple validation-count caution can reduce downside at 16--24 materials without
+repairing the 32-material failure.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

@@ -50,7 +50,9 @@ non-oracle candidate policies, choosing on validation, charging the full search,
 and then evaluating heldout once. A linear-proxy selector probe tests a cheaper
 model hierarchy by scoring the same candidates with two-epoch linear fits,
 charging that search, training only one final tiny MLP, and then evaluating
-heldout once.
+heldout once. An abstaining-proxy selector adds a raw-text fallback that
+requires three extra validation-correct examples before selecting a non-raw
+policy.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -120,6 +122,13 @@ heldout once.
   less density-efficient than fixed self-ranked or sample-aware self-ranked
   induction. The next selector needs a cheaper pre-filter or abstention signal
   before paying for even proxy fits.
+- Treat raw-text abstention as downside control, not a frontier solution. The
+  abstaining-proxy selector moves 16 materials from `-0.105` to `0.000` and 24
+  materials from `-0.041` to `0.006897`, but it still fails at 32 materials and
+  lowers the 48-material gain from `0.103` to `0.082759`. The next experiment
+  should search for a reliability feature that distinguishes the 32-material
+  MDL/raw/self-ranked cases before heldout, not merely raise the abstention
+  threshold.
 
 ## Phase 3: Continual-Learning Replay
 

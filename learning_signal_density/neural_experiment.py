@@ -28,6 +28,7 @@ VALIDATION_SELECTED_NEURAL_CONDITIONS = frozenset({
 })
 VALIDATION_PORTFOLIO_SELECTOR = "validation_portfolio_selector"
 VALIDATION_LINEAR_PROXY_SELECTOR = "validation_linear_proxy_selector"
+VALIDATION_ABSTAINING_PROXY_SELECTOR = "validation_abstaining_proxy_selector"
 VALIDATION_PORTFOLIO_CANDIDATES = (
     "raw_text",
     "self_ranked_induction",
@@ -37,6 +38,7 @@ VALIDATION_PORTFOLIO_CANDIDATES = (
     "mdl_rule_expansion",
 )
 VALIDATION_LINEAR_PROXY_EPOCHS = 2
+VALIDATION_ABSTAINING_PROXY_EXTRA_CORRECT = 3
 VALIDATION_PORTFOLIO_SCOPE = {
     "oracle_generated_labels": False,
     "train_only_selection": False,
@@ -49,7 +51,13 @@ VALIDATION_LINEAR_PROXY_SCOPE = {
     **VALIDATION_PORTFOLIO_SCOPE,
     "low_fidelity_proxy_selector": True,
 }
+VALIDATION_ABSTAINING_PROXY_SCOPE = {
+    **VALIDATION_LINEAR_PROXY_SCOPE,
+    "raw_text_abstention": True,
+    "validation_abstention_extra_correct": VALIDATION_ABSTAINING_PROXY_EXTRA_CORRECT,
+}
 VALIDATION_SELECTOR_CONDITIONS = frozenset({
+    VALIDATION_ABSTAINING_PROXY_SELECTOR,
     VALIDATION_PORTFOLIO_SELECTOR,
     VALIDATION_LINEAR_PROXY_SELECTOR,
 })
@@ -77,6 +85,9 @@ def _aggregate(rows: list[dict]) -> dict:
         "portfolio_selection_cost_units",
         "portfolio_validation_score",
         "portfolio_proxy_epochs",
+        "portfolio_abstention_extra_correct",
+        "portfolio_abstention_margin",
+        "portfolio_raw_text_abstention",
     )
     return {f"{key}_mean": _round(mean(row[key] for row in rows)) for key in keys}
 
@@ -97,6 +108,8 @@ def neural_condition_scope(condition: str) -> dict:
         return VALIDATION_PORTFOLIO_SCOPE
     if condition == VALIDATION_LINEAR_PROXY_SELECTOR:
         return VALIDATION_LINEAR_PROXY_SCOPE
+    if condition == VALIDATION_ABSTAINING_PROXY_SELECTOR:
+        return VALIDATION_ABSTAINING_PROXY_SCOPE
     return CONDITION_SCOPE[condition]
 
 
@@ -120,6 +133,9 @@ def _empty_portfolio_fields() -> dict:
         "portfolio_candidate_conditions": [],
         "portfolio_selection_metric": "none",
         "portfolio_proxy_epochs": 0,
+        "portfolio_abstention_extra_correct": 0,
+        "portfolio_abstention_margin": 0.0,
+        "portfolio_raw_text_abstention": 0,
         "portfolio_candidate_summaries": [],
     }
 
@@ -206,6 +222,9 @@ def _run_validation_portfolio_selector(
         "portfolio_candidate_conditions": list(VALIDATION_PORTFOLIO_CANDIDATES),
         "portfolio_selection_metric": "validation_accuracy_improvement_over_majority",
         "portfolio_proxy_epochs": 0,
+        "portfolio_abstention_extra_correct": 0,
+        "portfolio_abstention_margin": 0.0,
+        "portfolio_raw_text_abstention": 0,
         "portfolio_candidate_summaries": [
             {
                 "condition": record["condition"],
@@ -298,6 +317,112 @@ def _run_validation_linear_proxy_selector(
         "portfolio_candidate_conditions": list(VALIDATION_PORTFOLIO_CANDIDATES),
         "portfolio_selection_metric": "linear_proxy_validation_accuracy_improvement_over_majority",
         "portfolio_proxy_epochs": VALIDATION_LINEAR_PROXY_EPOCHS,
+        "portfolio_abstention_extra_correct": 0,
+        "portfolio_abstention_margin": 0.0,
+        "portfolio_raw_text_abstention": 0,
+        "portfolio_candidate_summaries": [
+            {
+                "condition": record["condition"],
+                "validation_accuracy": _round(record["validation_accuracy"]),
+                "validation_score": _round(record["validation_score"]),
+                "candidate_compute_units": record["candidate_compute_units"],
+            }
+            for record in candidate_records
+        ],
+    }
+
+
+def _run_validation_abstaining_proxy_selector(
+    seed: int,
+    material_count: int,
+    epochs: int,
+    hidden_units: int,
+    feature_dimension: int,
+    learning_rate: float,
+) -> dict:
+    world = build_world(seed=seed, material_count=material_count)
+    split = split_observations(world.observations)
+    heldout_examples = build_evaluation_examples(split.heldout)
+    validation_examples = build_evaluation_examples(split.validation)
+    validation_eval_cost = sum(example.token_count for example in validation_examples)
+
+    candidate_records: list[dict] = []
+    for candidate_condition in VALIDATION_PORTFOLIO_CANDIDATES:
+        pipeline = _build_neural_pipeline(candidate_condition, split, world.rules)
+        proxy = PerceptronClassifier()
+        proxy.fit(pipeline.examples, epochs=VALIDATION_LINEAR_PROXY_EPOCHS, seed=seed)
+        validation = proxy.evaluate(validation_examples)
+        validation_baseline = majority_baseline(pipeline.examples, validation_examples)
+        validation_score = validation.accuracy - validation_baseline.accuracy
+        proxy_compute_units = (
+            _pipeline_compute_units(pipeline=pipeline, epochs=VALIDATION_LINEAR_PROXY_EPOCHS)
+            + validation_eval_cost
+        )
+        candidate_records.append(
+            {
+                "condition": candidate_condition,
+                "pipeline": pipeline,
+                "validation_accuracy": validation.accuracy,
+                "validation_score": validation_score,
+                "candidate_compute_units": proxy_compute_units,
+            }
+        )
+
+    raw = next(record for record in candidate_records if record["condition"] == "raw_text")
+    best_non_raw = min(
+        (record for record in candidate_records if record["condition"] != "raw_text"),
+        key=lambda record: (
+            -record["validation_score"],
+            record["candidate_compute_units"],
+            VALIDATION_PORTFOLIO_CANDIDATES.index(record["condition"]),
+        ),
+    )
+    abstention_margin = VALIDATION_ABSTAINING_PROXY_EXTRA_CORRECT / max(1, len(validation_examples))
+    raw_text_abstention = best_non_raw["validation_score"] < raw["validation_score"] + abstention_margin
+    best = raw if raw_text_abstention else best_non_raw
+
+    pipeline = best["pipeline"]
+    model = TinyMlpClassifier(
+        feature_dimension=feature_dimension,
+        hidden_units=hidden_units,
+        learning_rate=learning_rate,
+    )
+    model.fit(pipeline.examples, epochs=epochs, seed=seed)
+    heldout = model.evaluate(heldout_examples)
+    baseline = majority_baseline(pipeline.examples, heldout_examples)
+    proxy_selection_cost_units = sum(record["candidate_compute_units"] for record in candidate_records)
+    charged_compute_units = _pipeline_compute_units(pipeline=pipeline, epochs=epochs) + proxy_selection_cost_units
+    improvement = heldout.accuracy - baseline.accuracy
+    signed_lsd = 1_000_000.0 * improvement / max(1, pipeline.external_event_count * charged_compute_units)
+
+    profile = model.training_profile
+    return {
+        "seed": seed,
+        "condition": VALIDATION_ABSTAINING_PROXY_SELECTOR,
+        "external_events": pipeline.external_event_count,
+        "internal_examples": pipeline.internal_example_count,
+        "internal_tokens": pipeline.internal_token_count,
+        "charged_compute_units": charged_compute_units,
+        "heldout_accuracy": _round(heldout.accuracy),
+        "majority_baseline_accuracy": _round(baseline.accuracy),
+        "accuracy_improvement_over_majority": _round(improvement),
+        "signed_learning_signal_density_per_1m_event_compute": _round(signed_lsd),
+        "neural_parameter_count": profile.parameter_count,
+        "neural_training_step_count": profile.training_step_count,
+        "estimated_neural_training_multiply_adds": profile.estimated_training_multiply_adds,
+        "portfolio_candidate_count": len(candidate_records),
+        "portfolio_selection_cost_units": proxy_selection_cost_units,
+        "portfolio_validation_score": _round(best["validation_score"]),
+        "portfolio_selected_condition": best["condition"],
+        "portfolio_candidate_conditions": list(VALIDATION_PORTFOLIO_CANDIDATES),
+        "portfolio_selection_metric": (
+            "linear_proxy_validation_accuracy_with_raw_text_abstention_"
+            f"{VALIDATION_ABSTAINING_PROXY_EXTRA_CORRECT}_extra_correct"
+        ),
+        "portfolio_proxy_epochs": VALIDATION_LINEAR_PROXY_EPOCHS,
+        "portfolio_abstention_extra_correct": VALIDATION_ABSTAINING_PROXY_EXTRA_CORRECT,
+        "portfolio_abstention_margin": _round(abstention_margin),
+        "portfolio_raw_text_abstention": 1 if raw_text_abstention else 0,
         "portfolio_candidate_summaries": [
             {
                 "condition": record["condition"],
@@ -332,6 +457,15 @@ def run_neural_condition(
         )
     if condition == VALIDATION_LINEAR_PROXY_SELECTOR:
         return _run_validation_linear_proxy_selector(
+            seed=seed,
+            material_count=material_count,
+            epochs=epochs,
+            hidden_units=hidden_units,
+            feature_dimension=feature_dimension,
+            learning_rate=learning_rate,
+        )
+    if condition == VALIDATION_ABSTAINING_PROXY_SELECTOR:
+        return _run_validation_abstaining_proxy_selector(
             seed=seed,
             material_count=material_count,
             epochs=epochs,

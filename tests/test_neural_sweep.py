@@ -115,6 +115,34 @@ class NeuralBudgetSweepTests(unittest.TestCase):
             self.assertIn("16", saved["portfolio_selection_counts_by_budget"])
             self.assertIn("validation_linear_proxy_selector", saved["portfolio_selection_counts_by_budget"]["16"])
 
+    def test_neural_budget_sweep_preserves_abstaining_proxy_abstention_rate_by_budget(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_json = Path(temp_dir) / "neural_budget_sweep.json"
+            out_md = Path(temp_dir) / "neural_budget_sweep.md"
+
+            run_neural_budget_sweep(
+                material_counts=[16],
+                seeds=[17],
+                conditions=["validation_abstaining_proxy_selector"],
+                output_json=out_json,
+                output_markdown=out_md,
+                epochs=2,
+                hidden_units=4,
+                feature_dimension=32,
+                learning_rate=0.03,
+                target_signed_gain=0.03,
+            )
+
+            saved = json.loads(out_json.read_text())
+            selector = saved["budgets"]["16"]["validation_abstaining_proxy_selector"]
+            self.assertEqual(selector["portfolio_candidate_count_mean"], 6)
+            self.assertEqual(selector["portfolio_proxy_epochs_mean"], 2)
+            self.assertEqual(selector["portfolio_abstention_extra_correct_mean"], 3)
+            self.assertEqual(selector["portfolio_raw_text_abstention_mean"], 1)
+            self.assertIn("portfolio_selected_condition_counts", selector)
+            self.assertIn("16", saved["portfolio_selection_counts_by_budget"])
+            self.assertIn("validation_abstaining_proxy_selector", saved["portfolio_selection_counts_by_budget"]["16"])
+
 
 if __name__ == "__main__":
     unittest.main()
