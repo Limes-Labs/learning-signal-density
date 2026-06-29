@@ -25,6 +25,7 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_validation_portfolio_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_linear_proxy_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.json`
+- `results/tiny_neural_budget_sweep_selector_transfer_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked
@@ -38,6 +39,9 @@ linear-proxy selector artifact must additionally mark the low-fidelity proxy
 selector scope and charge the proxy fits before final heldout evaluation.
 The abstaining-proxy selector artifact must also mark raw-text abstention and
 record the validation-example margin used before leaving raw text.
+The selector-transfer artifact must use fresh seeds and keep the same
+heldout-isolation flags, so selector claims are checked beyond the development
+selector artifacts.
 
 ## Release Checklist
 
