@@ -42,7 +42,9 @@ coverage proxy turns part of that diagnostic into positive fresh-seed evidence
 at 32 materials, but also exposes a 24-material failure, so the selector
 problem remains open. A train-only tempered-budget ablation reduces the
 sample-aware 24--32 material loss, but still does not beat raw-text abstention
-at those scarce budgets.
+at those scarce budgets. A final compact train-size gate keeps that abstention
+schedule, then improves the 64-material density point by dropping redundant
+original QA examples only at the large-sample tier.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -167,6 +169,10 @@ one final tiny MLP.
 The latest train-only follow-up then lowers the sample-aware mid-budget
 synthetic ratio from 0.75 to 0.50 to test whether fewer generated labels repair
 the same failure without validation selection.
+The latest efficiency follow-up keeps the train-size abstention schedule but
+changes the large-sample representation: above 224 train events it retains raw
+original observations and ranked generated examples, while dropping original
+QA duplicates.
 
 \section{Results}
 
@@ -179,7 +185,8 @@ Table~\ref{tab:generated-label-audit},
 Table~\ref{tab:generated-coverage-audit},
 Table~\ref{tab:validation-coverage-proxy},
 Table~\ref{tab:tempered-sample-aware},
-Table~\ref{tab:train-size-gated-baseline}, and
+Table~\ref{tab:train-size-gated-baseline},
+Table~\ref{tab:compact-train-size-gated}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -312,6 +319,16 @@ materials, and the validation portfolio is less negative at 32. Its value is
 instead as a cheap promotion gate. Any future adaptive selector should justify
 its extra selection cost by beating this schedule on fresh seeds.
 
+Table~\ref{tab:compact-train-size-gated} asks whether the high-budget part of
+that schedule can be made denser without changing the generated labels. The
+compact condition is identical to the train-size gate through 48 materials. At
+64 materials, on fresh seeds 181, 191, 193, 197, and 199, it drops original QA
+duplicates while keeping raw originals and ranked generated examples. Charged
+compute falls from 124274.8 to 77354.8 units, signed gain rises from 0.132467
+to 0.140260, and signed LSD rises from 0.004634 to 0.007883. This is a useful
+efficiency result, not a scarce-budget solution: it does not change the 16--32
+material rows, and it relies on the same train-only abstention schedule.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -352,6 +369,10 @@ The tempered sample-aware ablation sharpens the same point from the other
 direction: reducing generated-label count lowers damage, but the better
 decision at 24--32 materials is often not fewer synthetic examples; it is no
 synthetic examples yet.
+The compact train-size gate adds the large-sample complement: once generated
+labels are useful, retaining every original representation is also a policy
+choice, and dropping redundant original QA views can improve density without
+changing the train-only generated labels.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

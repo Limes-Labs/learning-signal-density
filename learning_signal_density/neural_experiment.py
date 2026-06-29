@@ -51,6 +51,7 @@ VALIDATION_COVERAGE_PAIR_BONUS = 0.15
 VALIDATION_COVERAGE_MIN_PAIR_COVERAGE = 0.5
 GENERATED_SOURCE_KINDS = frozenset({
     "agreement_gated_self_ranked_induced",
+    "compact_sample_aware_self_ranked_induced",
     "counterfactual",
     "induced_counterfactual",
     "mdl_counterfactual",

@@ -32,6 +32,9 @@ VALIDATION_COVERAGE_PROXY_ARTIFACT = Path(
 TEMPERED_SAMPLE_AWARE_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json"
 )
+COMPACT_TRAIN_SIZE_GATED_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json"
+)
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
@@ -52,6 +55,7 @@ LOW_BUDGET_MATERIALS = ["16", "24", "32"]
 CONDITION_LABELS = {
     "agreement_gated_self_ranked_induction": "Agreement-gated",
     "counterfactual_expansion": "Oracle counterfactual",
+    "compact_train_size_gated_induction": "Compact train-size gated",
     "mdl_rule_expansion": "MDL rule expansion",
     "qa_expansion": "QA expansion",
     "raw_text": "Raw text",
@@ -167,6 +171,22 @@ def validate_train_size_gated_scope(artifact_path: Path, artifact: dict[str, Any
         raise ValueError(f"{artifact_path} must not use oracle labels for the train-size gate")
 
 
+def validate_compact_train_size_gated_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("compact_train_size_gated_induction", {})
+    if scope.get("train_only_selection") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only compact schedule selection")
+    if scope.get("train_only_induction") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only compact induction")
+    if scope.get("validation_used_for_policy_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for compact schedule selection")
+    if scope.get("validation_used_for_transform_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for compact transform selection")
+    if scope.get("compact_original_encoding_at_large_samples") is not True:
+        raise ValueError(f"{artifact_path} must mark the compact large-sample encoding")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the compact gate")
+
+
 def validate_tempered_sample_aware_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("condition_scope", {}).get("tempered_sample_aware_self_ranked_induction", {})
     if scope.get("train_only_selection") is not True:
@@ -246,6 +266,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "validation_abstaining_proxy": load_json(repo_root / VALIDATION_ABSTAINING_PROXY_ARTIFACT),
         "validation_coverage_proxy": load_json(repo_root / VALIDATION_COVERAGE_PROXY_ARTIFACT),
         "tempered_sample_aware": load_json(repo_root / TEMPERED_SAMPLE_AWARE_ARTIFACT),
+        "compact_train_size_gated": load_json(repo_root / COMPACT_TRAIN_SIZE_GATED_ARTIFACT),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
         "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
@@ -273,6 +294,11 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_tempered_sample_aware_scope(
         TEMPERED_SAMPLE_AWARE_ARTIFACT,
         artifacts["tempered_sample_aware"],
+    )
+    validate_claim_scope(COMPACT_TRAIN_SIZE_GATED_ARTIFACT, artifacts["compact_train_size_gated"])
+    validate_compact_train_size_gated_scope(
+        COMPACT_TRAIN_SIZE_GATED_ARTIFACT,
+        artifacts["compact_train_size_gated"],
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
@@ -743,6 +769,62 @@ def build_train_size_gated_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_compact_train_size_gated_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["compact_train_size_gated"]
+    conditions = (
+        "raw_text",
+        "train_size_gated_sample_aware_induction",
+        "compact_train_size_gated_induction",
+    )
+    materials = ("16", "24", "32", "48", "64")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Fresh-seed compact train-size gated efficiency probe. The compact policy is deployable and train-only: it matches the raw fallback below 144 train events, matches full sample-aware induction below 224 train events, and drops original QA duplicates only at the large-sample tier. Entries show heldout accuracy improvement over majority, charged compute units, and signed learning-signal density per one million event-compute units.}",
+        r"\label{tab:compact-train-size-gated}",
+        r"\small",
+        r"\setlength{\tabcolsep}{2pt}",
+        r"\begin{tabular}{@{}llrrrrr@{}}",
+        r"\toprule",
+        r"Condition & Metric & 16 & 24 & 32 & 48 & 64 \\",
+        r"\midrule",
+    ]
+    for condition in conditions:
+        rows = (
+            (
+                "Gain",
+                "accuracy_improvement_over_majority_mean",
+                6,
+            ),
+            (
+                "Compute",
+                "charged_compute_units_mean",
+                1,
+            ),
+            (
+                "LSD",
+                "signed_learning_signal_density_per_1m_event_compute_mean",
+                6,
+            ),
+        )
+        for index, (metric_label, metric_key, digits) in enumerate(rows):
+            row = [
+                latex_escape(condition_label(condition)) if index == 0 else "",
+                metric_label,
+                *(
+                    fmt_float(
+                        artifact["budgets"][material][condition][metric_key],
+                        digits=digits,
+                    )
+                    for material in materials
+                ),
+            ]
+            lines.append(" & ".join(row) + r" \\")
+        lines.append(r"\addlinespace")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
@@ -757,6 +839,7 @@ def render_tables(repo_root: Path) -> str:
             build_validation_coverage_proxy_table(repo_root),
             build_tempered_sample_aware_table(repo_root),
             build_train_size_gated_table(repo_root),
+            build_compact_train_size_gated_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

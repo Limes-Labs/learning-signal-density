@@ -176,6 +176,10 @@ using the same split and accounting discipline.
   unseen-seed baseline on seeds `59 61 67 71 73`, testing a deployable
   train-size-only schedule that stays raw below 144 train events and switches
   to sample-aware self-ranked induction once the train split is large enough.
+- `results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.*` -
+  fresh-seed train-only efficiency probe on seeds `181 191 193 197 199`. It
+  matches the train-size gate through 48 materials, then drops original QA
+  duplicates at the large-sample tier and improves 64-material signed LSD.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -635,6 +639,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024_tempered_sample_aware
 ```
 
+Run the 16x8 1024-feature compact train-size gated efficiency probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 181 191 193 197 199 \
+  --conditions raw_text train_size_gated_sample_aware_induction compact_train_size_gated_induction \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_train_size_gated_f1024.json \
+  --profile-label f1024_16x8_compact_train_size_gated
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -690,6 +714,10 @@ The repo reports three families of measurements:
   raw text below 144 train events and sample-aware self-ranked induction once
   the train split is large enough. It uses no validation labels or selector
   search, so it is a baseline future adaptive selectors must beat.
+- The compact train-size gated policy keeps that same train-only schedule, but
+  at 224 or more train events drops original QA duplicates while retaining raw
+  originals and ranked generated examples. It tests whether density can improve
+  by removing redundant transformed originals rather than by changing labels.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 
@@ -888,6 +916,11 @@ The current artifacts show a useful split:
   solution; it is a cheap schedule baseline that beats the abstaining proxy on
   64-material gain and density and exposes how much selector search cost must
   be justified by any future adaptive rule.
+- The compact train-size gated efficiency probe adds fresh seeds
+  `181 191 193 197 199`. It is identical to the train-size gate through 48
+  materials, then improves the 64-material row from `0.132467` gain and
+  `0.004634` signed LSD to `0.140260` gain and `0.007883` signed LSD by
+  dropping original QA duplicates while keeping train-only generated labels.
 
 ## Research Thesis
 
