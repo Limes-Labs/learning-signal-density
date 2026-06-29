@@ -506,5 +506,32 @@ sample-aware induction at 24 materials (`-0.096552` versus `-0.137931`) and 32
 materials (`-0.078947` versus `-0.152632`), but it remains worse than the raw
 fallback used by the train-size gate at both scarce budgets.
 
+16x8 1024-feature compact train-size gated efficiency probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 181 191 193 197 199 \
+  --conditions raw_text train_size_gated_sample_aware_induction compact_train_size_gated_induction \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_train_size_gated_f1024.json \
+  --profile-label f1024_16x8_compact_train_size_gated
+```
+
+The compact train-size gate is train-only. It matches the raw fallback below
+144 train events, matches full sample-aware induction below 224 train events,
+and at the large-sample tier keeps raw originals while dropping original QA
+duplicates. On seeds `181 191 193 197 199`, it is identical to the train-size
+gate through 48 materials, then improves the 64-material row from `0.132467`
+gain and `0.004634` signed LSD to `0.140260` gain and `0.007883` signed LSD.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

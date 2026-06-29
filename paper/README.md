@@ -31,6 +31,7 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_train_size_gated_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json`
 - `results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json`
+- `results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked
@@ -63,6 +64,10 @@ the selector score.
 The tempered sample-aware artifact must use fresh seeds, mark train-only
 selection and induction, and keep validation, heldout, and oracle labels out of
 the synthetic-budget policy.
+The compact train-size gated artifact must use fresh seeds, mark train-only
+selection and induction, keep validation and heldout out of policy selection,
+and disclose that original QA duplicates are dropped only at the large-sample
+tier.
 
 ## Release Checklist
 

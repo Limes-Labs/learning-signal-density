@@ -97,6 +97,32 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
             self.assertEqual(scope["validation_used_for_transform_selection"], False)
             self.assertEqual(scope["oracle_generated_labels"], False)
 
+    def test_compact_train_size_gated_policy_reduces_large_sample_neural_compute(self) -> None:
+        compact = run_neural_condition(
+            seed=181,
+            condition="compact_train_size_gated_induction",
+            material_count=64,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        train_gated = run_neural_condition(
+            seed=181,
+            condition="train_size_gated_sample_aware_induction",
+            material_count=64,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(compact["condition"], "compact_train_size_gated_induction")
+        self.assertLess(compact["internal_examples"], train_gated["internal_examples"])
+        self.assertLess(compact["internal_tokens"], train_gated["internal_tokens"])
+        self.assertLess(compact["charged_compute_units"], train_gated["charged_compute_units"])
+        self.assertEqual(compact["portfolio_candidate_count"], 0)
+
     def test_validation_portfolio_selector_charges_candidate_training_without_heldout_selection(self) -> None:
         selector = run_neural_condition(
             seed=17,

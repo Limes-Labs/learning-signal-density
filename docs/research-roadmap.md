@@ -68,6 +68,10 @@ distribution rather than heldout distribution or validation labels for the
 selector score. A tempered sample-aware ablation then tests whether lowering
 the mid-budget train-only synthetic ratio from `0.75` to `0.50` repairs the
 same 24/32-material failure without validation selection.
+A compact train-size gated efficiency probe then keeps the same schedule but
+drops original QA duplicates at the large-sample tier, testing whether density
+can improve by removing redundant transformed originals instead of changing
+generated labels.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -184,6 +188,12 @@ same 24/32-material failure without validation selection.
   validation selector search. It remains negative at 16 and 32 materials, so it
   is not a solution; it is the baseline a future adaptive selector must beat
   after charging its selection cost.
+- Treat representation cost as part of the policy. On fresh seeds
+  `181 191 193 197 199`, compact train-size gating matches the train-size gate
+  through 48 materials, then improves the 64-material row from `0.132467` gain
+  and `0.004634` signed LSD to `0.140260` gain and `0.007883` signed LSD by
+  keeping raw originals but dropping original QA duplicates at the large-sample
+  tier.
 
 ## Phase 3: Continual-Learning Replay
 
