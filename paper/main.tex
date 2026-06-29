@@ -146,7 +146,9 @@ train-only ranked policies and oracle counterfactual headroom.
 The latest selector extensions replace the expensive full validation portfolio
 with a two-epoch linear proxy that scores the same candidate policies before
 training only one final MLP, then test whether a raw-text abstention margin
-reduces scarce-budget downside.
+reduces scarce-budget downside. A final train-size gated baseline removes
+validation selection entirely: it uses raw text below 144 train events and
+sample-aware self-ranked induction only after the train split is large enough.
 
 \section{Results}
 
@@ -154,7 +156,8 @@ Table~\ref{tab:f1024-profile-frontier},
 Table~\ref{tab:validation-selected-reliability-probe},
 Table~\ref{tab:post-hoc-policy-envelope},
 Table~\ref{tab:validation-portfolio-selector},
-Table~\ref{tab:selector-transfer-stress}, and
+Table~\ref{tab:selector-transfer-stress},
+Table~\ref{tab:train-size-gated-baseline}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -228,6 +231,16 @@ selector variants remain negative, and raw text is less negative than the
 selector family. This is useful negative evidence: the current validation
 signals are not stable enough to drive a deployable adaptive policy.
 
+Table~\ref{tab:train-size-gated-baseline} checks a simpler alternative on a
+second unseen seed set: use raw text below 144 train events, then switch to
+sample-aware self-ranked induction. This train-only schedule reaches the target
+at 48 materials and matches fixed sample-aware induction at 64 materials
+(0.145454 signed gain and 0.005090 signed LSD), without validation selector
+search. It is not a scarce-budget solution: it is still negative at 16 and 32
+materials, and the validation portfolio is less negative at 32. Its value is
+instead as a cheap promotion gate. Any future adaptive selector should justify
+its extra selection cost by beating this schedule on fresh seeds.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -250,7 +263,9 @@ shows that cheaper model hierarchies help, and the abstaining proxy shows that
 simple validation-count caution can reduce downside at 16--24 materials without
 repairing the 32-material failure. The fresh-seed transfer test adds a stronger
 constraint: future selectors must beat simple fixed policies on new seeds, not
-only on the artifacts that inspired them.
+only on the artifacts that inspired them. The train-size gated baseline makes
+that constraint sharper: selector search has to buy more than a cheap
+train-size schedule that abstains from generated labels at scarce budgets.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

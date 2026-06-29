@@ -406,5 +406,32 @@ It is intentionally uncomfortable: fixed sample-aware self-ranked induction
 beats the deployable selector family at 64 materials, and raw text is less
 negative than the selector family at 32 materials.
 
+16x8 1024-feature train-size gated baseline on a second unseen seed set:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_train_size_gated_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_train_size_gated_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 59 61 67 71 73 \
+  --conditions raw_text self_ranked_induction sample_aware_self_ranked_induction train_size_gated_sample_aware_induction validation_ranked_induction mdl_rule_expansion validation_abstaining_proxy_selector validation_linear_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_selector_transfer_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_selector_transfer_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_train_size_gated
+```
+
+The train-size gate uses raw text below 144 train events and switches to
+sample-aware self-ranked induction at larger train splits. On seeds `59 61 67
+71 73`, it reaches target at 48 materials and matches sample-aware induction at
+64 materials (`0.145454` gain, `0.005090` signed LSD), without selector search
+cost. It remains negative at 16 and 32 materials, so it should be read as a
+cheap baseline and promotion gate rather than a scarce-budget fix.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

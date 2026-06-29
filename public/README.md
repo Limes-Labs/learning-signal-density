@@ -19,4 +19,7 @@ falls back to raw text unless a non-raw candidate clears a three-validation
 example margin, improving 16/24-material behavior but still failing at 32
 materials. The selector-transfer artifact is included as a fresh-seed stress
 test showing that current deployable selectors do not yet transfer strongly
-enough for paper-ready claims.
+enough for paper-ready claims. The train-size gated artifact is included as a
+second unseen-seed cheap-baseline test: it avoids selector search cost and
+matches sample-aware induction at larger budgets, while still leaving the
+scarce-budget failure visible.

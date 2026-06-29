@@ -1,6 +1,6 @@
 # Learning Signal Density Pilot
 
-Generated: `2026-06-29T00:01:07Z`
+Generated: `2026-06-29T12:07:50Z`
 
 This is a controlled pilot on a synthetic causal-text domain. It is not a neural-language-model result.
 The heldout split is not used for selection or transformation. Counterfactual expansion is oracle-generated inside the synthetic world.
