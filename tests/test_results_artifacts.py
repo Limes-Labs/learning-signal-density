@@ -661,6 +661,78 @@ class CommittedResultArtifactTests(unittest.TestCase):
             0.576443,
         )
 
+    def test_f1024_validation_coverage_proxy_artifact_records_deployable_coverage_probe(self) -> None:
+        coverage = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json").read_text()
+        )
+
+        self.assertEqual(coverage["seeds"], [103, 107, 109, 113, 127])
+        self.assertEqual(coverage["feature_dimension"], 1024)
+        self.assertEqual(
+            coverage["profile_label"],
+            "epochs=16_hidden=8_features=1024_validation_coverage_proxy",
+        )
+        self.assertEqual(
+            coverage["comparison_of"],
+            "results/generated_coverage_audit_selector_transfer_f1024.json",
+        )
+        self.assertEqual(coverage["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(coverage["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_coverage_proxy_selector", coverage["conditions"])
+
+        scope = coverage["condition_scope"]["validation_coverage_proxy_selector"]
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_motif_distribution_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_labels_used_for_policy_selection"], False)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            coverage["budgets"]["16"]["validation_coverage_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.0,
+        )
+        self.assertEqual(
+            coverage["budgets"]["24"]["validation_coverage_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            -0.082759,
+        )
+        self.assertEqual(
+            coverage["budgets"]["32"]["validation_coverage_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.010526,
+        )
+        self.assertEqual(
+            coverage["budgets"]["64"]["validation_coverage_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.171428,
+        )
+        self.assertEqual(
+            coverage["thresholds"]["validation_coverage_proxy_selector"][
+                "first_material_count_reaching_target"
+            ],
+            64,
+        )
+        self.assertLess(
+            coverage["budgets"]["64"]["validation_coverage_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            coverage["budgets"]["64"]["sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertGreater(
+            coverage["budgets"]["32"]["validation_coverage_proxy_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            coverage["budgets"]["32"]["sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

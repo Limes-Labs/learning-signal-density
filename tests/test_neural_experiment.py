@@ -297,6 +297,35 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
                 saved["conditions"]["validation_abstaining_proxy_selector"],
             )
 
+    def test_validation_coverage_proxy_selector_records_motif_proxy_scope(self) -> None:
+        result = run_neural_seedset(
+            seeds=[109],
+            conditions=["validation_coverage_proxy_selector"],
+            material_count=32,
+            epochs=16,
+            hidden_units=8,
+            feature_dimension=1024,
+            learning_rate=0.03,
+        )
+
+        selector = result["conditions"]["validation_coverage_proxy_selector"]
+        scope = result["condition_scope"]["validation_coverage_proxy_selector"]
+
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_motif_distribution_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_labels_used_for_policy_selection"], False)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(selector["portfolio_candidate_count_mean"], 6)
+        self.assertEqual(selector["portfolio_proxy_epochs_mean"], 0)
+        self.assertGreater(selector["portfolio_selection_cost_units_mean"], 0)
+        self.assertEqual(selector["portfolio_selected_condition_counts"], {"mdl_rule_expansion": 1})
+        self.assertEqual(selector["accuracy_improvement_over_majority_mean"], 0.052632)
+        self.assertIn("portfolio_candidate_summaries", result["per_seed"][0])
+        self.assertEqual(
+            result["per_seed"][0]["portfolio_selection_metric"],
+            "validation_motif_coverage_l1_with_pair_coverage_bonus",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

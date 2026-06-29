@@ -37,7 +37,10 @@ finding: representation width and model profile can improve density, but
 scarce-sample generated-label failures remain visible at 24 and 32 external
 materials; a hidden-rulebook audit shows that label correctness alone does not
 explain those failures, and even a non-deployable post-hoc policy envelope
-reaches the current target only at 48 materials.
+reaches the current target only at 48 materials. A deployable validation
+coverage proxy turns part of that diagnostic into positive fresh-seed evidence
+at 32 materials, but also exposes a 24-material failure, so the selector
+problem remains open.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -154,6 +157,11 @@ The latest diagnostics then audit generated synthetic labels against the hidden
 rulebook and heldout motif distribution after the selector-transfer sweep has
 run. These audits are non-deployable by construction, but they separate label
 correctness and coverage from downstream neural gain.
+The latest deployable follow-up replaces heldout coverage with validation motif
+coverage: it scores candidate generated-label policies by motif-distribution
+fit to validation, does not use validation labels for the selector score, and
+charges candidate construction plus validation-motif scanning before training
+one final tiny MLP.
 
 \section{Results}
 
@@ -164,6 +172,7 @@ Table~\ref{tab:validation-portfolio-selector},
 Table~\ref{tab:selector-transfer-stress},
 Table~\ref{tab:generated-label-audit},
 Table~\ref{tab:generated-coverage-audit},
+Table~\ref{tab:validation-coverage-proxy},
 Table~\ref{tab:train-size-gated-baseline}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
@@ -262,6 +271,20 @@ induction and also has lower triple L1 distance, 0.683666 versus 0.764428.
 This does not make heldout distribution a usable selector signal; it identifies
 what a future train/validation-side proxy must approximate.
 
+Table~\ref{tab:validation-coverage-proxy} is the first deployable version of
+that approximation. It uses validation motif distribution, not heldout
+distribution or validation labels, to score the same candidate family. On fresh
+seeds 103, 107, 109, 113, and 127, the proxy moves the 32-material row from
+negative fixed sample-aware induction to positive signed gain, 0.010526, by
+abstaining to raw text on four seeds and choosing MDL once. It also reaches
+0.171428 signed gain at 64 materials, above the abstaining proxy but below
+fixed sample-aware induction and the validation portfolio in this confirmation
+artifact. The failure is equally important: at 24 materials it
+selects MDL rule expansion on all five seeds and falls to -0.082759, worse than
+raw text and the train-size gate. The mechanism signal is therefore real enough
+to keep, but the current rule needs a low-budget abstention floor or train-size
+prior before it can be promoted.
+
 Table~\ref{tab:train-size-gated-baseline} checks a simpler alternative on a
 second unseen seed set: use raw text below 144 train events, then switch to
 sample-aware self-ranked induction. This train-only schedule reaches the target
@@ -304,6 +327,10 @@ The generated-coverage audit suggests one measurable version of that warning:
 heldout-like motif coverage appears closer to the gain ordering than raw label
 precision in the selector-transfer artifact, but it must be approximated
 without heldout access before it can become a policy.
+The validation-coverage proxy is a first approximation, and its mixed result
+sharpens the next design constraint: coverage scoring needs to be joined with
+scarce-budget abstention, because distributional fit can still choose a
+generated-label policy when raw text is the better action.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

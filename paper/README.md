@@ -29,6 +29,7 @@ The generator currently reads:
 - `results/generated_label_audit_selector_transfer_f1024.json`
 - `results/generated_coverage_audit_selector_transfer_f1024.json`
 - `results/tiny_neural_budget_sweep_train_size_gated_f1024.json`
+- `results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked
@@ -54,6 +55,10 @@ remain non-deployable.
 The train-size gated artifact must use another unseen seed set, mark the
 train-only schedule scope, and keep validation and heldout out of policy
 selection.
+The validation-coverage proxy artifact must use fresh seeds, disclose
+validation motif distribution as the policy-selection signal, keep heldout
+distribution out of selection, and mark that validation labels are not used for
+the selector score.
 
 ## Release Checklist
 

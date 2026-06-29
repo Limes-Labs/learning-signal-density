@@ -453,5 +453,32 @@ sample-aware self-ranked induction at larger train splits. On seeds `59 61 67
 cost. It remains negative at 16 and 32 materials, so it should be read as a
 cheap baseline and promotion gate rather than a scarce-budget fix.
 
+16x8 1024-feature validation-coverage proxy on a fresh confirmation seed set:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 103 107 109 113 127 \
+  --conditions raw_text sample_aware_self_ranked_induction train_size_gated_sample_aware_induction validation_coverage_proxy_selector validation_abstaining_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_train_size_gated_f1024.json \
+  --comparison-of results/generated_coverage_audit_selector_transfer_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_validation_coverage_proxy
+```
+
+The coverage proxy is deployable: it approximates the non-deployable
+heldout-coverage audit with validation motif distribution and does not use
+validation labels for its selector score. On seeds `103 107 109 113 127`, it
+turns the 32-material row positive (`0.010526`) and reaches `0.171428` at 64
+materials, but it overselects MDL rule expansion at 24 materials and falls to
+`-0.082759`. Treat it as mechanism evidence, not as a robust selector.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

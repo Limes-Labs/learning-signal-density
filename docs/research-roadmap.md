@@ -61,7 +61,11 @@ portfolio selection. A hidden-rulebook generated-label audit then checks the
 selector-transfer synthetic labels after the fact and shows that label precision
 alone does not explain the remaining neural-gain bottleneck. A
 heldout-distribution generated-coverage audit then tests whether the motif
-distribution of generated labels explains part of the remaining gap.
+distribution of generated labels explains part of the remaining gap. A
+validation-coverage proxy now turns that mechanism diagnostic into a deployable
+selector probe on fresh seeds `103 107 109 113 127`, using validation motif
+distribution rather than heldout distribution or validation labels for the
+selector score.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -158,6 +162,12 @@ distribution of generated labels explains part of the remaining gap.
   induction has the lowest 32-material distance among non-oracle generated
   policies (`0.683666`) and is least negative. The next experiment should
   search for a deployable train/validation proxy for heldout motif coverage.
+- Treat validation motif coverage as useful but not sufficient. The fresh-seed
+  validation-coverage proxy turns 32 materials positive (`0.010526`) and
+  reaches `0.171428` at 64 materials, but it selects MDL rule expansion at
+  every 24-material seed and drops to `-0.082759`. The next selector should
+  combine motif coverage with a low-budget abstention floor or train-size
+  prior before paying for generated-label policies.
 - Treat the train-size gated schedule as the new cheap-selector baseline. On
   unseen seeds `59 61 67 71 73`, raw text below 144 train events plus
   sample-aware induction above that threshold reaches the same `0.145454` best
