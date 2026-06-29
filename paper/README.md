@@ -21,10 +21,14 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_8x8_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_selected_f1024.json`
 - `results/tiny_neural_budget_sweep_agreement_gated_f1024.json`
+- `results/policy_envelope_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked
 as paper-ready. That keeps the manuscript tied to the current evidence level.
+The policy-envelope artifact is the one deliberate exception: it must disclose
+heldout policy selection, mark itself as post-hoc and non-deployable, and
+exclude the oracle condition from its non-oracle envelope.
 
 ## Release Checklist
 

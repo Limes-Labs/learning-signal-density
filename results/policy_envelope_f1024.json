@@ -1,0 +1,153 @@
+{
+  "best_by_material": {
+    "16": {
+      "charged_compute_units": 29295.6,
+      "condition": "mdl_rule_expansion",
+      "condition_label": "MDL rule expansion",
+      "heldout_accuracy": 0.589474,
+      "oracle_charged_compute_units": 64960,
+      "oracle_condition": "counterfactual_expansion",
+      "oracle_gap_signed_gain": -0.073684,
+      "oracle_signed_gain": -0.063158,
+      "signed_gain": 0.010526,
+      "signed_learning_signal_density_per_1m_event_compute": 0.006546
+    },
+    "24": {
+      "charged_compute_units": 9632,
+      "condition": "raw_text",
+      "condition_label": "Raw text",
+      "heldout_accuracy": 0.655172,
+      "oracle_charged_compute_units": 96320,
+      "oracle_condition": "counterfactual_expansion",
+      "oracle_gap_signed_gain": 0.075862,
+      "oracle_signed_gain": 0.075862,
+      "signed_gain": 0.0,
+      "signed_learning_signal_density_per_1m_event_compute": 0.0
+    },
+    "32": {
+      "charged_compute_units": 79635.4,
+      "condition": "mdl_rule_expansion",
+      "condition_label": "MDL rule expansion",
+      "heldout_accuracy": 0.594737,
+      "oracle_charged_compute_units": 129920,
+      "oracle_condition": "counterfactual_expansion",
+      "oracle_gap_signed_gain": 0.073684,
+      "oracle_signed_gain": 0.036842,
+      "signed_gain": -0.036842,
+      "signed_learning_signal_density_per_1m_event_compute": -0.004033
+    },
+    "48": {
+      "charged_compute_units": 94299.6,
+      "condition": "validation_ranked_induction",
+      "condition_label": "Validation-ranked",
+      "heldout_accuracy": 0.655173,
+      "oracle_charged_compute_units": 192640,
+      "oracle_condition": "counterfactual_expansion",
+      "oracle_gap_signed_gain": 0.106897,
+      "oracle_signed_gain": 0.193104,
+      "signed_gain": 0.086207,
+      "signed_learning_signal_density_per_1m_event_compute": 0.005312
+    },
+    "64": {
+      "charged_compute_units": 126970,
+      "condition": "self_ranked_induction",
+      "condition_label": "Self-ranked",
+      "heldout_accuracy": 0.745455,
+      "oracle_charged_compute_units": 257600,
+      "oracle_condition": "counterfactual_expansion",
+      "oracle_gap_signed_gain": 0.085714,
+      "oracle_signed_gain": 0.238961,
+      "signed_gain": 0.153247,
+      "signed_learning_signal_density_per_1m_event_compute": 0.005247
+    }
+  },
+  "best_condition": "self_ranked_induction",
+  "best_condition_counts": {
+    "mdl_rule_expansion": 2,
+    "raw_text": 1,
+    "self_ranked_induction": 1,
+    "validation_ranked_induction": 1
+  },
+  "best_material_count": 64,
+  "best_signed_gain": 0.153247,
+  "claim_scope": {
+    "deployable_policy": false,
+    "fresh_seed_confirmation": true,
+    "heldout_used_for_policy_selection": true,
+    "neural_model": true,
+    "paper_ready_claim": false,
+    "post_hoc_envelope": true,
+    "synthetic_domain": true
+  },
+  "condition_policy_scope": {
+    "agreement_gated_self_ranked_induction": {
+      "candidate_scope": "train-only agreement gate",
+      "uses_hidden_rulebook": false,
+      "uses_validation_labels": false
+    },
+    "mdl_rule_expansion": {
+      "candidate_scope": "charged validation-selected MDL rules",
+      "uses_hidden_rulebook": false,
+      "uses_validation_labels": true
+    },
+    "raw_text": {
+      "candidate_scope": "no generated-label transform",
+      "uses_hidden_rulebook": false,
+      "uses_validation_labels": false
+    },
+    "sample_aware_self_ranked_induction": {
+      "candidate_scope": "train-only sample-aware ranking",
+      "uses_hidden_rulebook": false,
+      "uses_validation_labels": false
+    },
+    "self_ranked_induction": {
+      "candidate_scope": "train-only ranking",
+      "uses_hidden_rulebook": false,
+      "uses_validation_labels": false
+    },
+    "validation_ranked_induction": {
+      "candidate_scope": "charged validation-ranked candidates",
+      "uses_hidden_rulebook": false,
+      "uses_validation_labels": true
+    }
+  },
+  "conditions_considered": [
+    "raw_text",
+    "self_ranked_induction",
+    "sample_aware_self_ranked_induction",
+    "agreement_gated_self_ranked_induction",
+    "validation_ranked_induction",
+    "mdl_rule_expansion"
+  ],
+  "epochs": 16,
+  "feature_dimension": 1024,
+  "first_material_count_reaching_target": 48,
+  "hidden_units": 8,
+  "learner_backend": "tiny_mlp",
+  "learning_rate": 0.03,
+  "material_counts": [
+    16,
+    24,
+    32,
+    48,
+    64
+  ],
+  "non_deployable_reason": "The envelope selects the best non-oracle condition separately at each material budget using heldout accuracy from the completed sweep. It is a diagnostic upper bound for policy selection, not a deployable policy.",
+  "oracle_condition": "counterfactual_expansion",
+  "profile_label": "epochs=16_hidden=8_features=1024_agreement_gated",
+  "seeds": [
+    17,
+    19,
+    23,
+    29,
+    31
+  ],
+  "selection_metric": "accuracy_improvement_over_majority_mean",
+  "source_artifacts": [
+    "results/tiny_neural_budget_sweep_agreement_gated_f1024.json"
+  ],
+  "source_generated_at": "2026-06-28T23:55:06Z",
+  "target_signed_gain": 0.03,
+  "tie_break": "lower charged_compute_units_mean, then condition name",
+  "title": "Learning Signal Density Post-hoc Policy Envelope"
+}

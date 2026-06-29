@@ -34,7 +34,8 @@ pulled from committed JSON. The strongest current positive result is not a
 frontier-model claim. It is a reusable measurement protocol plus a concrete
 finding: representation width and model profile can improve density, but
 scarce-sample generated-label noise remains visible at 24 and 32 external
-materials.
+materials; even a non-deployable post-hoc policy envelope reaches the current
+target only at 48 materials.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -145,7 +146,8 @@ train-only ranked policies and oracle counterfactual headroom.
 \section{Results}
 
 Table~\ref{tab:f1024-profile-frontier},
-Table~\ref{tab:validation-selected-reliability-probe}, and
+Table~\ref{tab:validation-selected-reliability-probe},
+Table~\ref{tab:post-hoc-policy-envelope}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -176,6 +178,18 @@ train-only ranked policies. This points to a more specific next step: a useful
 generated-label policy must improve reliability at 24--32 materials without
 paying so much selection cost that density collapses.
 
+The post-hoc envelope in Table~\ref{tab:post-hoc-policy-envelope} is
+deliberately not a deployable method: it chooses the best non-oracle condition
+at each budget after seeing the completed heldout results. That diagnostic
+still does not reach the signed-gain target below 48 materials. At 24 materials,
+raw text is the best non-oracle row because every generated-label policy hurts
+heldout accuracy. At 32 materials, MDL rule expansion is only the least bad
+choice, not a positive result. The envelope switches again to validation-ranked
+induction at 48 and self-ranked induction at 64. This makes the next research
+problem sharper: a useful policy must learn when to abstain, when to compress
+rules, and when to rank generated labels using only train signals or explicitly
+charged validation signals.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -188,6 +202,10 @@ useful next breakthrough is therefore unlikely to come from only increasing or
 shrinking the MLP budget. The low-budget failure points instead toward
 reliability-aware generated-label policies with sharper uncertainty estimates,
 or a small transformer backend whose sequence structure can be charged honestly.
+The post-hoc envelope also turns the problem into a selector-learning question:
+future experiments should preregister train/validation features that predict
+whether raw text, compact rules, validation-ranked candidates, or train-only
+ranked candidates are appropriate before heldout evaluation is opened.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be
