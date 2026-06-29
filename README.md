@@ -65,6 +65,10 @@ The current pilot is intentionally modest:
 - `support_ramped_compact_induction` is a train-only high-budget tradeoff: it
   matches compact induction through 96 materials, then raises induced-label
   minimum support from `3` to `4` after the abundant-data tier.
+- `late_confidence_ramped_compact_induction` is a train-only negative/mixed
+  control for that tradeoff. It matches support-ramped compact until the train
+  split reaches 432 events, then raises induced-label confidence from `0.55` to
+  `0.60`.
 - `agreement_gated_self_ranked_induction` keeps train-only generated labels
   only when independent induced-rule projections agree, testing whether source
   agreement is enough reliability signal without validation labels.
@@ -204,6 +208,12 @@ using the same split and accounting discipline.
   it improves compact density after 104 materials and recovers more gain than
   raw fallback at several high-budget points, but raw fallback still has higher
   signed LSD at 128.
+- `results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.*` -
+  fresh-seed late-confidence control on seeds `499 503 509 521 523`. It raises
+  the abundant-tier confidence floor from `0.55` to `0.60` only after 432 train
+  events. The result is mostly negative: it improves the support-ramped row at
+  120 materials, but raw/density-capped fallback still dominates that row and
+  the best signed gain remains below plain compact.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -723,6 +733,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label f1024_16x8_support_ramped_compact
 ```
 
+Run the 16x8 1024-feature late-confidence compact control:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.md \
+  --material-counts 96 104 112 120 128 144 160 \
+  --seeds 499 503 509 521 523 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction late_confidence_ramped_compact_induction density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json \
+  --profile-label f1024_16x8_late_confidence_ramped_compact
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -1004,6 +1034,14 @@ The current artifacts show a useful split:
   compact (`0.119481`), but raw fallback remains denser (`0.006521` versus
   `0.005153`). The useful claim is a Pareto tradeoff, not a universal
   improvement.
+- The late-confidence compact control tests whether that support-ramped policy
+  only needed a stricter confidence floor at later abundant budgets. On fresh
+  seeds `499 503 509 521 523`, it improves the 120-material support-ramped row
+  from `0.134722` gain and `0.004119` signed LSD to `0.138889` and `0.004322`,
+  but raw/density-capped fallback is still better at that same row (`0.145833`
+  gain and `0.006977` signed LSD). Its best signed gain, `0.171098`, also
+  remains below plain compact's `0.196875`. Confidence tightening alone is
+  therefore a useful negative control, not the next frontier.
 
 ## Research Thesis
 

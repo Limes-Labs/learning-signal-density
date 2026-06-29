@@ -183,6 +183,32 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
         self.assertEqual(scope["oracle_generated_labels"], False)
         self.assertEqual(stats["portfolio_candidate_count_mean"], 0)
 
+    def test_late_confidence_ramped_compact_policy_declares_train_only_late_confidence_ramp(self) -> None:
+        result = run_neural_seedset(
+            seeds=[463],
+            conditions=["late_confidence_ramped_compact_induction"],
+            material_count=120,
+            epochs=4,
+            hidden_units=4,
+            feature_dimension=64,
+            fresh_seed_confirmation=True,
+        )
+
+        scope = result["condition_scope"]["late_confidence_ramped_compact_induction"]
+        stats = result["conditions"]["late_confidence_ramped_compact_induction"]
+
+        self.assertEqual(result["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["compact_original_encoding_at_large_samples"], True)
+        self.assertEqual(scope["abundant_data_min_support"], 4)
+        self.assertEqual(scope["late_confidence_ramp_min_events"], 432)
+        self.assertEqual(scope["late_confidence_min_confidence"], 0.60)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(stats["portfolio_candidate_count_mean"], 0)
+
     def test_validation_portfolio_selector_charges_candidate_training_without_heldout_selection(self) -> None:
         selector = run_neural_condition(
             seed=17,

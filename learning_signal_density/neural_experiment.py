@@ -54,6 +54,7 @@ GENERATED_SOURCE_KINDS = frozenset({
     "compact_sample_aware_self_ranked_induced",
     "counterfactual",
     "induced_counterfactual",
+    "late_confidence_ramped_compact_sample_aware_self_ranked_induced",
     "mdl_counterfactual",
     "sample_aware_self_ranked_induced",
     "self_ranked_induced",

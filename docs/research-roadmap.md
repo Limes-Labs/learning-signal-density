@@ -79,6 +79,9 @@ their charged compute.
 A support-ramped compact probe then tests the middle of that high-budget
 frontier, keeping compact induction but raising induced-label minimum support
 from `3` to `4` after the abundant-data tier.
+A late-confidence compact control then tests whether raising induced-label
+confidence from `0.55` to `0.60` after 432 train events repairs the remaining
+high-budget tradeoff.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -216,6 +219,14 @@ from `3` to `4` after the abundant-data tier.
   (`0.184416` versus `0.154545`), but raw fallback remains denser (`0.006521`
   versus `0.005153`). Future selectors should choose among raw, compact, and
   higher-support compact views according to the target point on the frontier.
+- Treat late confidence tightening as a negative/mixed control. On fresh seeds
+  `499 503 509 521 523`, raising the abundant-tier confidence floor from
+  `0.55` to `0.60` only after 432 train events improves the 120-material
+  support-ramped row (`0.004322` signed LSD versus `0.004119`), but raw
+  fallback is still better at that row (`0.006977`) and the policy's best
+  signed gain (`0.171098`) remains below plain compact (`0.196875`). The next
+  useful selector needs a richer utility signal than confidence tightening
+  alone.
 
 ## Phase 3: Continual-Learning Replay
 

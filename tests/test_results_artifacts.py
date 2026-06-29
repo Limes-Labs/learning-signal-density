@@ -1109,6 +1109,115 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_late_confidence_ramped_compact_artifact_records_late_confidence_tradeoff(self) -> None:
+        late_confidence = json.loads(
+            Path("results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json").read_text()
+        )
+
+        self.assertEqual(late_confidence["seeds"], [499, 503, 509, 521, 523])
+        self.assertEqual(late_confidence["material_counts"], [96, 104, 112, 120, 128, 144, 160])
+        self.assertEqual(late_confidence["feature_dimension"], 1024)
+        self.assertEqual(late_confidence["profile_label"], "f1024_16x8_late_confidence_ramped_compact")
+        self.assertEqual(
+            late_confidence["confirmation_of"],
+            "results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json",
+        )
+        self.assertEqual(
+            late_confidence["comparison_of"],
+            "results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json",
+        )
+        self.assertEqual(late_confidence["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(late_confidence["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("late_confidence_ramped_compact_induction", late_confidence["conditions"])
+
+        scope = late_confidence["condition_scope"]["late_confidence_ramped_compact_induction"]
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["compact_original_encoding_at_large_samples"], True)
+        self.assertEqual(scope["abundant_data_support_ramp"], True)
+        self.assertEqual(scope["abundant_data_support_ramp_min_events"], 360)
+        self.assertEqual(scope["abundant_data_min_support"], 4)
+        self.assertEqual(scope["late_confidence_ramp_min_events"], 432)
+        self.assertEqual(scope["late_confidence_min_confidence"], 0.60)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            late_confidence["budgets"]["104"]["late_confidence_ramped_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.152,
+        )
+        self.assertGreater(
+            late_confidence["budgets"]["104"]["late_confidence_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            late_confidence["budgets"]["104"]["raw_text"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        for material_count in ("96", "104", "112", "128", "144", "160"):
+            self.assertEqual(
+                late_confidence["budgets"][material_count]["late_confidence_ramped_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                late_confidence["budgets"][material_count]["support_ramped_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+            self.assertEqual(
+                late_confidence["budgets"][material_count]["late_confidence_ramped_compact_induction"][
+                    "charged_compute_units_mean"
+                ],
+                late_confidence["budgets"][material_count]["support_ramped_compact_induction"][
+                    "charged_compute_units_mean"
+                ],
+            )
+
+        self.assertEqual(
+            late_confidence["budgets"]["120"]["late_confidence_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            0.004322,
+        )
+        self.assertGreater(
+            late_confidence["budgets"]["120"]["late_confidence_ramped_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            late_confidence["budgets"]["120"]["support_ramped_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertGreater(
+            late_confidence["budgets"]["120"]["late_confidence_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            late_confidence["budgets"]["120"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            late_confidence["budgets"]["120"]["late_confidence_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            late_confidence["budgets"]["120"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            late_confidence["budgets"]["160"]["late_confidence_ramped_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            late_confidence["budgets"]["160"]["density_capped_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertLess(
+            late_confidence["thresholds"]["late_confidence_ramped_compact_induction"]["best_signed_gain"],
+            late_confidence["thresholds"]["compact_train_size_gated_induction"]["best_signed_gain"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
