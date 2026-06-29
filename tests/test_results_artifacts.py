@@ -601,6 +601,66 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_generated_coverage_audit_artifact_records_distribution_not_precision_mechanism(self) -> None:
+        audit = json.loads(Path("results/generated_coverage_audit_selector_transfer_f1024.json").read_text())
+
+        self.assertEqual(audit["seeds"], [37, 41, 43, 47, 53])
+        self.assertEqual(audit["material_counts"], [16, 24, 32, 48, 64])
+        self.assertEqual(
+            audit["source_artifacts"],
+            ["results/tiny_neural_budget_sweep_selector_transfer_f1024.json"],
+        )
+        self.assertEqual(audit["claim_scope"]["uses_hidden_rulebook_for_label_audit"], True)
+        self.assertEqual(audit["claim_scope"]["uses_heldout_distribution_for_audit"], True)
+        self.assertEqual(audit["claim_scope"]["heldout_distribution_available_to_policies"], False)
+        self.assertEqual(audit["claim_scope"]["deployable_policy"], False)
+        self.assertEqual(audit["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(audit["claim_scope"]["paper_ready_claim"], False)
+
+        material32 = audit["audits"]["32"]
+        self.assertLess(
+            material32["validation_ranked_induction"]["generated_vs_heldout_triple_l1_distance"],
+            material32["agreement_gated_self_ranked_induction"][
+                "generated_vs_heldout_triple_l1_distance"
+            ],
+        )
+        self.assertGreater(
+            material32["validation_ranked_induction"][
+                "linked_accuracy_improvement_over_majority_mean"
+            ],
+            material32["agreement_gated_self_ranked_induction"][
+                "linked_accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertEqual(
+            material32["validation_ranked_induction"]["generated_vs_heldout_triple_l1_distance"],
+            0.683666,
+        )
+
+        material64 = audit["audits"]["64"]
+        self.assertLess(
+            material64["sample_aware_self_ranked_induction"][
+                "generated_vs_heldout_triple_l1_distance"
+            ],
+            material64["agreement_gated_self_ranked_induction"][
+                "generated_vs_heldout_triple_l1_distance"
+            ],
+        )
+        self.assertGreater(
+            material64["sample_aware_self_ranked_induction"][
+                "linked_accuracy_improvement_over_majority_mean"
+            ],
+            material64["agreement_gated_self_ranked_induction"][
+                "linked_accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertEqual(
+            material64["agreement_gated_self_ranked_induction"][
+                "generated_vs_heldout_triple_l1_distance"
+            ],
+            0.576443,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

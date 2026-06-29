@@ -149,6 +149,10 @@ using the same split and accounting discipline.
   generated-label audit for the selector-transfer seeds. This is explicitly
   non-deployable and exists to test whether label precision alone explains
   neural gain.
+- `results/generated_coverage_audit_selector_transfer_f1024.*` -
+  heldout-distribution coverage audit for the selector-transfer seeds. This is
+  explicitly non-deployable and tests whether generated-label motif coverage
+  tracks gain better than label precision alone.
 - `results/tiny_neural_budget_sweep_train_size_gated_f1024.*` - second
   unseen-seed baseline on seeds `59 61 67 71 73`, testing a deployable
   train-size-only schedule that stays raw below 144 train events and switches
@@ -178,6 +182,7 @@ Regenerate the manuscript result tables from checked-in JSON artifacts:
 ```bash
 python3 scripts/build_policy_envelope.py
 python3 scripts/build_generated_label_audit.py
+python3 scripts/build_generated_coverage_audit.py
 python3 scripts/build_paper_tables.py
 ```
 
@@ -788,6 +793,14 @@ The current artifacts show a useful split:
   lower gain (`0.080519` versus `0.142857`). Label correctness is therefore
   necessary but not sufficient; coverage, distribution, learner interaction,
   and charged selection cost remain live bottlenecks.
+- The generated-coverage audit makes that bottleneck measurable. At 64
+  materials, sample-aware induction has lower generated-versus-heldout motif
+  L1 distance than agreement-gated induction (`0.477843` versus `0.576443`)
+  and higher gain (`0.142857` versus `0.080519`) despite lower label
+  precision. At 32 materials, validation-ranked induction is much less
+  negative than agreement-gated induction and also has lower motif L1 distance
+  (`0.683666` versus `0.764428`). The next deployable policy needs a
+  train/validation-side proxy for this coverage signal.
 - The train-size gated baseline adds a second unseen seed check on seeds
   `59 61 67 71 73`. It reaches the same `0.145454` best gain and `0.005090`
   best signed LSD as fixed sample-aware induction while using raw text at 16,

@@ -21,8 +21,10 @@ materials. The selector-transfer artifact is included as a fresh-seed stress
 test showing that current deployable selectors do not yet transfer strongly
 enough for paper-ready claims. The generated-label audit is included as a
 hidden-rulebook, non-deployable mechanism diagnostic: it shows that high
-synthetic-label precision can still fail to produce neural gain. The train-size
-gated artifact is included as a
+synthetic-label precision can still fail to produce neural gain. The
+generated-coverage audit is included as a second non-deployable diagnostic: it
+tests whether generated-label motif distribution explains part of that failure.
+The train-size gated artifact is included as a
 second unseen-seed cheap-baseline test: it avoids selector search cost and
 matches sample-aware induction at larger budgets, while still leaving the
 scarce-budget failure visible.

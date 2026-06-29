@@ -150,10 +150,10 @@ training only one final MLP, then test whether a raw-text abstention margin
 reduces scarce-budget downside. A final train-size gated baseline removes
 validation selection entirely: it uses raw text below 144 train events and
 sample-aware self-ranked induction only after the train split is large enough.
-The latest diagnostic then audits generated synthetic labels against the hidden
-rulebook after the selector-transfer sweep has run. This audit is
-non-deployable by construction, but it separates label correctness from
-downstream neural gain.
+The latest diagnostics then audit generated synthetic labels against the hidden
+rulebook and heldout motif distribution after the selector-transfer sweep has
+run. These audits are non-deployable by construction, but they separate label
+correctness and coverage from downstream neural gain.
 
 \section{Results}
 
@@ -163,6 +163,7 @@ Table~\ref{tab:post-hoc-policy-envelope},
 Table~\ref{tab:validation-portfolio-selector},
 Table~\ref{tab:selector-transfer-stress},
 Table~\ref{tab:generated-label-audit},
+Table~\ref{tab:generated-coverage-audit},
 Table~\ref{tab:train-size-gated-baseline}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
@@ -249,6 +250,18 @@ the scarce-budget failure is not reducible to generated-label correctness.
 Coverage, distribution shift, interaction with the tiny learner, and charged
 selection cost remain live mechanisms.
 
+Table~\ref{tab:generated-coverage-audit} makes the distribution part concrete.
+The table compares generated synthetic-label motif frequencies with heldout
+family/stimulus/modifier frequencies after the sweep has run. Lower triple L1
+distance means the generated labels land in a motif distribution closer to
+heldout. At 64 materials, sample-aware induction has lower triple L1 distance
+than agreement-gated induction, 0.477843 versus 0.576443, and higher gain,
+0.142857 versus 0.080519, despite lower label precision. At 32 materials,
+validation-ranked induction is much less negative than agreement-gated
+induction and also has lower triple L1 distance, 0.683666 versus 0.764428.
+This does not make heldout distribution a usable selector signal; it identifies
+what a future train/validation-side proxy must approximate.
+
 Table~\ref{tab:train-size-gated-baseline} checks a simpler alternative on a
 second unseen seed set: use raw text below 144 train events, then switch to
 sample-aware self-ranked induction. This train-only schedule reaches the target
@@ -287,6 +300,10 @@ train-size schedule that abstains from generated labels at scarce budgets.
 The generated-label audit adds one more constraint: a policy that optimizes
 only synthetic-label precision can still lose if the labels cover the wrong
 regions or interact poorly with the learner.
+The generated-coverage audit suggests one measurable version of that warning:
+heldout-like motif coverage appears closer to the gain ordering than raw label
+precision in the selector-transfer artifact, but it must be approximated
+without heldout access before it can become a policy.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be
