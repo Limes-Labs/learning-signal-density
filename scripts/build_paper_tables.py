@@ -26,6 +26,9 @@ VALIDATION_LINEAR_PROXY_ARTIFACT = Path(
 VALIDATION_ABSTAINING_PROXY_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_validation_abstaining_proxy_f1024.json"
 )
+VALIDATION_COVERAGE_PROXY_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json"
+)
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
@@ -53,6 +56,7 @@ CONDITION_LABELS = {
     "self_ranked_induction": "Self-ranked",
     "train_size_gated_sample_aware_induction": "Train-size gated sample-aware",
     "validation_abstaining_proxy_selector": "Abstaining proxy selector",
+    "validation_coverage_proxy_selector": "Validation coverage proxy",
     "validation_linear_proxy_selector": "Linear proxy selector",
     "validation_portfolio_selector": "Validation portfolio selector",
     "validation_ranked_induction": "Validation-ranked",
@@ -159,6 +163,20 @@ def validate_train_size_gated_scope(artifact_path: Path, artifact: dict[str, Any
         raise ValueError(f"{artifact_path} must not use oracle labels for the train-size gate")
 
 
+def validate_validation_coverage_proxy_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("validation_coverage_proxy_selector", {})
+    if scope.get("low_fidelity_coverage_proxy_selector") is not True:
+        raise ValueError(f"{artifact_path} must mark the low-fidelity coverage proxy selector")
+    if scope.get("validation_motif_distribution_used_for_policy_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation motif policy selection")
+    if scope.get("validation_labels_used_for_policy_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation labels for coverage policy selection")
+    if scope.get("validation_used_for_policy_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation policy selection")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the coverage proxy selector")
+
+
 def validate_generated_label_audit_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("claim_scope", {})
     if scope.get("uses_hidden_rulebook_for_audit") is not True:
@@ -208,6 +226,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "validation_portfolio": load_json(repo_root / VALIDATION_PORTFOLIO_ARTIFACT),
         "validation_linear_proxy": load_json(repo_root / VALIDATION_LINEAR_PROXY_ARTIFACT),
         "validation_abstaining_proxy": load_json(repo_root / VALIDATION_ABSTAINING_PROXY_ARTIFACT),
+        "validation_coverage_proxy": load_json(repo_root / VALIDATION_COVERAGE_PROXY_ARTIFACT),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
         "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
@@ -225,6 +244,11 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_abstaining_proxy_scope(
         VALIDATION_ABSTAINING_PROXY_ARTIFACT,
         artifacts["validation_abstaining_proxy"],
+    )
+    validate_claim_scope(VALIDATION_COVERAGE_PROXY_ARTIFACT, artifacts["validation_coverage_proxy"])
+    validate_validation_coverage_proxy_scope(
+        VALIDATION_COVERAGE_PROXY_ARTIFACT,
+        artifacts["validation_coverage_proxy"],
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
@@ -564,6 +588,49 @@ def build_generated_coverage_audit_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_validation_coverage_proxy_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["validation_coverage_proxy"]
+    conditions = (
+        "raw_text",
+        "sample_aware_self_ranked_induction",
+        "train_size_gated_sample_aware_induction",
+        "validation_coverage_proxy_selector",
+        "validation_abstaining_proxy_selector",
+        "validation_portfolio_selector",
+        "counterfactual_expansion",
+    )
+    materials = ("16", "24", "32", "48", "64")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Fresh-seed validation-coverage proxy probe. The deployable proxy chooses one candidate by matching generated synthetic-motif coverage to the validation motif distribution, without using heldout distribution or validation labels for the selector score. Entries are heldout accuracy improvement over majority; oracle counterfactual expansion is shown only as headroom.}",
+        r"\label{tab:validation-coverage-proxy}",
+        r"\small",
+        r"\setlength{\tabcolsep}{3pt}",
+        r"\begin{tabular}{@{}lrrrrrrr@{}}",
+        r"\toprule",
+        r"Condition & 16 & 24 & 32 & 48 & 64 & First target & Best gain \\",
+        r"\midrule",
+    ]
+    for condition in conditions:
+        thresholds = artifact["thresholds"][condition]
+        row = [
+            latex_escape(condition_label(condition)),
+            *(
+                fmt_float(
+                    artifact["budgets"][material][condition]["accuracy_improvement_over_majority_mean"],
+                    digits=6,
+                )
+                for material in materials
+            ),
+            latex_escape(fmt_target(thresholds["first_material_count_reaching_target"])),
+            fmt_float(thresholds["best_signed_gain"], digits=6),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def build_train_size_gated_table(repo_root: Path) -> str:
     artifact = load_supporting_artifacts(repo_root)["train_size_gated"]
     conditions = (
@@ -620,6 +687,7 @@ def render_tables(repo_root: Path) -> str:
             build_selector_transfer_table(repo_root),
             build_generated_label_audit_table(repo_root),
             build_generated_coverage_audit_table(repo_root),
+            build_validation_coverage_proxy_table(repo_root),
             build_train_size_gated_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]

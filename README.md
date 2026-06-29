@@ -70,6 +70,12 @@ The current pilot is intentionally modest:
   diagnostic. It checks whether generated synthetic labels are correct after
   the selector-transfer sweep has run, then links that precision to the neural
   gains in the source artifact.
+- `validation_coverage_proxy_selector` is a deployable follow-up to the
+  generated-coverage audit: it scores candidate policies by how closely their
+  generated synthetic-label motifs match the validation motif distribution,
+  without using heldout distribution or validation labels for the selector
+  score. It improves the 32-material confirmation row but exposes a new
+  24-material MDL over-selection failure.
 - `diverse_self_ranked_induction` applies a diversity penalty to the same
   train-only ranking to test whether balancing modifier/stimulus/family coverage
   improves the fixed synthetic budget.
@@ -153,6 +159,11 @@ using the same split and accounting discipline.
   heldout-distribution coverage audit for the selector-transfer seeds. This is
   explicitly non-deployable and tests whether generated-label motif coverage
   tracks gain better than label precision alone.
+- `results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.*` -
+  fresh-seed validation-coverage proxy probe on seeds `103 107 109 113 127`.
+  This is deployable, uses validation motif distribution rather than heldout
+  distribution for policy selection, and records a mixed result: positive at
+  32 and 64 materials, but harmful at 24 materials.
 - `results/tiny_neural_budget_sweep_train_size_gated_f1024.*` - second
   unseen-seed baseline on seeds `59 61 67 71 73`, testing a deployable
   train-size-only schedule that stays raw below 144 train events and switches
@@ -575,6 +586,27 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label epochs=16_hidden=8_features=1024_train_size_gated
 ```
 
+Run the 16x8 1024-feature validation-coverage proxy on a fresh confirmation
+seed set:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 103 107 109 113 127 \
+  --conditions raw_text sample_aware_self_ranked_induction train_size_gated_sample_aware_induction validation_coverage_proxy_selector validation_abstaining_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_train_size_gated_f1024.json \
+  --comparison-of results/generated_coverage_audit_selector_transfer_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_validation_coverage_proxy
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -619,6 +651,10 @@ The repo reports three families of measurements:
 - The abstaining-proxy validation selector tests whether requiring a
   three-validation-example margin over raw text reduces downside before paying
   for generated-label policies.
+- The validation-coverage proxy selector tests whether the non-deployable
+  heldout-coverage audit can be approximated by validation motif distribution
+  before heldout is opened. It uses no validation labels for its selector score,
+  but still charges candidate construction and validation-motif scanning.
 - The train-size gated sample-aware policy tests a cheaper schedule baseline:
   raw text below 144 train events and sample-aware self-ranked induction once
   the train split is large enough. It uses no validation labels or selector
@@ -801,6 +837,13 @@ The current artifacts show a useful split:
   negative than agreement-gated induction and also has lower motif L1 distance
   (`0.683666` versus `0.764428`). The next deployable policy needs a
   train/validation-side proxy for this coverage signal.
+- The validation-coverage proxy is the first deployable test of that mechanism
+  on fresh seeds `103 107 109 113 127`. It uses validation motif coverage, not
+  heldout distribution or validation labels, to choose one candidate. The result
+  is useful but mixed: it moves the 32-material row above fixed sample-aware
+  induction (`0.010526` versus `-0.036842`) and reaches `0.171428` at 64, but
+  it selects MDL at every 24-material seed and falls to `-0.082759`. Coverage
+  is therefore a real signal, but this proxy is not yet a robust selector.
 - The train-size gated baseline adds a second unseen seed check on seeds
   `59 61 67 71 73`. It reaches the same `0.145454` best gain and `0.005090`
   best signed LSD as fixed sample-aware induction while using raw text at 16,
