@@ -59,7 +59,9 @@ unseen seed set, `59 61 67 71 73`, to test whether a cheap train-only switch
 from raw text to sample-aware induction is a harder baseline than validation
 portfolio selection. A hidden-rulebook generated-label audit then checks the
 selector-transfer synthetic labels after the fact and shows that label precision
-alone does not explain the remaining neural-gain bottleneck.
+alone does not explain the remaining neural-gain bottleneck. A
+heldout-distribution generated-coverage audit then tests whether the motif
+distribution of generated labels explains part of the remaining gap.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -149,6 +151,13 @@ alone does not explain the remaining neural-gain bottleneck.
   (`0.954783` versus `0.829565`) while gain is lower (`0.080519` versus
   `0.142857`). Future policies must measure coverage, distribution, and learner
   interaction rather than optimizing label precision alone.
+- Treat generated-label coverage as the next mechanism target. On the
+  selector-transfer seeds, sample-aware induction has lower 64-material
+  generated-versus-heldout motif L1 distance than agreement-gated induction
+  (`0.477843` versus `0.576443`) and higher gain, while validation-ranked
+  induction has the lowest 32-material distance among non-oracle generated
+  policies (`0.683666`) and is least negative. The next experiment should
+  search for a deployable train/validation proxy for heldout motif coverage.
 - Treat the train-size gated schedule as the new cheap-selector baseline. On
   unseen seeds `59 61 67 71 73`, raw text below 144 train events plus
   sample-aware induction above that threshold reaches the same `0.145454` best

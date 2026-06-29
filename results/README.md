@@ -315,6 +315,16 @@ This derived artifact uses the synthetic hidden rulebook after the
 selector-transfer sweep has run. It is intentionally non-deployable and should
 be interpreted as a mechanism diagnostic, not a policy selector.
 
+Build the generated-coverage audit used by the paper tables:
+
+```bash
+python3 scripts/build_generated_coverage_audit.py
+```
+
+This derived artifact compares generated-label motif frequencies with the
+heldout motif distribution after the selector-transfer sweep has run. It is
+non-deployable and should be read as a coverage mechanism diagnostic.
+
 16x8 1024-feature validation-portfolio selector probe:
 
 ```bash
