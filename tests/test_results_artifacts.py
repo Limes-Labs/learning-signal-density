@@ -984,6 +984,108 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_diversity_interaction_artifact_records_train_only_tradeoff(self) -> None:
+        diversity = json.loads(
+            Path("results/tiny_neural_budget_sweep_diversity_interaction_f1024.json").read_text()
+        )
+
+        self.assertEqual(diversity["seeds"], [701, 709, 719, 727, 733])
+        self.assertEqual(diversity["material_counts"], [16, 24, 32, 48, 64])
+        self.assertEqual(diversity["feature_dimension"], 1024)
+        self.assertEqual(
+            diversity["profile_label"],
+            "epochs=16_hidden=8_features=1024_diversity_interaction",
+        )
+        self.assertEqual(
+            diversity["comparison_of"],
+            "results/tiny_neural_budget_sweep_compact_train_size_gated_f1024.json",
+        )
+        self.assertEqual(diversity["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(diversity["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("sample_aware_diverse_self_ranked_induction", diversity["conditions"])
+        self.assertIn("compact_diverse_train_size_gated_induction", diversity["conditions"])
+
+        sample_diverse_scope = diversity["condition_scope"]["sample_aware_diverse_self_ranked_induction"]
+        self.assertEqual(sample_diverse_scope["train_only_selection"], True)
+        self.assertEqual(sample_diverse_scope["train_only_induction"], True)
+        self.assertEqual(sample_diverse_scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(sample_diverse_scope["oracle_generated_labels"], False)
+
+        compact_diverse_scope = diversity["condition_scope"]["compact_diverse_train_size_gated_induction"]
+        self.assertEqual(compact_diverse_scope["train_only_selection"], True)
+        self.assertEqual(compact_diverse_scope["train_only_induction"], True)
+        self.assertEqual(compact_diverse_scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(compact_diverse_scope["compact_original_encoding_at_large_samples"], True)
+        self.assertEqual(compact_diverse_scope["diversity_penalty_after_compaction"], True)
+        self.assertEqual(compact_diverse_scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            diversity["budgets"]["64"]["sample_aware_diverse_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.168831,
+        )
+        self.assertGreater(
+            diversity["budgets"]["64"]["sample_aware_diverse_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            diversity["budgets"]["64"]["sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertGreater(
+            diversity["budgets"]["64"]["sample_aware_diverse_self_ranked_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            diversity["budgets"]["64"]["sample_aware_self_ranked_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            diversity["budgets"]["64"]["compact_diverse_train_size_gated_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            diversity["budgets"]["64"]["compact_train_size_gated_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertLess(
+            diversity["budgets"]["64"]["compact_diverse_train_size_gated_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            diversity["budgets"]["64"]["compact_train_size_gated_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertGreater(
+            diversity["budgets"]["64"]["compact_diverse_train_size_gated_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            diversity["budgets"]["64"]["sample_aware_diverse_self_ranked_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
+        for material_count in ("16", "24", "32", "48"):
+            self.assertEqual(
+                diversity["budgets"][material_count]["compact_diverse_train_size_gated_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                diversity["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+
+        for material_count in ("24", "32", "64"):
+            self.assertGreater(
+                diversity["budgets"][material_count]["diverse_self_ranked_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                diversity["budgets"][material_count]["self_ranked_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+
     def test_f1024_density_capped_compact_artifact_records_abundant_raw_fallback(self) -> None:
         density = json.loads(
             Path("results/tiny_neural_budget_sweep_density_capped_compact_f1024.json").read_text()

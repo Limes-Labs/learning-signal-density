@@ -4,6 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from learning_signal_density.domain import build_world, split_observations
+from learning_signal_density.pipelines import build_pipeline_examples
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_PATH = REPO_ROOT / "scripts" / "build_generated_coverage_audit.py"
@@ -28,6 +30,52 @@ class GeneratedCoverageAuditTests(unittest.TestCase):
             ),
             0.0,
         )
+
+    def test_diverse_self_ranked_induction_is_counted_as_generated(self) -> None:
+        coverage_builder = load_coverage_builder()
+        world = build_world(seed=37, material_count=48)
+        split = split_observations(world.observations)
+        pipeline = build_pipeline_examples("diverse_self_ranked_induction", split.train, world.rules)
+
+        diverse_generated = [
+            example for example in pipeline.examples if example.source_kind == "diverse_self_ranked_induced"
+        ]
+
+        self.assertGreater(len(diverse_generated), 0)
+        self.assertEqual(coverage_builder.generated_examples(pipeline), tuple(diverse_generated))
+
+        sample_aware_diverse = build_pipeline_examples(
+            "sample_aware_diverse_self_ranked_induction",
+            split.train,
+            world.rules,
+        )
+        sample_aware_diverse_generated = [
+            example
+            for example in sample_aware_diverse.examples
+            if example.source_kind == "sample_aware_diverse_self_ranked_induced"
+        ]
+
+        self.assertGreater(len(sample_aware_diverse_generated), 0)
+        self.assertEqual(
+            coverage_builder.generated_examples(sample_aware_diverse),
+            tuple(sample_aware_diverse_generated),
+        )
+
+        compact_world = build_world(seed=37, material_count=64)
+        compact_split = split_observations(compact_world.observations)
+        compact_diverse = build_pipeline_examples(
+            "compact_diverse_train_size_gated_induction",
+            compact_split.train,
+            compact_world.rules,
+        )
+        compact_diverse_generated = [
+            example
+            for example in compact_diverse.examples
+            if example.source_kind == "compact_diverse_sample_aware_self_ranked_induced"
+        ]
+
+        self.assertGreater(len(compact_diverse_generated), 0)
+        self.assertEqual(coverage_builder.generated_examples(compact_diverse), tuple(compact_diverse_generated))
 
     def test_builds_non_deployable_heldout_coverage_diagnostic(self) -> None:
         coverage_builder = load_coverage_builder()

@@ -46,6 +46,12 @@ internal processing cost.
 - `diverse_self_ranked_induction`: the self-ranked candidate list is selected
   with an explicit diversity penalty over modifier, stimulus, and family
   coverage.
+- `sample_aware_diverse_self_ranked_induction`: the same diversity penalty is
+  applied inside the train-size-aware synthetic budget.
+- `compact_diverse_train_size_gated_induction`: the train-size gate remains raw
+  below the scarcity floor and matches sample-aware induction before the
+  compact tier; the diversity penalty is applied only after compact encoding is
+  active.
 - `mdl_rule_expansion`: train-only empirical rules are scored on validation
   with a description-length penalty, then only selected compact rules are used
   for counterfactual generation.

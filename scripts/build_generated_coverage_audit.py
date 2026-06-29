@@ -38,9 +38,12 @@ AUDIT_CONDITIONS = (
 )
 GENERATED_SOURCE_KINDS = frozenset({
     "agreement_gated_self_ranked_induced",
+    "compact_diverse_sample_aware_self_ranked_induced",
     "counterfactual",
+    "diverse_self_ranked_induced",
     "induced_counterfactual",
     "mdl_counterfactual",
+    "sample_aware_diverse_self_ranked_induced",
     "sample_aware_self_ranked_induced",
     "self_ranked_induced",
     "validation_ranked_induced",

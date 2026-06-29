@@ -44,11 +44,14 @@ problem remains open. A coverage-prior selector fixes that 24-material
 over-selection and cuts coverage-selection cost, but still does not beat the
 cheap train-size gate on density. A train-only tempered-budget ablation reduces
 the sample-aware 24--32 material loss, but still does not beat raw-text
-abstention at those scarce budgets. A final compact train-size gate keeps that
+abstention at those scarce budgets. A compact train-size gate keeps that
 abstention schedule, then improves the 64-material density point by dropping
-redundant original QA examples only at the large-sample tier. A high-budget
-density cap then shows the frontier can switch back to raw text once external
-evidence is abundant, trading absolute gain for better learning-signal density.
+redundant original QA examples only at the large-sample tier. A diversity
+interaction probe improves the 64-material sample-aware row but does not beat
+the compact density frontier, separating candidate-order coverage from
+representation cost. A high-budget density cap then shows the frontier can
+switch back to raw text once external evidence is abundant, trading absolute
+gain for better learning-signal density.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -180,6 +183,10 @@ The latest efficiency follow-up keeps the train-size abstention schedule but
 changes the large-sample representation: above 224 train events it retains raw
 original observations and ranked generated examples, while dropping original
 QA duplicates.
+A diversity interaction follow-up then keeps the same train-only budget and
+split discipline while changing only ranked-candidate ordering. It compares
+plain diversity, sample-aware diversity, and compact diversity to separate
+coverage balancing from representation-cost savings.
 A high-budget extension then tests a density-capped schedule through 128
 materials: it keeps compact induction through 96 materials and returns to raw
 text once the train split reaches the abundant-data tier.
@@ -204,6 +211,7 @@ Table~\ref{tab:validation-coverage-prior},
 Table~\ref{tab:tempered-sample-aware},
 Table~\ref{tab:train-size-gated-baseline},
 Table~\ref{tab:compact-train-size-gated},
+Table~\ref{tab:diversity-interaction},
 Table~\ref{tab:density-capped-compact},
 Table~\ref{tab:support-ramped-compact},
 Table~\ref{tab:late-confidence-ramped-compact}, and
@@ -362,6 +370,19 @@ to 0.140260, and signed LSD rises from 0.004634 to 0.007883. This is a useful
 efficiency result, not a scarce-budget solution: it does not change the 16--32
 material rows, and it relies on the same train-only abstention schedule.
 
+Table~\ref{tab:diversity-interaction} asks whether balancing generated-label
+coverage should be treated as a candidate-ordering improvement or as a
+replacement for compact representation savings. On fresh seeds 701, 709, 719,
+727, and 733, plain diversity improves self-ranked gain at 24, 32, and 64
+materials. The sample-aware diversity variant improves the 64-material
+sample-aware row from 0.158441 gain and 0.005544 signed LSD to 0.168831 and
+0.005908. The compact-diversity variant is the important negative control: it
+keeps the low-budget compact behavior but lowers the 64-material compact row
+from 0.135065 gain and 0.007594 signed LSD to 0.116883 and 0.006573.
+Diversity is therefore a useful train-only ordering signal for the fuller
+sample-aware representation, but it does not replace the density benefit from
+dropping redundant original QA views.
+
 Table~\ref{tab:density-capped-compact} extends the question beyond the original
 64-material frontier. The density-capped policy keeps compact induction through
 96 materials, then returns to raw text from 104 materials onward. On fresh
@@ -445,6 +466,9 @@ The compact train-size gate adds the large-sample complement: once generated
 labels are useful, retaining every original representation is also a policy
 choice, and dropping redundant original QA views can improve density without
 changing the train-only generated labels.
+The diversity interaction probe separates representation cost from candidate
+ordering: diversity can improve sample-aware accuracy, but it is not enough to
+beat compact density after redundant original views are removed.
 The density-capped compact probe adds the abundant-data complement: even
 generated labels that improve accuracy can become density-inefficient once raw
 external evidence is plentiful enough. The next selector therefore needs a
