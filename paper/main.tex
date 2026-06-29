@@ -181,6 +181,9 @@ text once the train split reaches the abundant-data tier.
 A second high-budget extension tests the middle of that gain-density tradeoff:
 it keeps compact induction but raises the induced-label minimum support from 3
 to 4 after the abundant-data tier.
+A final high-budget control then asks whether tightening the induced-label
+confidence floor after 432 train events is enough to repair the remaining
+tradeoff.
 
 \section{Results}
 
@@ -196,7 +199,8 @@ Table~\ref{tab:tempered-sample-aware},
 Table~\ref{tab:train-size-gated-baseline},
 Table~\ref{tab:compact-train-size-gated},
 Table~\ref{tab:density-capped-compact},
-Table~\ref{tab:support-ramped-compact}, and
+Table~\ref{tab:support-ramped-compact},
+Table~\ref{tab:late-confidence-ramped-compact}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -363,6 +367,17 @@ fallback remains denser, 0.006521 versus 0.005153. This makes the high-budget
 selector target more precise: the choice is not just synthesize or abstain, but
 which support floor buys the desired point on the gain-density frontier.
 
+Table~\ref{tab:late-confidence-ramped-compact} is a negative control for the
+same idea. It keeps the support-ramped policy, but after 432 train events it
+raises the induced-label confidence floor from 0.55 to 0.60. On fresh seeds
+499, 503, 509, 521, and 523, this improves the 120-material support-ramped row
+from 0.134722 gain and 0.004119 signed LSD to 0.138889 and 0.004322. The
+improvement is real but not enough: raw/density-capped fallback is still better
+at the same row, 0.145833 gain and 0.006977 signed LSD, and the
+late-confidence policy's best signed gain, 0.171098, remains below plain
+compact induction's 0.196875. A confidence floor alone is therefore not the
+missing selector.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -416,6 +431,9 @@ The support-ramped compact probe adds another constraint to that utility model:
 increasing induced-label support can recover high-budget gain-density tradeoffs
 that raw fallback discards, but it still does not dominate raw on density
 alone.
+The late-confidence control further narrows the design: stricter generated
+labels can improve one support-ramped point, but confidence tightening alone
+does not produce a deployable frontier policy.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

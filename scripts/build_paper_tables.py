@@ -41,6 +41,9 @@ DENSITY_CAPPED_COMPACT_ARTIFACT = Path(
 SUPPORT_RAMPED_COMPACT_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json"
 )
+LATE_CONFIDENCE_RAMPED_COMPACT_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json"
+)
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
@@ -63,6 +66,7 @@ CONDITION_LABELS = {
     "counterfactual_expansion": "Oracle counterfactual",
     "compact_train_size_gated_induction": "Compact train-size gated",
     "density_capped_compact_induction": "Density-capped compact",
+    "late_confidence_ramped_compact_induction": "Late-confidence compact",
     "mdl_rule_expansion": "MDL rule expansion",
     "qa_expansion": "QA expansion",
     "raw_text": "Raw text",
@@ -233,6 +237,30 @@ def validate_support_ramped_compact_scope(artifact_path: Path, artifact: dict[st
         raise ValueError(f"{artifact_path} must not use oracle labels for the support-ramped policy")
 
 
+def validate_late_confidence_ramped_compact_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("late_confidence_ramped_compact_induction", {})
+    if scope.get("train_only_selection") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only late-confidence selection")
+    if scope.get("train_only_induction") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only late-confidence induction")
+    if scope.get("validation_used_for_policy_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for late-confidence selection")
+    if scope.get("validation_used_for_transform_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for late-confidence transforms")
+    if scope.get("compact_original_encoding_at_large_samples") is not True:
+        raise ValueError(f"{artifact_path} must mark compact large-sample encoding")
+    if scope.get("abundant_data_support_ramp") is not True:
+        raise ValueError(f"{artifact_path} must mark abundant-data support ramp")
+    if scope.get("abundant_data_min_support") != 4:
+        raise ValueError(f"{artifact_path} must disclose the abundant-data support floor")
+    if scope.get("late_confidence_ramp_min_events") != 432:
+        raise ValueError(f"{artifact_path} must disclose the late confidence tier")
+    if scope.get("late_confidence_min_confidence") != 0.60:
+        raise ValueError(f"{artifact_path} must disclose the late confidence floor")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the late-confidence policy")
+
+
 def validate_tempered_sample_aware_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("condition_scope", {}).get("tempered_sample_aware_self_ranked_induction", {})
     if scope.get("train_only_selection") is not True:
@@ -315,6 +343,9 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "compact_train_size_gated": load_json(repo_root / COMPACT_TRAIN_SIZE_GATED_ARTIFACT),
         "density_capped_compact": load_json(repo_root / DENSITY_CAPPED_COMPACT_ARTIFACT),
         "support_ramped_compact": load_json(repo_root / SUPPORT_RAMPED_COMPACT_ARTIFACT),
+        "late_confidence_ramped_compact": load_json(
+            repo_root / LATE_CONFIDENCE_RAMPED_COMPACT_ARTIFACT
+        ),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
         "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
@@ -357,6 +388,14 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_support_ramped_compact_scope(
         SUPPORT_RAMPED_COMPACT_ARTIFACT,
         artifacts["support_ramped_compact"],
+    )
+    validate_claim_scope(
+        LATE_CONFIDENCE_RAMPED_COMPACT_ARTIFACT,
+        artifacts["late_confidence_ramped_compact"],
+    )
+    validate_late_confidence_ramped_compact_scope(
+        LATE_CONFIDENCE_RAMPED_COMPACT_ARTIFACT,
+        artifacts["late_confidence_ramped_compact"],
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
@@ -972,6 +1011,51 @@ def build_support_ramped_compact_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_late_confidence_ramped_compact_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["late_confidence_ramped_compact"]
+    conditions = (
+        "raw_text",
+        "support_ramped_compact_induction",
+        "late_confidence_ramped_compact_induction",
+        "density_capped_compact_induction",
+    )
+    materials = ("96", "104", "112", "120", "128", "144", "160")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Fresh-seed late-confidence compact control. The policy matches support-ramped compact until the train split reaches 432 events, then keeps support 4 and raises the induced-label confidence floor from 0.55 to 0.60. Entries report heldout accuracy improvement over majority, charged compute units, and signed learning-signal density per one million event-compute units.}",
+        r"\label{tab:late-confidence-ramped-compact}",
+        r"\small",
+        r"\setlength{\tabcolsep}{1.5pt}",
+        r"\begin{tabular}{@{}llrrrrrrr@{}}",
+        r"\toprule",
+        r"Condition & Metric & 96 & 104 & 112 & 120 & 128 & 144 & 160 \\",
+        r"\midrule",
+    ]
+    for condition in conditions:
+        rows = (
+            ("Gain", "accuracy_improvement_over_majority_mean", 6),
+            ("Compute", "charged_compute_units_mean", 1),
+            ("LSD", "signed_learning_signal_density_per_1m_event_compute_mean", 6),
+        )
+        for index, (metric_label, metric_key, digits) in enumerate(rows):
+            row = [
+                latex_escape(condition_label(condition)) if index == 0 else "",
+                metric_label,
+                *(
+                    fmt_float(
+                        artifact["budgets"][material][condition][metric_key],
+                        digits=digits,
+                    )
+                    for material in materials
+                ),
+            ]
+            lines.append(" & ".join(row) + r" \\")
+        lines.append(r"\addlinespace")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
@@ -989,6 +1073,7 @@ def render_tables(repo_root: Path) -> str:
             build_compact_train_size_gated_table(repo_root),
             build_density_capped_compact_table(repo_root),
             build_support_ramped_compact_table(repo_root),
+            build_late_confidence_ramped_compact_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

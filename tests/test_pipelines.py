@@ -168,6 +168,12 @@ class PipelineAccountingTests(unittest.TestCase):
         alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "support_ramped_compact_induction")
 
+        normal = build_pipeline_examples("late_confidence_ramped_compact_induction", split.train, world.rules)
+        alternate = build_pipeline_examples("late_confidence_ramped_compact_induction", split.train, alternate_rules)
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
+        self.assertEqual(normal_signature, alternate_signature, "late_confidence_ramped_compact_induction")
+
         normal = build_pipeline_examples("agreement_gated_self_ranked_induction", split.train, world.rules)
         alternate = build_pipeline_examples("agreement_gated_self_ranked_induction", split.train, alternate_rules)
         normal_signature = self._example_signature(normal)
@@ -514,6 +520,52 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertIn("raw", source_kinds)
         self.assertNotIn("qa", source_kinds)
         self.assertIn("support_ramped_compact_sample_aware_self_ranked_induced", source_kinds)
+
+    def test_late_confidence_ramped_compact_induction_raises_confidence_only_late(self) -> None:
+        pre_late_world = build_world(seed=79, material_count=112)
+        pre_late_split = split_observations(pre_late_world.observations)
+        pre_late_support = build_pipeline_examples(
+            "support_ramped_compact_induction",
+            pre_late_split.train,
+            pre_late_world.rules,
+        )
+        pre_late_late_confidence = build_pipeline_examples(
+            "late_confidence_ramped_compact_induction",
+            pre_late_split.train,
+            pre_late_world.rules,
+        )
+
+        self.assertEqual(
+            self._example_signature(pre_late_late_confidence),
+            self._example_signature(pre_late_support),
+        )
+        self.assertEqual(pre_late_late_confidence.ranked_induction_min_support, 4)
+        self.assertEqual(pre_late_late_confidence.ranked_induction_min_confidence, 0.55)
+
+        late_world = build_world(seed=79, material_count=120)
+        late_split = split_observations(late_world.observations)
+        support_ramped = build_pipeline_examples(
+            "support_ramped_compact_induction",
+            late_split.train,
+            late_world.rules,
+        )
+        late_confidence = build_pipeline_examples(
+            "late_confidence_ramped_compact_induction",
+            late_split.train,
+            late_world.rules,
+        )
+        source_kinds = {example.source_kind for example in late_confidence.examples}
+
+        self.assertEqual(late_confidence.external_event_count, support_ramped.external_event_count)
+        self.assertEqual(late_confidence.ranked_synthetic_budget_ratio, 1.0)
+        self.assertEqual(late_confidence.ranked_induction_min_support, 4)
+        self.assertEqual(late_confidence.ranked_induction_min_confidence, 0.60)
+        self.assertLessEqual(late_confidence.ranked_kept_candidate_count, support_ramped.ranked_kept_candidate_count)
+        self.assertLessEqual(late_confidence.internal_example_count, support_ramped.internal_example_count)
+        self.assertLessEqual(late_confidence.internal_token_count, support_ramped.internal_token_count)
+        self.assertIn("raw", source_kinds)
+        self.assertNotIn("qa", source_kinds)
+        self.assertIn("late_confidence_ramped_compact_sample_aware_self_ranked_induced", source_kinds)
 
     def test_agreement_gated_self_ranked_induction_uses_train_only_source_agreement(self) -> None:
         world = build_world(seed=59, material_count=32)
