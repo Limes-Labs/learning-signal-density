@@ -733,6 +733,94 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_tempered_sample_aware_artifact_records_train_only_budget_tempering(self) -> None:
+        tempered = json.loads(
+            Path("results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json").read_text()
+        )
+
+        self.assertEqual(tempered["seeds"], [157, 163, 167, 173, 179])
+        self.assertEqual(tempered["feature_dimension"], 1024)
+        self.assertEqual(
+            tempered["profile_label"],
+            "epochs=16_hidden=8_features=1024_tempered_sample_aware",
+        )
+        self.assertEqual(
+            tempered["comparison_of"],
+            "results/tiny_neural_budget_sweep_train_size_gated_f1024.json",
+        )
+        self.assertEqual(tempered["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(tempered["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("tempered_sample_aware_self_ranked_induction", tempered["conditions"])
+
+        scope = tempered["condition_scope"]["tempered_sample_aware_self_ranked_induction"]
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            tempered["budgets"]["16"]["tempered_sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            -0.021053,
+        )
+        self.assertEqual(
+            tempered["budgets"]["24"]["tempered_sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            -0.096552,
+        )
+        self.assertEqual(
+            tempered["budgets"]["32"]["tempered_sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            -0.078947,
+        )
+        self.assertEqual(
+            tempered["budgets"]["64"]["tempered_sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.124675,
+        )
+        self.assertEqual(
+            tempered["thresholds"]["tempered_sample_aware_self_ranked_induction"][
+                "first_material_count_reaching_target"
+            ],
+            48,
+        )
+        self.assertGreater(
+            tempered["budgets"]["24"]["tempered_sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            tempered["budgets"]["24"]["sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertGreater(
+            tempered["budgets"]["32"]["tempered_sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            tempered["budgets"]["32"]["sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertLess(
+            tempered["budgets"]["24"]["tempered_sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            tempered["budgets"]["24"]["train_size_gated_sample_aware_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertLess(
+            tempered["budgets"]["32"]["tempered_sample_aware_self_ranked_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            tempered["budgets"]["32"]["train_size_gated_sample_aware_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

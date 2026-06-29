@@ -29,6 +29,9 @@ VALIDATION_ABSTAINING_PROXY_ARTIFACT = Path(
 VALIDATION_COVERAGE_PROXY_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json"
 )
+TEMPERED_SAMPLE_AWARE_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json"
+)
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
@@ -54,6 +57,7 @@ CONDITION_LABELS = {
     "raw_text": "Raw text",
     "sample_aware_self_ranked_induction": "Sample-aware self-ranked",
     "self_ranked_induction": "Self-ranked",
+    "tempered_sample_aware_self_ranked_induction": "Tempered sample-aware",
     "train_size_gated_sample_aware_induction": "Train-size gated sample-aware",
     "validation_abstaining_proxy_selector": "Abstaining proxy selector",
     "validation_coverage_proxy_selector": "Validation coverage proxy",
@@ -163,6 +167,20 @@ def validate_train_size_gated_scope(artifact_path: Path, artifact: dict[str, Any
         raise ValueError(f"{artifact_path} must not use oracle labels for the train-size gate")
 
 
+def validate_tempered_sample_aware_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("tempered_sample_aware_self_ranked_induction", {})
+    if scope.get("train_only_selection") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only tempered selection")
+    if scope.get("train_only_induction") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only tempered induction")
+    if scope.get("validation_used_for_threshold") is not False:
+        raise ValueError(f"{artifact_path} must not use validation thresholds for the tempered policy")
+    if scope.get("validation_used_for_transform_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation transform selection for the tempered policy")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the tempered policy")
+
+
 def validate_validation_coverage_proxy_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("condition_scope", {}).get("validation_coverage_proxy_selector", {})
     if scope.get("low_fidelity_coverage_proxy_selector") is not True:
@@ -227,6 +245,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "validation_linear_proxy": load_json(repo_root / VALIDATION_LINEAR_PROXY_ARTIFACT),
         "validation_abstaining_proxy": load_json(repo_root / VALIDATION_ABSTAINING_PROXY_ARTIFACT),
         "validation_coverage_proxy": load_json(repo_root / VALIDATION_COVERAGE_PROXY_ARTIFACT),
+        "tempered_sample_aware": load_json(repo_root / TEMPERED_SAMPLE_AWARE_ARTIFACT),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
         "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
@@ -249,6 +268,11 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_validation_coverage_proxy_scope(
         VALIDATION_COVERAGE_PROXY_ARTIFACT,
         artifacts["validation_coverage_proxy"],
+    )
+    validate_claim_scope(TEMPERED_SAMPLE_AWARE_ARTIFACT, artifacts["tempered_sample_aware"])
+    validate_tempered_sample_aware_scope(
+        TEMPERED_SAMPLE_AWARE_ARTIFACT,
+        artifacts["tempered_sample_aware"],
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
@@ -631,6 +655,49 @@ def build_validation_coverage_proxy_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_tempered_sample_aware_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["tempered_sample_aware"]
+    conditions = (
+        "raw_text",
+        "qa_expansion",
+        "sample_aware_self_ranked_induction",
+        "tempered_sample_aware_self_ranked_induction",
+        "train_size_gated_sample_aware_induction",
+        "validation_coverage_proxy_selector",
+        "counterfactual_expansion",
+    )
+    materials = ("16", "24", "32", "48", "64")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Fresh-seed tempered sample-aware ablation. The tempered policy is train-only and lowers the mid-budget synthetic ratio from 0.75 to 0.50 for train splits below 144 events, testing whether smaller generated-label budgets repair the 24--32 material failure without validation selection. Entries are heldout accuracy improvement over majority; oracle counterfactual expansion is shown only as headroom.}",
+        r"\label{tab:tempered-sample-aware}",
+        r"\small",
+        r"\setlength{\tabcolsep}{2pt}",
+        r"\begin{tabular}{@{}lrrrrrrr@{}}",
+        r"\toprule",
+        r"Condition & 16 & 24 & 32 & 48 & 64 & First target & Best gain \\",
+        r"\midrule",
+    ]
+    for condition in conditions:
+        thresholds = artifact["thresholds"][condition]
+        row = [
+            latex_escape(condition_label(condition)),
+            *(
+                fmt_float(
+                    artifact["budgets"][material][condition]["accuracy_improvement_over_majority_mean"],
+                    digits=6,
+                )
+                for material in materials
+            ),
+            latex_escape(fmt_target(thresholds["first_material_count_reaching_target"])),
+            fmt_float(thresholds["best_signed_gain"], digits=6),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def build_train_size_gated_table(repo_root: Path) -> str:
     artifact = load_supporting_artifacts(repo_root)["train_size_gated"]
     conditions = (
@@ -688,6 +755,7 @@ def render_tables(repo_root: Path) -> str:
             build_generated_label_audit_table(repo_root),
             build_generated_coverage_audit_table(repo_root),
             build_validation_coverage_proxy_table(repo_root),
+            build_tempered_sample_aware_table(repo_root),
             build_train_size_gated_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]

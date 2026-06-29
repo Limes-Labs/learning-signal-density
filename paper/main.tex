@@ -40,7 +40,9 @@ explain those failures, and even a non-deployable post-hoc policy envelope
 reaches the current target only at 48 materials. A deployable validation
 coverage proxy turns part of that diagnostic into positive fresh-seed evidence
 at 32 materials, but also exposes a 24-material failure, so the selector
-problem remains open.
+problem remains open. A train-only tempered-budget ablation reduces the
+sample-aware 24--32 material loss, but still does not beat raw-text abstention
+at those scarce budgets.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -162,6 +164,9 @@ coverage: it scores candidate generated-label policies by motif-distribution
 fit to validation, does not use validation labels for the selector score, and
 charges candidate construction plus validation-motif scanning before training
 one final tiny MLP.
+The latest train-only follow-up then lowers the sample-aware mid-budget
+synthetic ratio from 0.75 to 0.50 to test whether fewer generated labels repair
+the same failure without validation selection.
 
 \section{Results}
 
@@ -173,6 +178,7 @@ Table~\ref{tab:selector-transfer-stress},
 Table~\ref{tab:generated-label-audit},
 Table~\ref{tab:generated-coverage-audit},
 Table~\ref{tab:validation-coverage-proxy},
+Table~\ref{tab:tempered-sample-aware},
 Table~\ref{tab:train-size-gated-baseline}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
@@ -285,6 +291,17 @@ raw text and the train-size gate. The mechanism signal is therefore real enough
 to keep, but the current rule needs a low-budget abstention floor or train-size
 prior before it can be promoted.
 
+Table~\ref{tab:tempered-sample-aware} tests whether that floor can be replaced
+by a milder train-only budget change. The tempered policy keeps the
+sample-aware support and confidence rule, but lowers the synthetic budget ratio
+from 0.75 to 0.50 for train splits below 144 events. On fresh seeds 157, 163,
+167, 173, and 179, this reduces sample-aware damage at 24 materials,
+-0.096552 versus -0.137931, and at 32 materials, -0.078947 versus -0.152632,
+while preserving the 48- and 64-material gains. The negative part is again the
+important part: raw text and the train-size gate are still better at 24 and 32
+materials. Smaller generated-label budgets help, but scarce-budget abstention
+is still a stronger baseline than tempered synthesis.
+
 Table~\ref{tab:train-size-gated-baseline} checks a simpler alternative on a
 second unseen seed set: use raw text below 144 train events, then switch to
 sample-aware self-ranked induction. This train-only schedule reaches the target
@@ -331,6 +348,10 @@ The validation-coverage proxy is a first approximation, and its mixed result
 sharpens the next design constraint: coverage scoring needs to be joined with
 scarce-budget abstention, because distributional fit can still choose a
 generated-label policy when raw text is the better action.
+The tempered sample-aware ablation sharpens the same point from the other
+direction: reducing generated-label count lowers damage, but the better
+decision at 24--32 materials is often not fewer synthetic examples; it is no
+synthetic examples yet.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

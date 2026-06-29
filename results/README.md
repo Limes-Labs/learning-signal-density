@@ -480,5 +480,31 @@ turns the 32-material row positive (`0.010526`) and reaches `0.171428` at 64
 materials, but it overselects MDL rule expansion at 24 materials and falls to
 `-0.082759`. Treat it as mechanism evidence, not as a robust selector.
 
+16x8 1024-feature tempered sample-aware ablation:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_tempered_sample_aware_f1024.md \
+  --material-counts 16 24 32 48 64 \
+  --seeds 157 163 167 173 179 \
+  --conditions raw_text qa_expansion sample_aware_self_ranked_induction tempered_sample_aware_self_ranked_induction train_size_gated_sample_aware_induction validation_coverage_proxy_selector validation_abstaining_proxy_selector validation_portfolio_selector counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_coverage_proxy_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_train_size_gated_f1024.json \
+  --profile-label epochs=16_hidden=8_features=1024_tempered_sample_aware
+```
+
+The tempered policy is train-only and lowers the mid-budget synthetic ratio
+from `0.75` to `0.50`. On seeds `157 163 167 173 179`, it improves over fixed
+sample-aware induction at 24 materials (`-0.096552` versus `-0.137931`) and 32
+materials (`-0.078947` versus `-0.152632`), but it remains worse than the raw
+fallback used by the train-size gate at both scarce budgets.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

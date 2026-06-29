@@ -258,6 +258,37 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertEqual(small_sample_aware.ranked_induction_min_support, 2)
         self.assertIn("sample_aware_self_ranked_induced", {example.source_kind for example in small_sample_aware.examples})
 
+    def test_tempered_sample_aware_induction_reduces_mid_budget_synthetic_ratio(self) -> None:
+        mid_world = build_world(seed=157, material_count=32)
+        mid_split = split_observations(mid_world.observations)
+        sample_aware = build_pipeline_examples("sample_aware_self_ranked_induction", mid_split.train, mid_world.rules)
+        tempered = build_pipeline_examples(
+            "tempered_sample_aware_self_ranked_induction",
+            mid_split.train,
+            mid_world.rules,
+        )
+
+        self.assertEqual(tempered.external_event_count, sample_aware.external_event_count)
+        self.assertEqual(tempered.train_calibration_event_count, 0)
+        self.assertEqual(tempered.validation_calibration_event_count, 0)
+        self.assertEqual(tempered.ranked_synthetic_budget_ratio, 0.5)
+        self.assertEqual(tempered.ranked_induction_min_support, sample_aware.ranked_induction_min_support)
+        self.assertEqual(tempered.ranked_induction_min_confidence, sample_aware.ranked_induction_min_confidence)
+        self.assertLess(tempered.ranked_kept_candidate_count, sample_aware.ranked_kept_candidate_count)
+        self.assertIn(
+            "tempered_sample_aware_self_ranked_induced",
+            {example.source_kind for example in tempered.examples},
+        )
+
+        large_world = build_world(seed=157, material_count=48)
+        large_split = split_observations(large_world.observations)
+        large_tempered = build_pipeline_examples(
+            "tempered_sample_aware_self_ranked_induction",
+            large_split.train,
+            large_world.rules,
+        )
+        self.assertEqual(large_tempered.ranked_synthetic_budget_ratio, 1.0)
+
     def test_train_size_gated_sample_aware_induction_uses_raw_until_large_train_split(self) -> None:
         small_world = build_world(seed=61, material_count=32)
         small_split = split_observations(small_world.observations)
