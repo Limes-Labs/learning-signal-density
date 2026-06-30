@@ -1484,6 +1484,93 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_train_support_density_artifact_records_charged_selector_overhead(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_train_support_density_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1033, 1039, 1049, 1051, 1061])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_train_support_density")
+        self.assertEqual(
+            selector["confirmation_of"],
+            "results/tiny_neural_budget_sweep_density_window_compact_f1024.json",
+        )
+        self.assertEqual(
+            selector["comparison_of"],
+            "results/tiny_neural_budget_sweep_density_window_compact_f1024.json",
+        )
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("train_support_density_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["train_support_density_selector"]
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["support_density_selector"], True)
+        self.assertEqual(scope["support_density_min_kept_per_compute"], 0.00145)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            selector["budgets"]["64"]["train_support_density_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"compact_train_size_gated_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["train_support_density_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"support_ramped_compact_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["120"]["train_support_density_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 4, "support_ramped_compact_induction": 1},
+        )
+        self.assertEqual(
+            selector["budgets"]["128"]["train_support_density_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["train_support_density_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            selector["budgets"]["104"]["support_ramped_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["104"]["train_support_density_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["104"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["120"]["train_support_density_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["120"]["density_window_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["128"]["train_support_density_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["128"]["raw_text"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

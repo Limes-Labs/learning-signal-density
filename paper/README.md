@@ -38,6 +38,7 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json`
 - `results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json`
 - `results/tiny_neural_budget_sweep_density_window_compact_f1024.json`
+- `results/tiny_neural_budget_sweep_train_support_density_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked
@@ -98,6 +99,10 @@ The density-window compact artifact must use fresh seeds, mark train-only
 selection and induction, keep validation and heldout out of policy selection,
 and disclose the fixed compact, raw, support-ramped, and abundant raw fallback
 windows.
+The train-support-density artifact must use fresh seeds, mark train-only
+selection and induction, keep validation and heldout out of policy selection,
+disclose the support-density threshold, and charge candidate inspection before
+the selected final fit.
 
 ## Release Checklist
 

@@ -53,6 +53,9 @@ LATE_CONFIDENCE_RAMPED_COMPACT_ARTIFACT = Path(
 DENSITY_WINDOW_COMPACT_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_density_window_compact_f1024.json"
 )
+TRAIN_SUPPORT_DENSITY_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_train_support_density_f1024.json"
+)
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
@@ -87,6 +90,7 @@ CONDITION_LABELS = {
     "self_ranked_induction": "Self-ranked",
     "support_ramped_compact_induction": "Support-ramped compact",
     "tempered_sample_aware_self_ranked_induction": "Tempered sample-aware",
+    "train_support_density_selector": "Train support-density selector",
     "train_size_gated_sample_aware_induction": "Train-size gated sample-aware",
     "validation_abstaining_proxy_selector": "Abstaining proxy selector",
     "validation_coverage_prior_selector": "Coverage-prior selector",
@@ -337,6 +341,26 @@ def validate_density_window_compact_scope(artifact_path: Path, artifact: dict[st
         raise ValueError(f"{artifact_path} must not use oracle labels for the density-window policy")
 
 
+def validate_train_support_density_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("train_support_density_selector", {})
+    if scope.get("train_only_selection") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only support-density selection")
+    if scope.get("train_only_induction") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only support-density induction")
+    if scope.get("validation_used_for_policy_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for support-density selection")
+    if scope.get("validation_used_for_transform_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for support-density transforms")
+    if scope.get("support_density_selector") is not True:
+        raise ValueError(f"{artifact_path} must mark the support-density selector")
+    if scope.get("support_density_min_kept_per_compute") != 0.00145:
+        raise ValueError(f"{artifact_path} must disclose the support-density threshold")
+    if scope.get("compact_original_encoding_at_large_samples") is not True:
+        raise ValueError(f"{artifact_path} must mark compact large-sample encoding")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the support-density selector")
+
+
 def validate_tempered_sample_aware_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("condition_scope", {}).get("tempered_sample_aware_self_ranked_induction", {})
     if scope.get("train_only_selection") is not True:
@@ -445,6 +469,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
             repo_root / LATE_CONFIDENCE_RAMPED_COMPACT_ARTIFACT
         ),
         "density_window_compact": load_json(repo_root / DENSITY_WINDOW_COMPACT_ARTIFACT),
+        "train_support_density": load_json(repo_root / TRAIN_SUPPORT_DENSITY_ARTIFACT),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
         "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
@@ -510,6 +535,11 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_density_window_compact_scope(
         DENSITY_WINDOW_COMPACT_ARTIFACT,
         artifacts["density_window_compact"],
+    )
+    validate_claim_scope(TRAIN_SUPPORT_DENSITY_ARTIFACT, artifacts["train_support_density"])
+    validate_train_support_density_scope(
+        TRAIN_SUPPORT_DENSITY_ARTIFACT,
+        artifacts["train_support_density"],
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
@@ -1307,6 +1337,54 @@ def build_density_window_compact_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_train_support_density_selector_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["train_support_density"]
+    comparator_conditions = (
+        "raw_text",
+        "support_ramped_compact_induction",
+        "density_window_compact_induction",
+    )
+    materials = ("104", "112", "120", "128")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Train support-density selector control on fresh seeds 1033, 1039, 1049, 1051, and 1061. The selector uses only train-derived support kept per charged compute to choose among raw text, compact train-size gated induction, and support-ramped compact induction, then charges candidate inspection before the final tiny-MLP fit. It often chooses sensible rows, but the inspection overhead erases the local density advantage.}",
+        r"\label{tab:train-support-density-selector}",
+        r"\small",
+        r"\setlength{\tabcolsep}{3pt}",
+        r"\begin{tabular}{@{}r>{\raggedright\arraybackslash}p{0.28\linewidth}rrlr@{}}",
+        r"\toprule",
+        r"Budget & Selector choices & Sel. gain & Sel. LSD & Best comparator & Best LSD \\",
+        r"\midrule",
+    ]
+    for material in materials:
+        selector = artifact["budgets"][material]["train_support_density_selector"]
+        best_condition = max(
+            comparator_conditions,
+            key=lambda condition: artifact["budgets"][material][condition][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        best = artifact["budgets"][material][best_condition]
+        row = [
+            material,
+            latex_escape(fmt_selection_counts(selector["portfolio_selected_condition_counts"])),
+            fmt_float(selector["accuracy_improvement_over_majority_mean"], digits=6),
+            fmt_float(
+                selector["signed_learning_signal_density_per_1m_event_compute_mean"],
+                digits=6,
+            ),
+            latex_escape(condition_label(best_condition)),
+            fmt_float(
+                best["signed_learning_signal_density_per_1m_event_compute_mean"],
+                digits=6,
+            ),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
@@ -1328,6 +1406,7 @@ def render_tables(repo_root: Path) -> str:
             build_support_ramped_compact_table(repo_root),
             build_late_confidence_ramped_compact_table(repo_root),
             build_density_window_compact_table(repo_root),
+            build_train_support_density_selector_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

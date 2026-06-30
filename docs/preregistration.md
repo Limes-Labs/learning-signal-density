@@ -56,6 +56,10 @@ internal processing cost.
   that uses compact induction below 320 train events, raw text from 320 to 400,
   support-ramped compact induction from 400 to 432, and raw text again after
   432.
+- `train_support_density_selector`: a train-only selector-cost control that
+  chooses among raw text, compact train-size gated induction, and
+  support-ramped compact induction using support kept per charged compute, then
+  charges candidate inspection before training the selected final tiny MLP.
 - `mdl_rule_expansion`: train-only empirical rules are scored on validation
   with a description-length penalty, then only selected compact rules are used
   for counterfactual generation.
@@ -117,6 +121,8 @@ is allowed only for train pairs.
 - Negative or mixed results remain publishable.
 - Any post-hoc frontier improvement should receive a fresh-seed confirmation
   sweep before being promoted beyond exploratory status.
+- Train-only selector controls must charge candidate construction or inspection
+  even when the final selected condition is cheap raw text.
 - The current pilot must mark `neural_model=false`.
 - Tiny neural replication artifacts must mark `neural_model=true`, keep the
   same heldout isolation rules, and report neural parameter count, training

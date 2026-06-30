@@ -77,6 +77,10 @@ The current pilot is intentionally modest:
 - `density_window_compact_induction` is a train-only fixed-window policy for
   the high-budget transition: compact below 320 train events, raw from 320 to
   400, support-ramped compact from 400 to 432, and raw again after 432.
+- `train_support_density_selector` is a train-only selector-cost control. It
+  chooses among raw text, compact train-size gated induction, and
+  support-ramped compact induction using support kept per charged compute, with
+  candidate inspection cost charged before the final tiny-MLP fit.
 - `late_confidence_ramped_compact_induction` is a train-only negative/mixed
   control for that tradeoff. It matches support-ramped compact until the train
   split reaches 432 events, then raises induced-label confidence from `0.55` to
@@ -243,6 +247,11 @@ using the same split and accounting discipline.
   result is mixed but useful: it improves signed LSD at 112 materials over
   density-capped/raw fallback, preserves raw density at 120, and misses the
   support-ramped 128-material row.
+- `results/tiny_neural_budget_sweep_train_support_density_f1024.*` -
+  fresh-seed train-only selector-cost control on seeds `1033 1039 1049 1051
+  1061`. The support-density selector often chooses plausible rows, but charged
+  candidate inspection erases the local density advantage, making this a
+  negative/mixed result rather than a deployable frontier.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -849,6 +858,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label f1024_16x8_density_window_compact
 ```
 
+Run the 16x8 1024-feature train-support-density selector-cost control:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_train_support_density_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_train_support_density_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1033 1039 1049 1051 1061 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction train_support_density_selector density_window_compact_induction density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_density_window_compact_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_density_window_compact_f1024.json \
+  --profile-label f1024_16x8_train_support_density
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -1161,6 +1190,16 @@ The current artifacts show a useful split:
   (`0.005648` versus support-ramped `0.004899`), but it misses the
   support-ramped 128-material row (`0.003726` versus `0.004290`). Fixed windows
   are therefore a sharper control, not the solved selector.
+- The train-support-density selector probes whether a train-only utility signal
+  can choose the high-budget representation more adaptively than fixed windows.
+  On fresh seeds `1033 1039 1049 1051 1061`, it chooses support-ramped compact
+  at 104/112 materials and raw text for most or all 120/128-material runs. The
+  choices are plausible, but charged candidate inspection lowers density: at
+  104 materials the selector matches support-ramped gain but drops signed LSD
+  from `0.003994` to `0.003262`; at 120 it reaches `0.003844` versus raw and
+  density-window `0.005515`; at 128 it reaches `0.004142` versus raw
+  `0.005809`. The next selector needs a cheaper proxy or an explicit
+  value-of-information rule.
 
 ## Research Thesis
 

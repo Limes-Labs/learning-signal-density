@@ -51,9 +51,11 @@ interaction probe improves the 64-material sample-aware row but does not beat
 the compact density frontier, separating candidate-order coverage from
 representation cost. A high-budget density cap then shows the frontier can
 switch back to raw text once external evidence is abundant, trading absolute
-gain for better learning-signal density. Support-ramped and fixed-window
-follow-ups expose the remaining selector problem: local transition windows can
-improve one high-budget density row, but still miss another.
+gain for better learning-signal density. Support-ramped, fixed-window, and
+train-support-density follow-ups expose the remaining selector problem: local
+transition windows can improve one high-budget density row, while a train-only
+selector can choose plausible candidates but lose its advantage to charged
+inspection overhead.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -220,7 +222,8 @@ Table~\ref{tab:diversity-interaction},
 Table~\ref{tab:density-capped-compact},
 Table~\ref{tab:support-ramped-compact},
 Table~\ref{tab:late-confidence-ramped-compact},
-Table~\ref{tab:density-window-compact}, and
+Table~\ref{tab:density-window-compact},
+Table~\ref{tab:train-support-density-selector}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -435,6 +438,20 @@ way that matters: at 128 materials it falls back to raw at 0.003726 signed
 LSD, while support-ramped compact reaches 0.004290. Fixed train-event windows
 are therefore a good control, but not a deployable selector.
 
+Table~\ref{tab:train-support-density-selector} then tests a slightly more
+adaptive train-only selector. It chooses among raw text, compact train-size
+gated induction, and support-ramped compact induction using support kept per
+charged compute, and it charges candidate inspection before the final fit. On
+fresh seeds 1033, 1039, 1049, 1051, and 1061, the selector chooses
+support-ramped compact at 104 and 112 materials, raw text for every
+128-material run, and a raw/support mix at 120. Those choices are sensible, but
+the measurement is not free: at 104 materials the selector matches
+support-ramped gain while lowering signed LSD from 0.003994 to 0.003262; at 120
+materials it reaches 0.003844 signed LSD while raw and density-window reach
+0.005515; at 128 materials it reaches 0.004142 while raw reaches 0.005809. The
+result is a selector-cost failure that points to cheaper proxies or
+value-of-information gates, not a new frontier policy.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -503,6 +520,11 @@ breakpoints can recover the 112-material transition and avoid unnecessary
 support-ramped cost at 120, but they miss the 128-material support-ramped
 opportunity. A useful selector likely needs a sample-aware utility signal over
 expected gain, representation cost, and generated-label reliability.
+The train-support-density selector makes that requirement sharper: even a
+train-only signal that chooses plausible high-budget representations can lose
+once candidate inspection is charged. The next useful policy should decide not
+only which representation is best, but whether the expected value of inspecting
+that representation exceeds the cost of the inspection itself.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

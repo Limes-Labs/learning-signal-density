@@ -91,6 +91,9 @@ high-budget tradeoff.
 A density-window compact probe then tests a fixed train-only transition
 schedule: compact below 320 train events, raw from 320 to 400, support-ramped
 compact from 400 to 432, and raw again after 432.
+A train-support-density selector-cost control then tests whether a train-only
+support-kept-per-compute signal can choose the high-budget representation
+dynamically, with candidate inspection charged before final training.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -259,6 +262,14 @@ compact from 400 to 432, and raw again after 432.
   support-ramped 128-material row (`0.003726` versus `0.004290`). The next
   selector needs sample- or feature-aware utility, not just fixed train-event
   breakpoints.
+- Treat charged selector inspection as its own bottleneck. On fresh seeds
+  `1033 1039 1049 1051 1061`, the train-support-density selector chooses
+  support-ramped compact at 104/112 materials and raw text mostly or always at
+  120/128, but the charged inspection cost lowers density below the best
+  comparator at those rows: `0.003262` versus support-ramped `0.003994` at 104,
+  `0.003844` versus raw/density-window `0.005515` at 120, and `0.004142`
+  versus raw `0.005809` at 128. Future selectors need cheaper proxy signals or
+  an explicit value-of-information gate before inspecting candidates.
 
 ## Phase 3: Continual-Learning Replay
 
