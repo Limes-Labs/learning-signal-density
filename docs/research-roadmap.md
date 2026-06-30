@@ -309,6 +309,11 @@ robust adaptive policy.
   `0.005601` signed LSD), but the simple density-capped raw fallback is still
   stronger (`0.006115`). This points toward a future expected-utility selector,
   not another unconditional support/raw threshold.
+- Use post-hoc selector-error audits as promotion gates, not as policies. The
+  support-selector audit finds that the least-regret transfer selector still
+  has positive average regret (`0.000496` signed LSD) against the best simple
+  comparator and wins only `1/7` budgets. The next selector needs explicit
+  expected-value-of-information accounting before another threshold search.
 
 ## Phase 3: Continual-Learning Replay
 

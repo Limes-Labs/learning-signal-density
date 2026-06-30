@@ -135,6 +135,9 @@ is allowed only for train pairs.
 - Negative or mixed results remain publishable.
 - Any post-hoc frontier improvement should receive a fresh-seed confirmation
   sweep before being promoted beyond exploratory status.
+- Post-hoc selector-error audits may use completed heldout outcomes only to
+  diagnose regret and define future promotion gates; they must be marked
+  non-deployable and cannot be used as policy selection results.
 - Train-only selector controls must charge candidate construction or inspection
   even when the final selected condition is cheap raw text.
 - Reuse-aware selector controls may avoid double-charging selected candidate

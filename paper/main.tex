@@ -599,6 +599,13 @@ and representation cost instead of depending on any one of those signals alone.
 The support-selector transfer stress then turns that lesson into a promotion
 gate. A fixed transition can help one seed block and harm the next; a validation
 gate can improve over that fixed prior and still lose to a no-scan density cap.
+The post-hoc error audit in Table~\ref{tab:support-selector-error-audit}
+quantifies that failure mode across the support-selector chain: the
+least-regret transfer selector is still positive-regret against the best simple
+comparator (\(0.000496\) signed LSD), and it beats that comparator on only
+\(1/7\) budgets. The one local negative-regret result appears on the development
+gate artifact, not on the transfer block, so it should be treated as a design
+clue rather than a promotion signal.
 The next selector should be evaluated as an expected-value-of-information
 problem: inspect or validate only when the anticipated gain over the raw or
 density-capped fallback exceeds the charged cost of obtaining that evidence.

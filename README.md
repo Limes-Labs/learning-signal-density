@@ -288,6 +288,11 @@ using the same split and accounting discipline.
   1487`. The no-window gate transfers better than the fixed-transition
   validation selector (`0.005936` versus `0.005601` average signed LSD), but the
   simple train-only density-capped raw fallback remains stronger (`0.006115`).
+- `results/support_selector_error_audit_f1024.*` - post-hoc regret ledger over
+  the committed high-budget support-selector artifacts. It marks heldout error
+  analysis explicitly and does not promote a support selector: on the transfer
+  block, the least-regret gate still loses `0.000496` signed LSD to the best
+  simple comparator and wins only `1/7` budgets.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -314,6 +319,7 @@ Regenerate the manuscript result tables from checked-in JSON artifacts:
 python3 scripts/build_policy_envelope.py
 python3 scripts/build_generated_label_audit.py
 python3 scripts/build_generated_coverage_audit.py
+python3 scripts/build_support_selector_error_audit.py
 python3 scripts/build_paper_tables.py
 ```
 
@@ -1057,6 +1063,10 @@ The repo reports three families of measurements:
   budgets: after the train split reaches 360 events, it returns to raw text
   because generated-label transforms can lose the signed-density frontier even
   when they still improve absolute gain.
+- The support-selector error audit is an analysis artifact, not a method: it
+  reads completed fresh-seed sweeps, computes selector regret against simple
+  comparators after charged selection cost, and marks heldout error analysis as
+  unavailable to deployable policies.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 

@@ -68,6 +68,7 @@ VALIDATION_SUPPORT_PRECISION_GATE_ARTIFACT = Path(
 SUPPORT_SELECTOR_TRANSFER_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json"
 )
+SUPPORT_SELECTOR_ERROR_AUDIT_ARTIFACT = Path("results/support_selector_error_audit_f1024.json")
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
@@ -467,6 +468,26 @@ def validate_support_selector_transfer_scope(artifact_path: Path, artifact: dict
         raise ValueError(f"{artifact_path} must not use oracle labels for the validation gate")
 
 
+def validate_support_selector_error_audit_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("claim_scope", {})
+    if scope.get("post_hoc_diagnostic") is not True:
+        raise ValueError(f"{artifact_path} must be marked as a post-hoc diagnostic")
+    if scope.get("uses_committed_fresh_seed_artifacts") is not True:
+        raise ValueError(f"{artifact_path} must use committed fresh-seed artifacts")
+    if scope.get("heldout_used_for_error_analysis") is not True:
+        raise ValueError(f"{artifact_path} must disclose heldout error analysis")
+    if scope.get("heldout_available_to_policies") is not False:
+        raise ValueError(f"{artifact_path} must not expose heldout outcomes to policies")
+    if scope.get("deployable_policy") is not False:
+        raise ValueError(f"{artifact_path} must be marked non-deployable")
+    if scope.get("paper_ready_claim") is not False:
+        raise ValueError(f"{artifact_path} must not mark the current result as paper-ready")
+    if artifact.get("recommendation", {}).get("promote_support_selector") is not False:
+        raise ValueError(f"{artifact_path} must not promote a support selector")
+    if str(SUPPORT_SELECTOR_TRANSFER_ARTIFACT) not in artifact.get("source_artifacts", []):
+        raise ValueError(f"{artifact_path} must include the support-selector transfer artifact")
+
+
 def validate_tempered_sample_aware_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("condition_scope", {}).get("tempered_sample_aware_self_ranked_induction", {})
     if scope.get("train_only_selection") is not True:
@@ -582,6 +603,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
             repo_root / VALIDATION_SUPPORT_PRECISION_GATE_ARTIFACT
         ),
         "support_selector_transfer": load_json(repo_root / SUPPORT_SELECTOR_TRANSFER_ARTIFACT),
+        "support_selector_error_audit": load_json(repo_root / SUPPORT_SELECTOR_ERROR_AUDIT_ARTIFACT),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
         "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
@@ -678,6 +700,10 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_support_selector_transfer_scope(
         SUPPORT_SELECTOR_TRANSFER_ARTIFACT,
         artifacts["support_selector_transfer"],
+    )
+    validate_support_selector_error_audit_scope(
+        SUPPORT_SELECTOR_ERROR_AUDIT_ARTIFACT,
+        artifacts["support_selector_error_audit"],
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
@@ -1754,6 +1780,38 @@ def build_support_selector_transfer_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_support_selector_error_audit_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["support_selector_error_audit"]
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Support-selector error audit. This post-hoc diagnostic reads the committed high-budget support-selector artifacts and compares each selector with the best simple comparator in the same seed block. Positive regret means the selector lost density after its charged inspection or validation cost; the audit is non-deployable because completed heldout outcomes define the errors.}",
+        r"\label{tab:support-selector-error-audit}",
+        r"\scriptsize",
+        r"\setlength{\tabcolsep}{1.5pt}",
+        r"\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.21\linewidth}>{\raggedright\arraybackslash}p{0.15\linewidth}>{\raggedright\arraybackslash}p{0.20\linewidth}rrrr@{}}",
+        r"\toprule",
+        r"Source & Best simple & Least-regret selector & Sel. LSD & Regret & Wins & Cost \\",
+        r"\midrule",
+    ]
+    for label in artifact["artifact_order"]:
+        summary = artifact["artifact_summaries"][label]
+        selector = summary["best_selector_by_regret"]
+        diagnostic = summary["selector_diagnostics"][selector]
+        row = [
+            latex_escape(summary["display_label"]),
+            latex_escape(summary["best_fixed_simple_condition_label"]),
+            latex_escape(diagnostic["condition_label"]),
+            fmt_float(diagnostic["average_lsd"], digits=6),
+            fmt_float(diagnostic["average_regret_vs_best_simple_lsd"], digits=6),
+            f"{diagnostic['budgets_beating_best_simple_count']}/{diagnostic['budget_count']}",
+            fmt_float(diagnostic["average_selection_cost_units"], digits=1),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
@@ -1780,6 +1838,7 @@ def render_tables(repo_root: Path) -> str:
             build_validation_support_precision_selector_table(repo_root),
             build_validation_support_precision_gate_table(repo_root),
             build_support_selector_transfer_table(repo_root),
+            build_support_selector_error_audit_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

@@ -800,5 +800,18 @@ density-capped raw fallback has the strongest all-budget average in this block
 (`0.006115`), and raw/probe still beat the validation gate at 120 and 128
 materials.
 
+Build the post-hoc support-selector error audit:
+
+```bash
+python3 scripts/build_support_selector_error_audit.py
+```
+
+The audit reads the committed high-budget support-selector JSON artifacts and
+computes signed-LSD regret against the best simple comparator in each source
+seed block. It is explicitly non-deployable because completed heldout outcomes
+define the error ledger. The transfer block remains negative for promotion: the
+least-regret gate has `0.000496` average regret versus the best simple
+comparator and wins only `1/7` budgets.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.
