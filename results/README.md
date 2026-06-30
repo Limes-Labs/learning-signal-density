@@ -676,5 +676,37 @@ raw/density-window reaches `0.005515`; at 128 materials it reaches `0.004142`
 while raw reaches `0.005809`. This artifact is a selector-cost failure, not a
 frontier improvement.
 
+16x8 1024-feature reuse-aware support-probe window control:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_support_probe_window_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_support_probe_window_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1063 1069 1087 1091 1093 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction train_support_density_selector support_probe_window_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_train_support_density_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_train_support_density_f1024.json \
+  --profile-label f1024_16x8_support_probe_window
+```
+
+The support-probe window selector is train-only and reuse-aware. It uses compact
+induction below 320 train events, raw text outside the 360--432 support-probe
+window, and inside that window inspects only support-ramped compact induction.
+If support is selected, the candidate construction is reused rather than
+charged again. On seeds `1063 1069 1087 1091 1093`, this removes the 104-material
+selector overhead: signed LSD is `0.004655` versus `0.003805` for the full
+train-support-density selector. The result is still mixed. At 112 materials the
+selector chooses support, but raw/density-capped is denser (`0.007103` versus
+`0.005161`); at 120 materials the selector chooses raw, but support-ramped is
+denser (`0.004240` versus `0.003588`). The artifact isolates accounting reuse
+from the harder policy-selection problem.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

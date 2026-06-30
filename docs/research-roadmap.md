@@ -94,6 +94,9 @@ compact from 400 to 432, and raw again after 432.
 A train-support-density selector-cost control then tests whether a train-only
 support-kept-per-compute signal can choose the high-budget representation
 dynamically, with candidate inspection charged before final training.
+A reuse-aware support-probe window control then tests the value-of-information
+version: only inspect support-ramped compact inside a narrow train-event window
+and reuse the selected candidate construction rather than charging it twice.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -270,6 +273,14 @@ dynamically, with candidate inspection charged before final training.
   `0.003844` versus raw/density-window `0.005515` at 120, and `0.004142`
   versus raw `0.005809` at 128. Future selectors need cheaper proxy signals or
   an explicit value-of-information gate before inspecting candidates.
+- Separate accounting reuse from policy quality. On fresh seeds `1063 1069
+  1087 1091 1093`, the support-probe window selector removes the duplicate
+  selected-candidate charge and recovers the 104-material support-ramped density
+  (`0.004655` versus the full selector's `0.003805`). It still misses the best
+  comparator at 112 and 120 materials, where raw reaches `0.007103` signed LSD
+  at 112 and support-ramped reaches `0.004240` at 120. The next useful selector
+  needs a train-only utility signal that can override the fixed window when the
+  local evidence changes.
 
 ## Phase 3: Continual-Learning Replay
 

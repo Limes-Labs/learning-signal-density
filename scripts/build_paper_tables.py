@@ -56,6 +56,9 @@ DENSITY_WINDOW_COMPACT_ARTIFACT = Path(
 TRAIN_SUPPORT_DENSITY_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_train_support_density_f1024.json"
 )
+SUPPORT_PROBE_WINDOW_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_support_probe_window_f1024.json"
+)
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
@@ -89,6 +92,7 @@ CONDITION_LABELS = {
     "sample_aware_self_ranked_induction": "Sample-aware self-ranked",
     "self_ranked_induction": "Self-ranked",
     "support_ramped_compact_induction": "Support-ramped compact",
+    "support_probe_window_selector": "Support-probe window selector",
     "tempered_sample_aware_self_ranked_induction": "Tempered sample-aware",
     "train_support_density_selector": "Train support-density selector",
     "train_size_gated_sample_aware_induction": "Train-size gated sample-aware",
@@ -361,6 +365,28 @@ def validate_train_support_density_scope(artifact_path: Path, artifact: dict[str
         raise ValueError(f"{artifact_path} must not use oracle labels for the support-density selector")
 
 
+def validate_support_probe_window_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("support_probe_window_selector", {})
+    if scope.get("train_only_selection") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only support-probe selection")
+    if scope.get("train_only_induction") is not True:
+        raise ValueError(f"{artifact_path} must mark train-only support-probe induction")
+    if scope.get("validation_used_for_policy_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for support-probe selection")
+    if scope.get("validation_used_for_transform_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for support-probe transforms")
+    if scope.get("support_probe_window_selector") is not True:
+        raise ValueError(f"{artifact_path} must mark the support-probe window selector")
+    if scope.get("support_probe_min_train_events") != 360:
+        raise ValueError(f"{artifact_path} must disclose the support-probe lower window")
+    if scope.get("support_probe_max_train_events") != 432:
+        raise ValueError(f"{artifact_path} must disclose the support-probe upper window")
+    if scope.get("reuse_selected_candidate_construction") is not True:
+        raise ValueError(f"{artifact_path} must disclose selected-candidate reuse")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the support-probe selector")
+
+
 def validate_tempered_sample_aware_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("condition_scope", {}).get("tempered_sample_aware_self_ranked_induction", {})
     if scope.get("train_only_selection") is not True:
@@ -470,6 +496,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         ),
         "density_window_compact": load_json(repo_root / DENSITY_WINDOW_COMPACT_ARTIFACT),
         "train_support_density": load_json(repo_root / TRAIN_SUPPORT_DENSITY_ARTIFACT),
+        "support_probe_window": load_json(repo_root / SUPPORT_PROBE_WINDOW_ARTIFACT),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
         "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
@@ -540,6 +567,11 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_train_support_density_scope(
         TRAIN_SUPPORT_DENSITY_ARTIFACT,
         artifacts["train_support_density"],
+    )
+    validate_claim_scope(SUPPORT_PROBE_WINDOW_ARTIFACT, artifacts["support_probe_window"])
+    validate_support_probe_window_scope(
+        SUPPORT_PROBE_WINDOW_ARTIFACT,
+        artifacts["support_probe_window"],
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
@@ -1385,6 +1417,56 @@ def build_train_support_density_selector_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_support_probe_window_selector_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["support_probe_window"]
+    comparator_conditions = (
+        "raw_text",
+        "compact_train_size_gated_induction",
+        "support_ramped_compact_induction",
+        "density_window_compact_induction",
+        "density_capped_compact_induction",
+    )
+    materials = ("96", "104", "112", "120", "128")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Support-probe window selector on fresh seeds 1063, 1069, 1087, 1091, and 1093. The train-only policy uses compact below 320 train events, raw text outside the 360--432 support-probe window, and inside that window inspects only support-ramped compact induction, reusing the selected candidate construction if support is chosen. Reuse removes the 104-material overhead, but fixed window errors remain at 112 and 120 materials.}",
+        r"\label{tab:support-probe-window-selector}",
+        r"\small",
+        r"\setlength{\tabcolsep}{3pt}",
+        r"\begin{tabular}{@{}r>{\raggedright\arraybackslash}p{0.26\linewidth}rrlr@{}}",
+        r"\toprule",
+        r"Budget & Selector choices & Sel. gain & Sel. LSD & Best comparator & Best LSD \\",
+        r"\midrule",
+    ]
+    for material in materials:
+        selector = artifact["budgets"][material]["support_probe_window_selector"]
+        best_condition = max(
+            comparator_conditions,
+            key=lambda condition: artifact["budgets"][material][condition][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        best = artifact["budgets"][material][best_condition]
+        row = [
+            material,
+            latex_escape(fmt_selection_counts(selector["portfolio_selected_condition_counts"])),
+            fmt_float(selector["accuracy_improvement_over_majority_mean"], digits=6),
+            fmt_float(
+                selector["signed_learning_signal_density_per_1m_event_compute_mean"],
+                digits=6,
+            ),
+            latex_escape(condition_label(best_condition)),
+            fmt_float(
+                best["signed_learning_signal_density_per_1m_event_compute_mean"],
+                digits=6,
+            ),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
@@ -1407,6 +1489,7 @@ def render_tables(repo_root: Path) -> str:
             build_late_confidence_ramped_compact_table(repo_root),
             build_density_window_compact_table(repo_root),
             build_train_support_density_selector_table(repo_root),
+            build_support_probe_window_selector_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

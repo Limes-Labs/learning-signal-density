@@ -51,11 +51,12 @@ interaction probe improves the 64-material sample-aware row but does not beat
 the compact density frontier, separating candidate-order coverage from
 representation cost. A high-budget density cap then shows the frontier can
 switch back to raw text once external evidence is abundant, trading absolute
-gain for better learning-signal density. Support-ramped, fixed-window, and
-train-support-density follow-ups expose the remaining selector problem: local
-transition windows can improve one high-budget density row, while a train-only
-selector can choose plausible candidates but lose its advantage to charged
-inspection overhead.
+gain for better learning-signal density. Support-ramped, fixed-window,
+train-support-density, and reuse-aware support-probe follow-ups expose the
+remaining selector problem: local transition windows can improve one
+high-budget density row, while a train-only selector can choose plausible
+candidates but lose its advantage to charged inspection overhead or fixed-window
+errors.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -223,7 +224,8 @@ Table~\ref{tab:density-capped-compact},
 Table~\ref{tab:support-ramped-compact},
 Table~\ref{tab:late-confidence-ramped-compact},
 Table~\ref{tab:density-window-compact},
-Table~\ref{tab:train-support-density-selector}, and
+Table~\ref{tab:train-support-density-selector},
+Table~\ref{tab:support-probe-window-selector}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -452,6 +454,19 @@ materials it reaches 0.003844 signed LSD while raw and density-window reach
 result is a selector-cost failure that points to cheaper proxies or
 value-of-information gates, not a new frontier policy.
 
+Table~\ref{tab:support-probe-window-selector} tests that value-of-information
+idea directly. The policy uses compact induction below 320 train events, raw
+text outside the 360--432 support-probe window, and inside that window inspects
+only support-ramped compact induction; if support is selected, the inspected
+candidate construction is reused. On fresh seeds 1063, 1069, 1087, 1091, and
+1093, this removes the 104-material overhead: the selector reaches the
+support-ramped row at 0.004655 signed LSD instead of the full
+train-support-density selector's 0.003805. The result is still not solved. At
+112 materials, it chooses support while raw/density-capped reaches 0.007103
+signed LSD versus 0.005161; at 120 materials, the no-probe raw fallback reaches
+0.003588 while support-ramped compact reaches 0.004240. Accounting reuse helps,
+but the train-only policy signal is still too coarse.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -525,6 +540,11 @@ train-only signal that chooses plausible high-budget representations can lose
 once candidate inspection is charged. The next useful policy should decide not
 only which representation is best, but whether the expected value of inspecting
 that representation exceeds the cost of the inspection itself.
+The support-probe window control answers part of that question by reusing
+selected candidate construction, but it leaves a policy-quality failure: fixed
+train-event windows still choose the wrong side of the raw/support tradeoff on
+some fresh seed rows. A stronger selector needs train-only evidence about
+expected heldout gain, not only support density and event-count windows.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be
