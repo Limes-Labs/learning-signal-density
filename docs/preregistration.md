@@ -138,6 +138,10 @@ is allowed only for train pairs.
 - Post-hoc selector-error audits may use completed heldout outcomes only to
   diagnose regret and define future promotion gates; they must be marked
   non-deployable and cannot be used as policy selection results.
+- Post-hoc mechanism audits may compare generated labels with the hidden
+  rulebook or heldout motif distribution only after the source sweep has been
+  committed; they must be marked non-deployable and cannot be used to select or
+  tune policies.
 - Train-only selector controls must charge candidate construction or inspection
   even when the final selected condition is cheap raw text.
 - Reuse-aware selector controls may avoid double-charging selected candidate

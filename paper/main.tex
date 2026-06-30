@@ -229,7 +229,9 @@ Table~\ref{tab:train-support-density-selector},
 Table~\ref{tab:support-probe-window-selector},
 Table~\ref{tab:validation-support-precision-selector},
 Table~\ref{tab:validation-support-precision-gate},
-Table~\ref{tab:support-selector-transfer}, and
+Table~\ref{tab:support-selector-transfer},
+Table~\ref{tab:support-selector-error-audit},
+Table~\ref{tab:support-mechanism-audit}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -507,6 +509,18 @@ advantages at 112, 120, and 128 materials. Thus, neither fixed transition priors
 nor validation precision alone are stable enough to replace an explicit
 expected-utility model.
 
+Table~\ref{tab:support-mechanism-audit} probes why this transfer block fails.
+It is a post-hoc mechanism diagnostic, not a policy: after the neural sweep is
+complete, it reconstructs the candidate pipelines and compares generated labels
+with the hidden rulebook and heldout motif distribution. The support ramp does
+reduce generated volume, but it records zero transition-budget precision
+improvements over compact induction, loses motif coverage at all four
+transition budgets, and beats the density-capped fallback on signed LSD at only
+104 materials. That falsifies the simple explanation that higher induced-label
+support is enough to improve reliability. In this block, support is mainly a
+cost-control knob; the missing selector signal is expected utility over gain,
+coverage, reliability, and inspection cost.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -606,6 +620,12 @@ comparator (\(0.000496\) signed LSD), and it beats that comparator on only
 \(1/7\) budgets. The one local negative-regret result appears on the development
 gate artifact, not on the transfer block, so it should be treated as a design
 clue rather than a promotion signal.
+The mechanism audit in Table~\ref{tab:support-mechanism-audit} adds the
+important causal hint: the support ramp is not improving the generated-label
+reliability or motif coverage that the selector needs. It mostly reduces the
+synthetic set. The next experiment should therefore estimate when that reduced
+set is worth its opportunity cost, rather than simply raising the support
+threshold again.
 The next selector should be evaluated as an expected-value-of-information
 problem: inspect or validate only when the anticipated gain over the raw or
 density-capped fallback exceeds the charged cost of obtaining that evidence.

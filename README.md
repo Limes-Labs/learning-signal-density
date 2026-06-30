@@ -293,6 +293,11 @@ using the same split and accounting discipline.
   analysis explicitly and does not promote a support selector: on the transfer
   block, the least-regret gate still loses `0.000496` signed LSD to the best
   simple comparator and wins only `1/7` budgets.
+- `results/support_mechanism_audit_f1024.*` - post-hoc mechanism audit over the
+  transfer block. It reconstructs candidate pipelines after the sweep and finds
+  that the support ramp lowers generated volume but does not improve
+  generated-label precision or heldout motif coverage versus compact induction
+  in the transition region.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -320,6 +325,7 @@ python3 scripts/build_policy_envelope.py
 python3 scripts/build_generated_label_audit.py
 python3 scripts/build_generated_coverage_audit.py
 python3 scripts/build_support_selector_error_audit.py
+python3 scripts/build_support_mechanism_audit.py
 python3 scripts/build_paper_tables.py
 ```
 
@@ -1067,6 +1073,11 @@ The repo reports three families of measurements:
   reads completed fresh-seed sweeps, computes selector regret against simple
   comparators after charged selection cost, and marks heldout error analysis as
   unavailable to deployable policies.
+- The support-ramp mechanism audit is also analysis-only: it uses the hidden
+  rulebook and heldout motif distribution after the transfer sweep to diagnose
+  whether support-ramped generated labels became more reliable or broader.
+  They did not on the transfer transition rows, so the support ramp should be
+  treated as a cost/volume control rather than a reliability mechanism.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 
@@ -1336,6 +1347,14 @@ The current artifacts show a useful split:
   support-ramped row (`0.003588` versus `0.004240`). The next selector needs a
   better train-only decision signal inside and near the window, not only cheaper
   inspection.
+- The support-ramp mechanism audit explains why another support threshold
+  search is unlikely to solve the transfer block by itself. Across 104--128
+  materials on seeds `1459 1471 1481 1483 1487`, support-ramped compact records
+  zero precision improvements over compact induction, loses heldout motif
+  coverage at all four transition budgets, and beats the density-capped
+  fallback on signed LSD at only 104 materials. The next selector needs a
+  utility model that balances expected gain, reliability, coverage, and
+  inspection cost.
 
 ## Research Thesis
 

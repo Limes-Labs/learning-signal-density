@@ -314,6 +314,12 @@ robust adaptive policy.
   has positive average regret (`0.000496` signed LSD) against the best simple
   comparator and wins only `1/7` budgets. The next selector needs explicit
   expected-value-of-information accounting before another threshold search.
+- Treat the support ramp as a cost-reduction mechanism, not a reliability
+  mechanism. The transfer-block mechanism audit finds zero support-ramp
+  precision improvements over compact induction and heldout motif coverage
+  losses at every transition budget. Future selectors should estimate expected
+  utility across gain, coverage, reliability, and inspection cost instead of
+  searching another unconditional support threshold.
 
 ## Phase 3: Continual-Learning Replay
 

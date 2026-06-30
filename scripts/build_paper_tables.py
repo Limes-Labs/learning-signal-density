@@ -69,6 +69,7 @@ SUPPORT_SELECTOR_TRANSFER_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json"
 )
 SUPPORT_SELECTOR_ERROR_AUDIT_ARTIFACT = Path("results/support_selector_error_audit_f1024.json")
+SUPPORT_MECHANISM_AUDIT_ARTIFACT = Path("results/support_mechanism_audit_f1024.json")
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
@@ -488,6 +489,28 @@ def validate_support_selector_error_audit_scope(artifact_path: Path, artifact: d
         raise ValueError(f"{artifact_path} must include the support-selector transfer artifact")
 
 
+def validate_support_mechanism_audit_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("claim_scope", {})
+    if scope.get("uses_hidden_rulebook_for_label_audit") is not True:
+        raise ValueError(f"{artifact_path} must disclose hidden-rulebook label audit")
+    if scope.get("uses_heldout_distribution_for_audit") is not True:
+        raise ValueError(f"{artifact_path} must disclose heldout-distribution audit")
+    if scope.get("hidden_rulebook_available_to_policies") is not False:
+        raise ValueError(f"{artifact_path} must not expose the hidden rulebook to policies")
+    if scope.get("heldout_available_to_policies") is not False:
+        raise ValueError(f"{artifact_path} must not expose heldout distribution to policies")
+    if scope.get("heldout_used_for_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use heldout data for selection")
+    if scope.get("deployable_policy") is not False:
+        raise ValueError(f"{artifact_path} must be marked non-deployable")
+    if scope.get("paper_ready_claim") is not False:
+        raise ValueError(f"{artifact_path} must not mark the current result as paper-ready")
+    if artifact.get("mechanism_summary", {}).get("promote_support_ramp_mechanism") is not False:
+        raise ValueError(f"{artifact_path} must not promote the support-ramp mechanism")
+    if str(SUPPORT_SELECTOR_TRANSFER_ARTIFACT) not in artifact.get("source_artifacts", []):
+        raise ValueError(f"{artifact_path} must audit the support-selector transfer artifact")
+
+
 def validate_tempered_sample_aware_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("condition_scope", {}).get("tempered_sample_aware_self_ranked_induction", {})
     if scope.get("train_only_selection") is not True:
@@ -604,6 +627,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         ),
         "support_selector_transfer": load_json(repo_root / SUPPORT_SELECTOR_TRANSFER_ARTIFACT),
         "support_selector_error_audit": load_json(repo_root / SUPPORT_SELECTOR_ERROR_AUDIT_ARTIFACT),
+        "support_mechanism_audit": load_json(repo_root / SUPPORT_MECHANISM_AUDIT_ARTIFACT),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
         "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
@@ -704,6 +728,10 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_support_selector_error_audit_scope(
         SUPPORT_SELECTOR_ERROR_AUDIT_ARTIFACT,
         artifacts["support_selector_error_audit"],
+    )
+    validate_support_mechanism_audit_scope(
+        SUPPORT_MECHANISM_AUDIT_ARTIFACT,
+        artifacts["support_mechanism_audit"],
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
@@ -1812,6 +1840,47 @@ def build_support_selector_error_audit_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_support_mechanism_audit_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["support_mechanism_audit"]
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Support-ramp mechanism audit on the support-selector transfer seeds. The audit reconstructs candidate pipelines after the neural sweep and compares generated labels with the hidden rulebook and heldout motif distribution. The support ramp reduces generated volume and cost, but in the transition region it does not improve label precision or motif coverage versus compact induction, and it beats the density-capped raw fallback on signed LSD at only one of four transition budgets.}",
+        r"\label{tab:support-mechanism-audit}",
+        r"\scriptsize",
+        r"\setlength{\tabcolsep}{2pt}",
+        r"\begin{tabular}{@{}rrrrrrrr@{}}",
+        r"\toprule",
+        r"Budget & Supp. prec. & Compact prec. & Supp. cov. & Compact cov. & Supp. LSD & Cap LSD & $\Delta$LSD \\",
+        r"\midrule",
+    ]
+    for material in artifact["mechanism_summary"]["transition_material_counts"]:
+        material_key = str(material)
+        support = artifact["audits"][material_key]["support_ramped_compact_induction"]
+        compact = artifact["audits"][material_key]["compact_train_size_gated_induction"]
+        density = artifact["audits"][material_key]["density_capped_compact_induction"]
+        diagnostic = artifact["transition_diagnostics"][material_key]
+        row = [
+            str(material),
+            fmt_float(support["label_precision"], digits=6),
+            fmt_float(compact["label_precision"], digits=6),
+            fmt_float(support["heldout_triple_coverage"], digits=6),
+            fmt_float(compact["heldout_triple_coverage"], digits=6),
+            fmt_float(
+                support["linked_signed_learning_signal_density_per_1m_event_compute_mean"],
+                digits=6,
+            ),
+            fmt_float(
+                density["linked_signed_learning_signal_density_per_1m_event_compute_mean"],
+                digits=6,
+            ),
+            fmt_float(diagnostic["support_minus_density_capped_lsd"], digits=6),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
@@ -1839,6 +1908,7 @@ def render_tables(repo_root: Path) -> str:
             build_validation_support_precision_gate_table(repo_root),
             build_support_selector_transfer_table(repo_root),
             build_support_selector_error_audit_table(repo_root),
+            build_support_mechanism_audit_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

@@ -813,5 +813,19 @@ define the error ledger. The transfer block remains negative for promotion: the
 least-regret gate has `0.000496` average regret versus the best simple
 comparator and wins only `1/7` budgets.
 
+Build the post-hoc support-ramp mechanism audit:
+
+```bash
+python3 scripts/build_support_mechanism_audit.py
+```
+
+The mechanism audit reconstructs the support-selector transfer candidates after
+the neural sweep and compares generated labels with the hidden rulebook and
+heldout motif distribution. It is non-deployable and should be read as a
+failure-mechanism diagnostic: support-ramped compact has zero precision
+improvements over compact induction, loses heldout motif coverage on all four
+transition budgets, and beats the density-capped fallback on signed LSD only at
+104 materials.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.
