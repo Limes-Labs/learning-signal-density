@@ -53,11 +53,11 @@ representation cost. A high-budget density cap then shows the frontier can
 switch back to raw text once external evidence is abundant, trading absolute
 gain for better learning-signal density. Support-ramped, fixed-window,
 train-support-density, reuse-aware support-probe, validation-calibrated
-support-precision, and no-window gate follow-ups expose the remaining selector
-problem: local transition windows can improve boundary rows, and cheap
-validation calibration can improve the average high-budget frontier, but late
-false positives, transition-prior dependence, and inspection cost still prevent
-a solved adaptive policy.
+support-precision, no-window gate, and transfer-stress follow-ups expose the
+remaining selector problem: local transition windows can improve boundary rows,
+and cheap validation calibration can improve one high-budget frontier, but late
+false positives, seed-block transfer, transition-prior dependence, and
+inspection cost still prevent a solved adaptive policy.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -228,7 +228,8 @@ Table~\ref{tab:density-window-compact},
 Table~\ref{tab:train-support-density-selector},
 Table~\ref{tab:support-probe-window-selector},
 Table~\ref{tab:validation-support-precision-selector},
-Table~\ref{tab:validation-support-precision-gate}, and
+Table~\ref{tab:validation-support-precision-gate},
+Table~\ref{tab:support-selector-transfer}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -494,6 +495,18 @@ while the fixed-transition selector and support-ramped compact reach 0.005864.
 The fixed transition prior is therefore carrying real information in this
 frontier, even though it is not a final adaptive solution.
 
+Table~\ref{tab:support-selector-transfer} reruns the support-selector family on
+fresh seeds 1459, 1471, 1481, 1483, and 1487 after the fixed-transition selector
+and no-window gate have both been developed. The no-window gate transfers better
+than the fixed-transition validation selector on average, 0.005936 versus
+0.005601 signed LSD, and it partially repairs the 112-material fixed-prior miss
+by reaching 0.006517 instead of 0.004175. The result is still a negative transfer
+stress for selector promotion: the simple train-only density-capped raw fallback
+has the strongest all-budget average at 0.006115, with especially visible
+advantages at 112, 120, and 128 materials. Thus, neither fixed transition priors
+nor validation precision alone are stable enough to replace an explicit
+expected-utility model.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -583,6 +596,12 @@ replace the transition prior. It can avoid some late support choices, but it als
 gives up useful support at the 112-material transition. A deployable selector
 needs a utility model that combines validation reliability, train-event regime,
 and representation cost instead of depending on any one of those signals alone.
+The support-selector transfer stress then turns that lesson into a promotion
+gate. A fixed transition can help one seed block and harm the next; a validation
+gate can improve over that fixed prior and still lose to a no-scan density cap.
+The next selector should be evaluated as an expected-value-of-information
+problem: inspect or validate only when the anticipated gain over the raw or
+density-capped fallback exceeds the charged cost of obtaining that evidence.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

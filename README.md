@@ -283,6 +283,11 @@ using the same split and accounting discipline.
   1423 1427`. It slightly beats the support-probe average (`0.006104` versus
   `0.006074`) but does not beat the fixed-transition validation selector
   (`0.006223`), mainly because it loses the 112-material support prior.
+- `results/tiny_neural_budget_sweep_support_selector_transfer_f1024.*` -
+  fresh-seed support-selector transfer stress on seeds `1459 1471 1481 1483
+  1487`. The no-window gate transfers better than the fixed-transition
+  validation selector (`0.005936` versus `0.005601` average signed LSD), but the
+  simple train-only density-capped raw fallback remains stronger (`0.006115`).
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -967,6 +972,26 @@ python3 -m learning_signal_density.neural_sweep \
   --confirmation-of results/tiny_neural_budget_sweep_validation_support_precision_f1024.json \
   --comparison-of results/tiny_neural_budget_sweep_validation_support_precision_f1024.json \
   --profile-label f1024_16x8_validation_support_precision_gate
+```
+
+Run the 16x8 1024-feature support-selector transfer stress:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_support_selector_transfer_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1459 1471 1481 1483 1487 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json \
+  --profile-label f1024_16x8_support_selector_transfer
 ```
 
 ## Metrics

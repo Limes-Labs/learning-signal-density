@@ -150,6 +150,9 @@ is allowed only for train pairs.
 - Neural confirmation artifacts must mark `fresh_seed_confirmation=true`,
   record the artifact being confirmed, and report whether each condition reaches
   the target signed gain.
+- Selector policies are not promoted from their development seed block alone;
+  they need a later transfer seed block that compares them against the simplest
+  fixed schedule or no-scan fallback they aim to replace.
 - The current pilot must mark `oracle_transform=true` because the synthetic
   world supplies ground-truth counterfactual labels for at least one condition.
 - Condition-level scope must identify which transforms use oracle-generated

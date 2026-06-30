@@ -103,6 +103,9 @@ transition band without training candidate neural models.
 A no-window validation support-precision gate then removes that fixed transition
 prior to test whether validation precision alone can carry the high-budget
 raw/support decision.
+A fresh support-selector transfer stress then reruns the fixed selector and
+no-window gate on a new seed block to distinguish local frontier progress from a
+robust adaptive policy.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -300,6 +303,12 @@ raw/support decision.
   validation selector to `0.006104` for the no-window gate. The main miss is at
   112 materials (`0.005031` versus `0.005864`), so validation precision alone is
   not yet a sufficient high-budget utility signal.
+- Treat support-selector gains as seed-block local until transfer says otherwise.
+  On fresh transfer seeds `1459 1471 1481 1483 1487`, the no-window gate beats
+  the fixed-transition validation selector on average (`0.005936` versus
+  `0.005601` signed LSD), but the simple density-capped raw fallback is still
+  stronger (`0.006115`). This points toward a future expected-utility selector,
+  not another unconditional support/raw threshold.
 
 ## Phase 3: Continual-Learning Replay
 

@@ -770,5 +770,35 @@ materials: the gate reaches `0.005031` signed LSD while the fixed-transition
 selector and support-ramped compact reach `0.005864`. This is a negative control
 for removing the transition prior, not a promoted selector.
 
+16x8 1024-feature support-selector transfer stress:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_support_selector_transfer_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1459 1471 1481 1483 1487 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json \
+  --profile-label f1024_16x8_support_selector_transfer
+```
+
+The transfer stress reruns the latest support-selector family on fresh seeds
+`1459 1471 1481 1483 1487` after the fixed selector and no-window gate were
+developed. The no-window gate transfers better than the fixed-transition
+validation selector on average (`0.005936` versus `0.005601` signed LSD), mainly
+because it avoids the fixed 112-material support choice (`0.006517` versus
+`0.004175`). The result is still not a promoted selector: the simple train-only
+density-capped raw fallback has the strongest all-budget average in this block
+(`0.006115`), and raw/probe still beat the validation gate at 120 and 128
+materials.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

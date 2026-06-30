@@ -42,6 +42,7 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_support_probe_window_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_support_precision_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json`
+- `results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked
@@ -118,6 +119,9 @@ The no-window validation support-precision gate artifact must use fresh seeds,
 disclose validation-based policy and transform selection, keep heldout out of
 selection, mark that the fixed transition prior was removed, and mark
 selected-candidate construction reuse.
+The support-selector transfer artifact must use the fresh transfer seed block,
+disclose the same selector scopes, keep heldout out of selection, and identify
+the no-window validation gate artifact it stress-tests.
 
 ## Release Checklist
 
