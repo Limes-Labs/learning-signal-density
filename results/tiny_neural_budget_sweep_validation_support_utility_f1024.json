@@ -1,0 +1,2159 @@
+{
+  "budgets": {
+    "104": {
+      "compact_train_size_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.1232,
+        "charged_compute_units_mean": 125784.4,
+        "estimated_neural_training_multiply_adds_mean": 6342016,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.7328,
+        "internal_examples_mean": 748,
+        "internal_tokens_mean": 7106,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 11968,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.002619
+      },
+      "counterfactual_expansion": {
+        "accuracy_improvement_over_majority_mean": 0.216,
+        "charged_compute_units_mean": 418880,
+        "estimated_neural_training_multiply_adds_mean": 21421184,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.8256,
+        "internal_examples_mean": 2244,
+        "internal_tokens_mean": 25058,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 35904,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.001379
+      },
+      "density_capped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.0544,
+        "charged_compute_units_mean": 41888,
+        "estimated_neural_training_multiply_adds_mean": 2572544,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.664,
+        "internal_examples_mean": 374,
+        "internal_tokens_mean": 2618,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 5984,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003472
+      },
+      "density_window_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.0544,
+        "charged_compute_units_mean": 41888,
+        "estimated_neural_training_multiply_adds_mean": 2572544,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.664,
+        "internal_examples_mean": 374,
+        "internal_tokens_mean": 2618,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 5984,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003472
+      },
+      "raw_text": {
+        "accuracy_improvement_over_majority_mean": 0.0544,
+        "charged_compute_units_mean": 41888,
+        "estimated_neural_training_multiply_adds_mean": 2572544,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.664,
+        "internal_examples_mean": 374,
+        "internal_tokens_mean": 2618,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 5984,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003472
+      },
+      "support_probe_window_selector": {
+        "accuracy_improvement_over_majority_mean": 0.0976,
+        "charged_compute_units_mean": 86237.2,
+        "estimated_neural_training_multiply_adds_mean": 4522342.4,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.7072,
+        "internal_examples_mean": 567.2,
+        "internal_tokens_mean": 4936.4,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 9075.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "support_ramped_compact_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 7254.8,
+        "portfolio_validation_score_mean": 0.002239,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003017
+      },
+      "support_ramped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.0976,
+        "charged_compute_units_mean": 86237.2,
+        "estimated_neural_training_multiply_adds_mean": 4522342.4,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.7072,
+        "internal_examples_mean": 567.2,
+        "internal_tokens_mean": 4936.4,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 9075.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003017
+      },
+      "train_support_density_selector": {
+        "accuracy_improvement_over_majority_mean": 0.0976,
+        "charged_compute_units_mean": 105580.4,
+        "estimated_neural_training_multiply_adds_mean": 4522342.4,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.7072,
+        "internal_examples_mean": 567.2,
+        "internal_tokens_mean": 4936.4,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 9075.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [
+          "raw_text",
+          "compact_train_size_gated_induction",
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 3,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "support_ramped_compact_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 19343.2,
+        "portfolio_validation_score_mean": 0.002239,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.002465
+      },
+      "validation_support_precision_gate_selector": {
+        "accuracy_improvement_over_majority_mean": 0.0896,
+        "charged_compute_units_mean": 61969.8,
+        "estimated_neural_training_multiply_adds_mean": 3346329.6,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.6992,
+        "internal_examples_mean": 450.8,
+        "internal_tokens_mean": 3539.6,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7212.8,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0.6,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 3,
+          "support_ramped_compact_induction": 2
+        },
+        "portfolio_selection_cost_units_mean": 2445.8,
+        "portfolio_validation_score_mean": 0.817488,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004015
+      },
+      "validation_support_precision_selector": {
+        "accuracy_improvement_over_majority_mean": 0.0896,
+        "charged_compute_units_mean": 61969.8,
+        "estimated_neural_training_multiply_adds_mean": 3346329.6,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.6992,
+        "internal_examples_mean": 450.8,
+        "internal_tokens_mean": 3539.6,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7212.8,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0.6,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 3,
+          "support_ramped_compact_induction": 2
+        },
+        "portfolio_selection_cost_units_mean": 2445.8,
+        "portfolio_validation_score_mean": 0.817488,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004015
+      },
+      "validation_support_utility_selector": {
+        "accuracy_improvement_over_majority_mean": 0.0544,
+        "charged_compute_units_mean": 47824.2,
+        "estimated_neural_training_multiply_adds_mean": 2572544,
+        "external_events_mean": 374,
+        "heldout_accuracy_mean": 0.664,
+        "internal_examples_mean": 374,
+        "internal_tokens_mean": 2618,
+        "majority_baseline_accuracy_mean": 0.6096,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 5984,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 1,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 5
+        },
+        "portfolio_selection_cost_units_mean": 5936.2,
+        "portfolio_validation_score_mean": -0.049302,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003137
+      }
+    },
+    "112": {
+      "compact_train_size_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.150746,
+        "charged_compute_units_mean": 134476,
+        "estimated_neural_training_multiply_adds_mean": 6809856,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.758209,
+        "internal_examples_mean": 804,
+        "internal_tokens_mean": 7628,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 12864,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.002775
+      },
+      "counterfactual_expansion": {
+        "accuracy_improvement_over_majority_mean": 0.219403,
+        "charged_compute_units_mean": 452480,
+        "estimated_neural_training_multiply_adds_mean": 23145600,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.826866,
+        "internal_examples_mean": 2424,
+        "internal_tokens_mean": 27068,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 38784,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.0012
+      },
+      "density_capped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.097015,
+        "charged_compute_units_mean": 45248,
+        "estimated_neural_training_multiply_adds_mean": 2780160,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.704478,
+        "internal_examples_mean": 404,
+        "internal_tokens_mean": 2828,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 6464,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005307
+      },
+      "density_window_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.134328,
+        "charged_compute_units_mean": 78748,
+        "estimated_neural_training_multiply_adds_mean": 4210944,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.741791,
+        "internal_examples_mean": 546,
+        "internal_tokens_mean": 4532,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 8736,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004222
+      },
+      "raw_text": {
+        "accuracy_improvement_over_majority_mean": 0.097015,
+        "charged_compute_units_mean": 45248,
+        "estimated_neural_training_multiply_adds_mean": 2780160,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.704478,
+        "internal_examples_mean": 404,
+        "internal_tokens_mean": 2828,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 6464,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005307
+      },
+      "support_probe_window_selector": {
+        "accuracy_improvement_over_majority_mean": 0.134328,
+        "charged_compute_units_mean": 78748,
+        "estimated_neural_training_multiply_adds_mean": 4210944,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.741791,
+        "internal_examples_mean": 546,
+        "internal_tokens_mean": 4532,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 8736,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "support_ramped_compact_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 6236,
+        "portfolio_validation_score_mean": 0.001803,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004222
+      },
+      "support_ramped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.134328,
+        "charged_compute_units_mean": 78748,
+        "estimated_neural_training_multiply_adds_mean": 4210944,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.741791,
+        "internal_examples_mean": 546,
+        "internal_tokens_mean": 4532,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 8736,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004222
+      },
+      "train_support_density_selector": {
+        "accuracy_improvement_over_majority_mean": 0.134328,
+        "charged_compute_units_mean": 97412,
+        "estimated_neural_training_multiply_adds_mean": 4210944,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.741791,
+        "internal_examples_mean": 546,
+        "internal_tokens_mean": 4532,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 8736,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [
+          "raw_text",
+          "compact_train_size_gated_induction",
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 3,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "support_ramped_compact_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 18664,
+        "portfolio_validation_score_mean": 0.001803,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003413
+      },
+      "validation_support_precision_gate_selector": {
+        "accuracy_improvement_over_majority_mean": 0.122388,
+        "charged_compute_units_mean": 61282.8,
+        "estimated_neural_training_multiply_adds_mean": 3352601.6,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.729851,
+        "internal_examples_mean": 460.8,
+        "internal_tokens_mean": 3509.6,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7372.8,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0.6,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 3,
+          "support_ramped_compact_induction": 2
+        },
+        "portfolio_selection_cost_units_mean": 2634.8,
+        "portfolio_validation_score_mean": 0.807692,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004846
+      },
+      "validation_support_precision_selector": {
+        "accuracy_improvement_over_majority_mean": 0.134328,
+        "charged_compute_units_mean": 78748,
+        "estimated_neural_training_multiply_adds_mean": 4210944,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.741791,
+        "internal_examples_mean": 546,
+        "internal_tokens_mean": 4532,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 8736,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "support_ramped_compact_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004222
+      },
+      "validation_support_utility_selector": {
+        "accuracy_improvement_over_majority_mean": 0.097015,
+        "charged_compute_units_mean": 51020.4,
+        "estimated_neural_training_multiply_adds_mean": 2780160,
+        "external_events_mean": 404,
+        "heldout_accuracy_mean": 0.704478,
+        "internal_examples_mean": 404,
+        "internal_tokens_mean": 2828,
+        "majority_baseline_accuracy_mean": 0.607463,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 6464,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 1,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 5
+        },
+        "portfolio_selection_cost_units_mean": 5772.4,
+        "portfolio_validation_score_mean": -0.071207,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004697
+      }
+    },
+    "120": {
+      "compact_train_size_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.141667,
+        "charged_compute_units_mean": 145240.8,
+        "estimated_neural_training_multiply_adds_mean": 7331968,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.7125,
+        "internal_examples_mean": 864,
+        "internal_tokens_mean": 8208,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 13824,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.002258
+      },
+      "counterfactual_expansion": {
+        "accuracy_improvement_over_majority_mean": 0.241667,
+        "charged_compute_units_mean": 483840,
+        "estimated_neural_training_multiply_adds_mean": 24769664,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.8125,
+        "internal_examples_mean": 2592,
+        "internal_tokens_mean": 28944,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 41472,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.001156
+      },
+      "density_capped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.119444,
+        "charged_compute_units_mean": 48384,
+        "estimated_neural_training_multiply_adds_mean": 2976384,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.690278,
+        "internal_examples_mean": 432,
+        "internal_tokens_mean": 3024,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 6912,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005715
+      },
+      "density_window_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.119444,
+        "charged_compute_units_mean": 48384,
+        "estimated_neural_training_multiply_adds_mean": 2976384,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.690278,
+        "internal_examples_mean": 432,
+        "internal_tokens_mean": 3024,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 6912,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005715
+      },
+      "raw_text": {
+        "accuracy_improvement_over_majority_mean": 0.119444,
+        "charged_compute_units_mean": 48384,
+        "estimated_neural_training_multiply_adds_mean": 2976384,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.690278,
+        "internal_examples_mean": 432,
+        "internal_tokens_mean": 3024,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 6912,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005715
+      },
+      "support_probe_window_selector": {
+        "accuracy_improvement_over_majority_mean": 0.119444,
+        "charged_compute_units_mean": 48384,
+        "estimated_neural_training_multiply_adds_mean": 2976384,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.690278,
+        "internal_examples_mean": 432,
+        "internal_tokens_mean": 3024,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 6912,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 1,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005715
+      },
+      "support_ramped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.161111,
+        "charged_compute_units_mean": 75254.4,
+        "estimated_neural_training_multiply_adds_mean": 4088268.8,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.731945,
+        "internal_examples_mean": 542.4,
+        "internal_tokens_mean": 4348.8,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 8678.4,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004935
+      },
+      "train_support_density_selector": {
+        "accuracy_improvement_over_majority_mean": 0.133333,
+        "charged_compute_units_mean": 73759.2,
+        "estimated_neural_training_multiply_adds_mean": 3217664,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.704167,
+        "internal_examples_mean": 456,
+        "internal_tokens_mean": 3312,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7296,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [
+          "raw_text",
+          "compact_train_size_gated_induction",
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 3,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0.8,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 4,
+          "support_ramped_compact_induction": 1
+        },
+        "portfolio_selection_cost_units_mean": 19586.4,
+        "portfolio_validation_score_mean": 0.001466,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004003
+      },
+      "validation_support_precision_gate_selector": {
+        "accuracy_improvement_over_majority_mean": 0.152778,
+        "charged_compute_units_mean": 66931.2,
+        "estimated_neural_training_multiply_adds_mean": 3652454.4,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.723611,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 3830.4,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0.4,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 2,
+          "support_ramped_compact_induction": 3
+        },
+        "portfolio_selection_cost_units_mean": 2217.6,
+        "portfolio_validation_score_mean": 0.862529,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005466
+      },
+      "validation_support_precision_selector": {
+        "accuracy_improvement_over_majority_mean": 0.152778,
+        "charged_compute_units_mean": 66931.2,
+        "estimated_neural_training_multiply_adds_mean": 3652454.4,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.723611,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 3830.4,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0.4,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 2,
+          "support_ramped_compact_induction": 3
+        },
+        "portfolio_selection_cost_units_mean": 2217.6,
+        "portfolio_validation_score_mean": 0.862529,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005466
+      },
+      "validation_support_utility_selector": {
+        "accuracy_improvement_over_majority_mean": 0.119444,
+        "charged_compute_units_mean": 55065.6,
+        "estimated_neural_training_multiply_adds_mean": 2976384,
+        "external_events_mean": 432,
+        "heldout_accuracy_mean": 0.690278,
+        "internal_examples_mean": 432,
+        "internal_tokens_mean": 3024,
+        "majority_baseline_accuracy_mean": 0.570833,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 6912,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 1,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 5
+        },
+        "portfolio_selection_cost_units_mean": 6681.6,
+        "portfolio_validation_score_mean": -0.051019,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005076
+      }
+    },
+    "128": {
+      "compact_train_size_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.161039,
+        "charged_compute_units_mean": 154810.4,
+        "estimated_neural_training_multiply_adds_mean": 7796992,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.75974,
+        "internal_examples_mean": 920,
+        "internal_tokens_mean": 8740,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 14720,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.002261
+      },
+      "counterfactual_expansion": {
+        "accuracy_improvement_over_majority_mean": 0.244156,
+        "charged_compute_units_mean": 515200,
+        "estimated_neural_training_multiply_adds_mean": 26343296,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.842857,
+        "internal_examples_mean": 2760,
+        "internal_tokens_mean": 30820,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 44160,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.00103
+      },
+      "density_capped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.131169,
+        "charged_compute_units_mean": 51520,
+        "estimated_neural_training_multiply_adds_mean": 3163776,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.72987,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 3220,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005535
+      },
+      "density_window_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.131169,
+        "charged_compute_units_mean": 51520,
+        "estimated_neural_training_multiply_adds_mean": 3163776,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.72987,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 3220,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005535
+      },
+      "raw_text": {
+        "accuracy_improvement_over_majority_mean": 0.131169,
+        "charged_compute_units_mean": 51520,
+        "estimated_neural_training_multiply_adds_mean": 3163776,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.72987,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 3220,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005535
+      },
+      "support_probe_window_selector": {
+        "accuracy_improvement_over_majority_mean": 0.131169,
+        "charged_compute_units_mean": 51520,
+        "estimated_neural_training_multiply_adds_mean": 3163776,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.72987,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 3220,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 1,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005535
+      },
+      "support_ramped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.131169,
+        "charged_compute_units_mean": 77463.2,
+        "estimated_neural_training_multiply_adds_mean": 4222566.4,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.72987,
+        "internal_examples_mean": 565.2,
+        "internal_tokens_mean": 4482.4,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 9043.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003672
+      },
+      "train_support_density_selector": {
+        "accuracy_improvement_over_majority_mean": 0.131169,
+        "charged_compute_units_mean": 72235.2,
+        "estimated_neural_training_multiply_adds_mean": 3163776,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.72987,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 3220,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [
+          "raw_text",
+          "compact_train_size_gated_induction",
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 3,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 1,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 5
+        },
+        "portfolio_selection_cost_units_mean": 20715.2,
+        "portfolio_validation_score_mean": 0.001357,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003949
+      },
+      "validation_support_precision_gate_selector": {
+        "accuracy_improvement_over_majority_mean": 0.131169,
+        "charged_compute_units_mean": 55818,
+        "estimated_neural_training_multiply_adds_mean": 3163776,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.72987,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 3220,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 1,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 5
+        },
+        "portfolio_selection_cost_units_mean": 4298,
+        "portfolio_validation_score_mean": 0.780606,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005109
+      },
+      "validation_support_precision_selector": {
+        "accuracy_improvement_over_majority_mean": 0.131169,
+        "charged_compute_units_mean": 55818,
+        "estimated_neural_training_multiply_adds_mean": 3163776,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.72987,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 3220,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 1,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 5
+        },
+        "portfolio_selection_cost_units_mean": 4298,
+        "portfolio_validation_score_mean": 0.780606,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005109
+      },
+      "validation_support_utility_selector": {
+        "accuracy_improvement_over_majority_mean": 0.131169,
+        "charged_compute_units_mean": 55818,
+        "estimated_neural_training_multiply_adds_mean": 3163776,
+        "external_events_mean": 460,
+        "heldout_accuracy_mean": 0.72987,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 3220,
+        "majority_baseline_accuracy_mean": 0.598701,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 1,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 5
+        },
+        "portfolio_selection_cost_units_mean": 4298,
+        "portfolio_validation_score_mean": -0.045152,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.005109
+      }
+    },
+    "64": {
+      "compact_train_size_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.142857,
+        "charged_compute_units_mean": 77335.6,
+        "estimated_neural_training_multiply_adds_mean": 3903872,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.722078,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 4370,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.008032
+      },
+      "counterfactual_expansion": {
+        "accuracy_improvement_over_majority_mean": 0.192208,
+        "charged_compute_units_mean": 257600,
+        "estimated_neural_training_multiply_adds_mean": 13183616,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.771429,
+        "internal_examples_mean": 1380,
+        "internal_tokens_mean": 15410,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 22080,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003244
+      },
+      "density_capped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.142857,
+        "charged_compute_units_mean": 77335.6,
+        "estimated_neural_training_multiply_adds_mean": 3903872,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.722078,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 4370,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.008032
+      },
+      "density_window_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.142857,
+        "charged_compute_units_mean": 77335.6,
+        "estimated_neural_training_multiply_adds_mean": 3903872,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.722078,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 4370,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.008032
+      },
+      "raw_text": {
+        "accuracy_improvement_over_majority_mean": 0.007792,
+        "charged_compute_units_mean": 25760,
+        "estimated_neural_training_multiply_adds_mean": 1583616,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.587013,
+        "internal_examples_mean": 230,
+        "internal_tokens_mean": 1610,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 3680,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.001315
+      },
+      "support_probe_window_selector": {
+        "accuracy_improvement_over_majority_mean": 0.142857,
+        "charged_compute_units_mean": 77335.6,
+        "estimated_neural_training_multiply_adds_mean": 3903872,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.722078,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 4370,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "compact_train_size_gated_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.008032
+      },
+      "support_ramped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.142857,
+        "charged_compute_units_mean": 77335.6,
+        "estimated_neural_training_multiply_adds_mean": 3903872,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.722078,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 4370,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.008032
+      },
+      "train_support_density_selector": {
+        "accuracy_improvement_over_majority_mean": 0.142857,
+        "charged_compute_units_mean": 92166.8,
+        "estimated_neural_training_multiply_adds_mean": 3903872,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.722078,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 4370,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [
+          "raw_text",
+          "compact_train_size_gated_induction",
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 3,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "compact_train_size_gated_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 14831.2,
+        "portfolio_validation_score_mean": 0.002974,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.006739
+      },
+      "validation_support_precision_gate_selector": {
+        "accuracy_improvement_over_majority_mean": 0.142857,
+        "charged_compute_units_mean": 77335.6,
+        "estimated_neural_training_multiply_adds_mean": 3903872,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.722078,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 4370,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "compact_train_size_gated_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.008032
+      },
+      "validation_support_precision_selector": {
+        "accuracy_improvement_over_majority_mean": 0.142857,
+        "charged_compute_units_mean": 77335.6,
+        "estimated_neural_training_multiply_adds_mean": 3903872,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.722078,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 4370,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "compact_train_size_gated_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.008032
+      },
+      "validation_support_utility_selector": {
+        "accuracy_improvement_over_majority_mean": 0.142857,
+        "charged_compute_units_mean": 77335.6,
+        "estimated_neural_training_multiply_adds_mean": 3903872,
+        "external_events_mean": 230,
+        "heldout_accuracy_mean": 0.722078,
+        "internal_examples_mean": 460,
+        "internal_tokens_mean": 4370,
+        "majority_baseline_accuracy_mean": 0.579221,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7360,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "compact_train_size_gated_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.008032
+      }
+    },
+    "80": {
+      "compact_train_size_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.1875,
+        "charged_compute_units_mean": 79891.2,
+        "estimated_neural_training_multiply_adds_mean": 4116582.4,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.760417,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 4550.4,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.0082
+      },
+      "counterfactual_expansion": {
+        "accuracy_improvement_over_majority_mean": 0.26875,
+        "charged_compute_units_mean": 322560,
+        "estimated_neural_training_multiply_adds_mean": 16515328,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.841667,
+        "internal_examples_mean": 1728,
+        "internal_tokens_mean": 19296,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 27648,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.002893
+      },
+      "density_capped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.1875,
+        "charged_compute_units_mean": 79891.2,
+        "estimated_neural_training_multiply_adds_mean": 4116582.4,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.760417,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 4550.4,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.0082
+      },
+      "density_window_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.1875,
+        "charged_compute_units_mean": 79891.2,
+        "estimated_neural_training_multiply_adds_mean": 4116582.4,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.760417,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 4550.4,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.0082
+      },
+      "raw_text": {
+        "accuracy_improvement_over_majority_mean": 0.064584,
+        "charged_compute_units_mean": 32256,
+        "estimated_neural_training_multiply_adds_mean": 1984768,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.6375,
+        "internal_examples_mean": 288,
+        "internal_tokens_mean": 2016,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 4608,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.006952
+      },
+      "support_probe_window_selector": {
+        "accuracy_improvement_over_majority_mean": 0.1875,
+        "charged_compute_units_mean": 79891.2,
+        "estimated_neural_training_multiply_adds_mean": 4116582.4,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.760417,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 4550.4,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "compact_train_size_gated_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.0082
+      },
+      "support_ramped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.1875,
+        "charged_compute_units_mean": 79891.2,
+        "estimated_neural_training_multiply_adds_mean": 4116582.4,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.760417,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 4550.4,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.0082
+      },
+      "train_support_density_selector": {
+        "accuracy_improvement_over_majority_mean": 0.1875,
+        "charged_compute_units_mean": 94060.8,
+        "estimated_neural_training_multiply_adds_mean": 4116582.4,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.760417,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 4550.4,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [
+          "raw_text",
+          "compact_train_size_gated_induction",
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 3,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "compact_train_size_gated_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 14169.6,
+        "portfolio_validation_score_mean": 0.002642,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.006966
+      },
+      "validation_support_precision_gate_selector": {
+        "accuracy_improvement_over_majority_mean": 0.1875,
+        "charged_compute_units_mean": 79891.2,
+        "estimated_neural_training_multiply_adds_mean": 4116582.4,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.760417,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 4550.4,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "compact_train_size_gated_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.0082
+      },
+      "validation_support_precision_selector": {
+        "accuracy_improvement_over_majority_mean": 0.1875,
+        "charged_compute_units_mean": 79891.2,
+        "estimated_neural_training_multiply_adds_mean": 4116582.4,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.760417,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 4550.4,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "compact_train_size_gated_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.0082
+      },
+      "validation_support_utility_selector": {
+        "accuracy_improvement_over_majority_mean": 0.1875,
+        "charged_compute_units_mean": 79891.2,
+        "estimated_neural_training_multiply_adds_mean": 4116582.4,
+        "external_events_mean": 288,
+        "heldout_accuracy_mean": 0.760417,
+        "internal_examples_mean": 499.2,
+        "internal_tokens_mean": 4550.4,
+        "majority_baseline_accuracy_mean": 0.572917,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 7987.2,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "compact_train_size_gated_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.0082
+      }
+    },
+    "96": {
+      "compact_train_size_gated_induction": {
+        "accuracy_improvement_over_majority_mean": 0.132174,
+        "charged_compute_units_mean": 100703.6,
+        "estimated_neural_training_multiply_adds_mean": 5159091.2,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.721739,
+        "internal_examples_mean": 621.6,
+        "internal_tokens_mean": 5729.2,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 9945.6,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003788
+      },
+      "counterfactual_expansion": {
+        "accuracy_improvement_over_majority_mean": 0.238261,
+        "charged_compute_units_mean": 387520,
+        "estimated_neural_training_multiply_adds_mean": 19821056,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.827826,
+        "internal_examples_mean": 2076,
+        "internal_tokens_mean": 23182,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 33216,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.001777
+      },
+      "density_capped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.132174,
+        "charged_compute_units_mean": 100703.6,
+        "estimated_neural_training_multiply_adds_mean": 5159091.2,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.721739,
+        "internal_examples_mean": 621.6,
+        "internal_tokens_mean": 5729.2,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 9945.6,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003788
+      },
+      "density_window_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.064348,
+        "charged_compute_units_mean": 38752,
+        "estimated_neural_training_multiply_adds_mean": 2381056,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.653913,
+        "internal_examples_mean": 346,
+        "internal_tokens_mean": 2422,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 5536,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004799
+      },
+      "raw_text": {
+        "accuracy_improvement_over_majority_mean": 0.064348,
+        "charged_compute_units_mean": 38752,
+        "estimated_neural_training_multiply_adds_mean": 2381056,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.653913,
+        "internal_examples_mean": 346,
+        "internal_tokens_mean": 2422,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 5536,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004799
+      },
+      "support_probe_window_selector": {
+        "accuracy_improvement_over_majority_mean": 0.064348,
+        "charged_compute_units_mean": 38752,
+        "estimated_neural_training_multiply_adds_mean": 2381056,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.653913,
+        "internal_examples_mean": 346,
+        "internal_tokens_mean": 2422,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 5536,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [],
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 1,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 5
+        },
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004799
+      },
+      "support_ramped_compact_induction": {
+        "accuracy_improvement_over_majority_mean": 0.132174,
+        "charged_compute_units_mean": 100703.6,
+        "estimated_neural_training_multiply_adds_mean": 5159091.2,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.721739,
+        "internal_examples_mean": 621.6,
+        "internal_tokens_mean": 5729.2,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 9945.6,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_count_mean": 0,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selection_cost_units_mean": 0,
+        "portfolio_validation_score_mean": 0.0,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003788
+      },
+      "train_support_density_selector": {
+        "accuracy_improvement_over_majority_mean": 0.132174,
+        "charged_compute_units_mean": 118776.4,
+        "estimated_neural_training_multiply_adds_mean": 5159091.2,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.721739,
+        "internal_examples_mean": 621.6,
+        "internal_tokens_mean": 5729.2,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 9945.6,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.00145,
+        "portfolio_candidate_conditions": [
+          "raw_text",
+          "compact_train_size_gated_induction",
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 3,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0,
+        "portfolio_selected_condition_counts": {
+          "support_ramped_compact_induction": 5
+        },
+        "portfolio_selection_cost_units_mean": 18072.8,
+        "portfolio_validation_score_mean": 0.002736,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.003212
+      },
+      "validation_support_precision_gate_selector": {
+        "accuracy_improvement_over_majority_mean": 0.095652,
+        "charged_compute_units_mean": 77489.4,
+        "estimated_neural_training_multiply_adds_mean": 4037196.8,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.685217,
+        "internal_examples_mean": 510.4,
+        "internal_tokens_mean": 4394.8,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 8166.4,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0.4,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 2,
+          "support_ramped_compact_induction": 3
+        },
+        "portfolio_selection_cost_units_mean": 1773.8,
+        "portfolio_validation_score_mean": 0.853922,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004556
+      },
+      "validation_support_precision_selector": {
+        "accuracy_improvement_over_majority_mean": 0.095652,
+        "charged_compute_units_mean": 77489.4,
+        "estimated_neural_training_multiply_adds_mean": 4037196.8,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.685217,
+        "internal_examples_mean": 510.4,
+        "internal_tokens_mean": 4394.8,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 8166.4,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.825758,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0.4,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 2,
+          "support_ramped_compact_induction": 3
+        },
+        "portfolio_selection_cost_units_mean": 1773.8,
+        "portfolio_validation_score_mean": 0.853922,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004556
+      },
+      "validation_support_utility_selector": {
+        "accuracy_improvement_over_majority_mean": 0.062609,
+        "charged_compute_units_mean": 57427.8,
+        "estimated_neural_training_multiply_adds_mean": 2941619.2,
+        "external_events_mean": 346,
+        "heldout_accuracy_mean": 0.652174,
+        "internal_examples_mean": 401.6,
+        "internal_tokens_mean": 3089.2,
+        "majority_baseline_accuracy_mean": 0.589565,
+        "neural_parameter_count_mean": 8209,
+        "neural_training_step_count_mean": 6425.6,
+        "portfolio_abstention_extra_correct_mean": 0,
+        "portfolio_abstention_margin_mean": 0.0,
+        "portfolio_candidate_conditions": [
+          "support_ramped_compact_induction"
+        ],
+        "portfolio_candidate_count_mean": 1,
+        "portfolio_proxy_epochs_mean": 0,
+        "portfolio_raw_text_abstention_mean": 0.8,
+        "portfolio_selected_condition_counts": {
+          "raw_text": 4,
+          "support_ramped_compact_induction": 1
+        },
+        "portfolio_selection_cost_units_mean": 8000.6,
+        "portfolio_validation_score_mean": -0.004125,
+        "signed_learning_signal_density_per_1m_event_compute_mean": 0.004063
+      }
+    }
+  },
+  "claim_scope": {
+    "fresh_seed_confirmation": true,
+    "heldout_used_for_selection": false,
+    "neural_model": true,
+    "paper_ready_claim": false,
+    "synthetic_domain": true
+  },
+  "comparison_of": "results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json",
+  "condition_scope": {
+    "compact_train_size_gated_induction": {
+      "compact_original_encoding_at_large_samples": true,
+      "oracle_generated_labels": false,
+      "train_only_induction": true,
+      "train_only_selection": true,
+      "validation_used_for_policy_selection": false,
+      "validation_used_for_threshold": false,
+      "validation_used_for_transform_selection": false
+    },
+    "counterfactual_expansion": {
+      "oracle_generated_labels": true,
+      "train_only_induction": false,
+      "train_only_selection": false,
+      "validation_used_for_threshold": false,
+      "validation_used_for_transform_selection": false
+    },
+    "density_capped_compact_induction": {
+      "abundant_data_raw_fallback": true,
+      "compact_original_encoding_at_large_samples": true,
+      "oracle_generated_labels": false,
+      "train_only_induction": true,
+      "train_only_selection": true,
+      "validation_used_for_policy_selection": false,
+      "validation_used_for_threshold": false,
+      "validation_used_for_transform_selection": false
+    },
+    "density_window_compact_induction": {
+      "abundant_data_raw_fallback": true,
+      "compact_density_window": true,
+      "compact_density_window_max_events": 320,
+      "compact_original_encoding_at_large_samples": true,
+      "oracle_generated_labels": false,
+      "train_only_induction": true,
+      "train_only_selection": true,
+      "transition_support_window": true,
+      "transition_support_window_max_events": 432,
+      "transition_support_window_min_events": 400,
+      "validation_used_for_policy_selection": false,
+      "validation_used_for_threshold": false,
+      "validation_used_for_transform_selection": false
+    },
+    "raw_text": {
+      "oracle_generated_labels": false,
+      "train_only_induction": false,
+      "train_only_selection": false,
+      "validation_used_for_threshold": false,
+      "validation_used_for_transform_selection": false
+    },
+    "support_probe_window_selector": {
+      "compact_original_encoding_at_large_samples": true,
+      "oracle_generated_labels": false,
+      "reuse_selected_candidate_construction": true,
+      "support_density_min_kept_per_compute": 0.00145,
+      "support_probe_max_train_events": 432,
+      "support_probe_min_train_events": 360,
+      "support_probe_raw_min_train_events": 320,
+      "support_probe_window_selector": true,
+      "train_only_induction": true,
+      "train_only_selection": true,
+      "validation_used_for_policy_selection": false,
+      "validation_used_for_threshold": false,
+      "validation_used_for_transform_selection": false
+    },
+    "support_ramped_compact_induction": {
+      "abundant_data_min_support": 4,
+      "abundant_data_support_ramp": true,
+      "abundant_data_support_ramp_min_events": 360,
+      "compact_original_encoding_at_large_samples": true,
+      "oracle_generated_labels": false,
+      "train_only_induction": true,
+      "train_only_selection": true,
+      "validation_used_for_policy_selection": false,
+      "validation_used_for_threshold": false,
+      "validation_used_for_transform_selection": false
+    },
+    "train_support_density_selector": {
+      "compact_original_encoding_at_large_samples": true,
+      "oracle_generated_labels": false,
+      "support_density_compact_max_events": 320,
+      "support_density_min_kept_per_compute": 0.00145,
+      "support_density_selector": true,
+      "train_only_induction": true,
+      "train_only_selection": true,
+      "validation_used_for_policy_selection": false,
+      "validation_used_for_threshold": false,
+      "validation_used_for_transform_selection": false
+    },
+    "validation_support_precision_gate_selector": {
+      "compact_original_encoding_at_large_samples": true,
+      "oracle_generated_labels": false,
+      "reuse_selected_candidate_construction": true,
+      "support_density_min_kept_per_compute": 0.00145,
+      "train_only_induction": true,
+      "train_only_selection": false,
+      "validation_support_compact_max_train_events": 320,
+      "validation_support_precision_gate_selector": true,
+      "validation_support_precision_selector": false,
+      "validation_support_precision_threshold": 0.825758,
+      "validation_support_transition_max_train_events": 432,
+      "validation_support_transition_min_train_events": 400,
+      "validation_support_uses_fixed_transition_prior": false,
+      "validation_used_for_policy_selection": true,
+      "validation_used_for_threshold": true,
+      "validation_used_for_transform_selection": true
+    },
+    "validation_support_precision_selector": {
+      "compact_original_encoding_at_large_samples": true,
+      "oracle_generated_labels": false,
+      "reuse_selected_candidate_construction": true,
+      "support_density_min_kept_per_compute": 0.00145,
+      "train_only_induction": true,
+      "train_only_selection": false,
+      "validation_support_compact_max_train_events": 320,
+      "validation_support_precision_selector": true,
+      "validation_support_precision_threshold": 0.825758,
+      "validation_support_transition_max_train_events": 432,
+      "validation_support_transition_min_train_events": 400,
+      "validation_used_for_policy_selection": true,
+      "validation_used_for_threshold": true,
+      "validation_used_for_transform_selection": true
+    },
+    "validation_support_utility_selector": {
+      "compact_original_encoding_at_large_samples": true,
+      "oracle_generated_labels": false,
+      "reuse_selected_candidate_construction": true,
+      "support_density_min_kept_per_compute": 0.00145,
+      "train_only_induction": true,
+      "train_only_selection": false,
+      "validation_labels_used_for_policy_selection": true,
+      "validation_motif_distribution_used_for_policy_selection": true,
+      "validation_support_compact_max_train_events": 320,
+      "validation_support_precision_selector": false,
+      "validation_support_precision_threshold": 0.825758,
+      "validation_support_transition_max_train_events": 432,
+      "validation_support_transition_min_train_events": 400,
+      "validation_support_uses_fixed_transition_prior": false,
+      "validation_support_utility_compute_penalty": 1e-06,
+      "validation_support_utility_min_score": 0.0,
+      "validation_support_utility_pair_coverage_weight": 0.25,
+      "validation_support_utility_selector": true,
+      "validation_support_utility_triple_l1_weight": 0.2,
+      "validation_used_for_policy_selection": true,
+      "validation_used_for_threshold": true,
+      "validation_used_for_transform_selection": true
+    }
+  },
+  "conditions": [
+    "raw_text",
+    "compact_train_size_gated_induction",
+    "support_ramped_compact_induction",
+    "density_window_compact_induction",
+    "support_probe_window_selector",
+    "validation_support_precision_selector",
+    "validation_support_precision_gate_selector",
+    "validation_support_utility_selector",
+    "train_support_density_selector",
+    "density_capped_compact_induction",
+    "counterfactual_expansion"
+  ],
+  "confirmation_of": "results/support_mechanism_audit_f1024.json",
+  "epochs": 16,
+  "feature_dimension": 1024,
+  "generated_at": "2026-06-30T22:35:19Z",
+  "hidden_units": 8,
+  "learner_backend": "tiny_mlp",
+  "learning_rate": 0.03,
+  "material_counts": [
+    64,
+    80,
+    96,
+    104,
+    112,
+    120,
+    128
+  ],
+  "portfolio_selection_counts_by_budget": {
+    "104": {
+      "support_probe_window_selector": {
+        "support_ramped_compact_induction": 5
+      },
+      "train_support_density_selector": {
+        "support_ramped_compact_induction": 5
+      },
+      "validation_support_precision_gate_selector": {
+        "raw_text": 3,
+        "support_ramped_compact_induction": 2
+      },
+      "validation_support_precision_selector": {
+        "raw_text": 3,
+        "support_ramped_compact_induction": 2
+      },
+      "validation_support_utility_selector": {
+        "raw_text": 5
+      }
+    },
+    "112": {
+      "support_probe_window_selector": {
+        "support_ramped_compact_induction": 5
+      },
+      "train_support_density_selector": {
+        "support_ramped_compact_induction": 5
+      },
+      "validation_support_precision_gate_selector": {
+        "raw_text": 3,
+        "support_ramped_compact_induction": 2
+      },
+      "validation_support_precision_selector": {
+        "support_ramped_compact_induction": 5
+      },
+      "validation_support_utility_selector": {
+        "raw_text": 5
+      }
+    },
+    "120": {
+      "support_probe_window_selector": {
+        "raw_text": 5
+      },
+      "train_support_density_selector": {
+        "raw_text": 4,
+        "support_ramped_compact_induction": 1
+      },
+      "validation_support_precision_gate_selector": {
+        "raw_text": 2,
+        "support_ramped_compact_induction": 3
+      },
+      "validation_support_precision_selector": {
+        "raw_text": 2,
+        "support_ramped_compact_induction": 3
+      },
+      "validation_support_utility_selector": {
+        "raw_text": 5
+      }
+    },
+    "128": {
+      "support_probe_window_selector": {
+        "raw_text": 5
+      },
+      "train_support_density_selector": {
+        "raw_text": 5
+      },
+      "validation_support_precision_gate_selector": {
+        "raw_text": 5
+      },
+      "validation_support_precision_selector": {
+        "raw_text": 5
+      },
+      "validation_support_utility_selector": {
+        "raw_text": 5
+      }
+    },
+    "64": {
+      "support_probe_window_selector": {
+        "compact_train_size_gated_induction": 5
+      },
+      "train_support_density_selector": {
+        "compact_train_size_gated_induction": 5
+      },
+      "validation_support_precision_gate_selector": {
+        "compact_train_size_gated_induction": 5
+      },
+      "validation_support_precision_selector": {
+        "compact_train_size_gated_induction": 5
+      },
+      "validation_support_utility_selector": {
+        "compact_train_size_gated_induction": 5
+      }
+    },
+    "80": {
+      "support_probe_window_selector": {
+        "compact_train_size_gated_induction": 5
+      },
+      "train_support_density_selector": {
+        "compact_train_size_gated_induction": 5
+      },
+      "validation_support_precision_gate_selector": {
+        "compact_train_size_gated_induction": 5
+      },
+      "validation_support_precision_selector": {
+        "compact_train_size_gated_induction": 5
+      },
+      "validation_support_utility_selector": {
+        "compact_train_size_gated_induction": 5
+      }
+    },
+    "96": {
+      "support_probe_window_selector": {
+        "raw_text": 5
+      },
+      "train_support_density_selector": {
+        "support_ramped_compact_induction": 5
+      },
+      "validation_support_precision_gate_selector": {
+        "raw_text": 2,
+        "support_ramped_compact_induction": 3
+      },
+      "validation_support_precision_selector": {
+        "raw_text": 2,
+        "support_ramped_compact_induction": 3
+      },
+      "validation_support_utility_selector": {
+        "raw_text": 4,
+        "support_ramped_compact_induction": 1
+      }
+    }
+  },
+  "profile_label": "f1024_16x8_validation_support_utility",
+  "seeds": [
+    1601,
+    1607,
+    1609,
+    1613,
+    1619
+  ],
+  "target_signed_gain": 0.03,
+  "thresholds": {
+    "compact_train_size_gated_induction": {
+      "best_material_count": 80,
+      "best_signed_gain": 0.1875,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.0082,
+      "first_material_count_reaching_target": 64
+    },
+    "counterfactual_expansion": {
+      "best_material_count": 80,
+      "best_signed_gain": 0.26875,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.002893,
+      "first_material_count_reaching_target": 64
+    },
+    "density_capped_compact_induction": {
+      "best_material_count": 80,
+      "best_signed_gain": 0.1875,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.0082,
+      "first_material_count_reaching_target": 64
+    },
+    "density_window_compact_induction": {
+      "best_material_count": 80,
+      "best_signed_gain": 0.1875,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.0082,
+      "first_material_count_reaching_target": 64
+    },
+    "raw_text": {
+      "best_material_count": 128,
+      "best_signed_gain": 0.131169,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.005535,
+      "first_material_count_reaching_target": 80
+    },
+    "support_probe_window_selector": {
+      "best_material_count": 80,
+      "best_signed_gain": 0.1875,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.0082,
+      "first_material_count_reaching_target": 64
+    },
+    "support_ramped_compact_induction": {
+      "best_material_count": 80,
+      "best_signed_gain": 0.1875,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.0082,
+      "first_material_count_reaching_target": 64
+    },
+    "train_support_density_selector": {
+      "best_material_count": 80,
+      "best_signed_gain": 0.1875,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.006966,
+      "first_material_count_reaching_target": 64
+    },
+    "validation_support_precision_gate_selector": {
+      "best_material_count": 80,
+      "best_signed_gain": 0.1875,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.0082,
+      "first_material_count_reaching_target": 64
+    },
+    "validation_support_precision_selector": {
+      "best_material_count": 80,
+      "best_signed_gain": 0.1875,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.0082,
+      "first_material_count_reaching_target": 64
+    },
+    "validation_support_utility_selector": {
+      "best_material_count": 80,
+      "best_signed_gain": 0.1875,
+      "best_signed_learning_signal_density_per_1m_event_compute": 0.0082,
+      "first_material_count_reaching_target": 64
+    }
+  },
+  "title": "Learning Signal Density Tiny Neural Budget Sweep"
+}

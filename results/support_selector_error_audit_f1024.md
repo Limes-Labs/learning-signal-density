@@ -13,6 +13,7 @@ expected value after charged inspection or validation cost.
 | Validation support-precision selector | density_capped_compact_induction | 0.006102 | validation_support_precision_selector | 0.006138 | 0.000042 | 2/7 | 1309.2 |
 | Validation support-precision gate | density_window_compact_induction | 0.006090 | validation_support_precision_selector | 0.006223 | -0.000110 | 2/7 | 1620.0 |
 | Support-selector transfer stress | density_capped_compact_induction | 0.006115 | validation_support_precision_gate_selector | 0.005936 | 0.000496 | 1/7 | 2082.8 |
+| Validation support-utility selector | density_capped_compact_induction | 0.005721 | validation_support_precision_gate_selector | 0.005746 | 0.000119 | 1/7 | 1910.0 |
 
 ## Selector Details
 
@@ -32,6 +33,11 @@ expected value after charged inspection or validation cost.
 | Support-selector transfer stress | support_probe_window_selector | 0.005920 | 0.000512 | 112 | 0.003582 | 1927.3 |
 | Support-selector transfer stress | validation_support_precision_selector | 0.005601 | 0.000831 | 112 | 0.003582 | 1706.4 |
 | Support-selector transfer stress | validation_support_precision_gate_selector | 0.005936 | 0.000496 | 112 | 0.001240 | 2082.8 |
+| Validation support-utility selector | train_support_density_selector | 0.004392 | 0.001473 | 112 | 0.001894 | 17911.8 |
+| Validation support-utility selector | support_probe_window_selector | 0.005646 | 0.000220 | 112 | 0.001085 | 1927.3 |
+| Validation support-utility selector | validation_support_precision_selector | 0.005657 | 0.000209 | 112 | 0.001085 | 1533.6 |
+| Validation support-utility selector | validation_support_precision_gate_selector | 0.005746 | 0.000119 | 112 | 0.000461 | 1910.0 |
+| Validation support-utility selector | validation_support_utility_selector | 0.005473 | 0.000392 | 96 | 0.000736 | 4384.1 |
 
 ## Recommendation
 

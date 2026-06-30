@@ -1967,6 +1967,105 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_validation_support_utility_artifact_records_fresh_seed_negative_result(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_support_utility_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1601, 1607, 1609, 1613, 1619])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_validation_support_utility")
+        self.assertEqual(selector["confirmation_of"], "results/support_mechanism_audit_f1024.json")
+        self.assertEqual(
+            selector["comparison_of"],
+            "results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json",
+        )
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_support_utility_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["validation_support_utility_selector"]
+        self.assertEqual(scope["validation_support_utility_selector"], True)
+        self.assertEqual(scope["validation_labels_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_motif_distribution_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_support_utility_min_score"], 0.0)
+        self.assertEqual(scope["validation_support_utility_pair_coverage_weight"], 0.25)
+        self.assertEqual(scope["validation_support_utility_triple_l1_weight"], 0.20)
+        self.assertEqual(scope["validation_support_utility_compute_penalty"], 0.000001)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            selector["budgets"]["64"]["validation_support_utility_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"compact_train_size_gated_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["96"]["validation_support_utility_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 4, "support_ramped_compact_induction": 1},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["validation_support_utility_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["128"]["validation_support_utility_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+
+        utility_average = sum(
+            selector["budgets"][str(material)]["validation_support_utility_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        gate_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        density_average = sum(
+            selector["budgets"][str(material)]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        raw_average = sum(
+            selector["budgets"][str(material)]["raw_text"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+
+        self.assertEqual(round(utility_average, 6), 0.005473)
+        self.assertGreater(utility_average, raw_average)
+        self.assertLess(utility_average, gate_average)
+        self.assertLess(utility_average, density_average)
+        self.assertGreater(
+            selector["budgets"]["96"]["validation_support_utility_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["96"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["112"]["validation_support_utility_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["112"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

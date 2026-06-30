@@ -320,6 +320,12 @@ robust adaptive policy.
   losses at every transition budget. Future selectors should estimate expected
   utility across gain, coverage, reliability, and inspection cost instead of
   searching another unconditional support threshold.
+- Do not assume validation coverage plus precision is a sufficient utility
+  model. The first validation support-utility selector beats raw on fresh seeds
+  (`0.005473` versus `0.004728` signed LSD), but still trails the no-window
+  precision gate (`0.005746`) and density-capped fallback (`0.005721`). The
+  next selector needs an explicit expected-gain predictor or a cheaper abstain
+  rule, not more proxy terms alone.
 
 ## Phase 3: Continual-Learning Replay
 

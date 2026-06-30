@@ -30,6 +30,7 @@ class SupportSelectorErrorAuditTests(unittest.TestCase):
                 "results/tiny_neural_budget_sweep_validation_support_precision_f1024.json",
                 "results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json",
                 "results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json",
+                "results/tiny_neural_budget_sweep_validation_support_utility_f1024.json",
             ],
         )
         self.assertEqual(audit["metric"], "signed_learning_signal_density_per_1m_event_compute_mean")
@@ -69,6 +70,20 @@ class SupportSelectorErrorAuditTests(unittest.TestCase):
         self.assertEqual(precision_selector["average_regret_vs_best_simple_lsd"], 0.000042)
         self.assertEqual(precision_selector["budgets_beating_best_simple_count"], 2)
 
+        utility_source = audit["artifact_summaries"]["validation_support_utility"]
+        utility = utility_source["selector_diagnostics"]["validation_support_utility_selector"]
+        utility_gate = utility_source["selector_diagnostics"]["validation_support_precision_gate_selector"]
+        self.assertEqual(utility_source["best_fixed_simple_condition"], "density_capped_compact_induction")
+        self.assertEqual(utility_source["best_fixed_simple_lsd"], 0.005721)
+        self.assertEqual(utility["average_lsd"], 0.005473)
+        self.assertEqual(utility["average_regret_vs_best_simple_lsd"], 0.000392)
+        self.assertEqual(utility["budgets_beating_best_simple_count"], 0)
+        self.assertEqual(utility["average_selection_cost_units"], 4384.1)
+        self.assertLess(
+            utility_gate["average_regret_vs_best_simple_lsd"],
+            utility["average_regret_vs_best_simple_lsd"],
+        )
+
     def test_generator_rebuilds_committed_audit_and_markdown(self) -> None:
         audit_builder = load_audit_builder()
 
@@ -88,7 +103,9 @@ class SupportSelectorErrorAuditTests(unittest.TestCase):
         self.assertEqual(markdown, audit_builder.render_markdown(committed))
         self.assertIn("post-hoc support-selector error audit", markdown)
         self.assertIn("validation_support_precision_gate_selector", markdown)
+        self.assertIn("validation_support_utility_selector", markdown)
         self.assertIn("0.000496", markdown)
+        self.assertIn("0.000392", markdown)
 
 
 if __name__ == "__main__":

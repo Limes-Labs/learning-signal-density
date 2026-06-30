@@ -45,6 +45,7 @@ TRAIN_SUPPORT_DENSITY_SELECTOR = "train_support_density_selector"
 SUPPORT_PROBE_WINDOW_SELECTOR = "support_probe_window_selector"
 VALIDATION_SUPPORT_PRECISION_SELECTOR = "validation_support_precision_selector"
 VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR = "validation_support_precision_gate_selector"
+VALIDATION_SUPPORT_UTILITY_SELECTOR = "validation_support_utility_selector"
 VALIDATION_PORTFOLIO_CANDIDATES = (
     "raw_text",
     "self_ranked_induction",
@@ -78,6 +79,10 @@ VALIDATION_SUPPORT_PRECISION_COMPACT_MAX_EVENTS = 320
 VALIDATION_SUPPORT_PRECISION_TRANSITION_MIN_EVENTS = 400
 VALIDATION_SUPPORT_PRECISION_TRANSITION_MAX_EVENTS = 432
 VALIDATION_SUPPORT_PRECISION_THRESHOLD = 0.825758
+VALIDATION_SUPPORT_UTILITY_PAIR_COVERAGE_WEIGHT = 0.25
+VALIDATION_SUPPORT_UTILITY_TRIPLE_L1_WEIGHT = 0.20
+VALIDATION_SUPPORT_UTILITY_COMPUTE_PENALTY = 0.000001
+VALIDATION_SUPPORT_UTILITY_MIN_SCORE = 0.0
 GENERATED_SOURCE_KINDS = frozenset({
     "agreement_gated_self_ranked_induced",
     "compact_diverse_sample_aware_self_ranked_induced",
@@ -173,6 +178,18 @@ VALIDATION_SUPPORT_PRECISION_GATE_SCOPE = {
     "validation_support_precision_gate_selector": True,
     "validation_support_uses_fixed_transition_prior": False,
 }
+VALIDATION_SUPPORT_UTILITY_SCOPE = {
+    **VALIDATION_SUPPORT_PRECISION_SCOPE,
+    "validation_support_precision_selector": False,
+    "validation_support_utility_selector": True,
+    "validation_support_uses_fixed_transition_prior": False,
+    "validation_labels_used_for_policy_selection": True,
+    "validation_motif_distribution_used_for_policy_selection": True,
+    "validation_support_utility_min_score": VALIDATION_SUPPORT_UTILITY_MIN_SCORE,
+    "validation_support_utility_pair_coverage_weight": VALIDATION_SUPPORT_UTILITY_PAIR_COVERAGE_WEIGHT,
+    "validation_support_utility_triple_l1_weight": VALIDATION_SUPPORT_UTILITY_TRIPLE_L1_WEIGHT,
+    "validation_support_utility_compute_penalty": VALIDATION_SUPPORT_UTILITY_COMPUTE_PENALTY,
+}
 VALIDATION_SELECTOR_CONDITIONS = frozenset({
     VALIDATION_ABSTAINING_PROXY_SELECTOR,
     VALIDATION_COVERAGE_PRIOR_SELECTOR,
@@ -183,6 +200,7 @@ VALIDATION_SELECTOR_CONDITIONS = frozenset({
     SUPPORT_PROBE_WINDOW_SELECTOR,
     VALIDATION_SUPPORT_PRECISION_SELECTOR,
     VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR,
+    VALIDATION_SUPPORT_UTILITY_SELECTOR,
 })
 
 UNSUPPORTED_NEURAL_CONDITIONS = frozenset({
@@ -245,6 +263,8 @@ def neural_condition_scope(condition: str) -> dict:
         return VALIDATION_SUPPORT_PRECISION_SCOPE
     if condition == VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR:
         return VALIDATION_SUPPORT_PRECISION_GATE_SCOPE
+    if condition == VALIDATION_SUPPORT_UTILITY_SELECTOR:
+        return VALIDATION_SUPPORT_UTILITY_SCOPE
     return CONDITION_SCOPE[condition]
 
 
@@ -1134,6 +1154,188 @@ def _validation_support_precision_calibration(split) -> dict:
     }
 
 
+def _support_utility_score(
+    calibration: dict,
+    coverage_record: dict,
+    final_compute_units: int,
+) -> float:
+    triple_l1 = coverage_record["coverage_triple_l1_distance"]
+    return (
+        calibration["precision"]
+        - VALIDATION_SUPPORT_PRECISION_THRESHOLD
+        + VALIDATION_SUPPORT_UTILITY_PAIR_COVERAGE_WEIGHT * coverage_record["coverage_pair_coverage"]
+        - VALIDATION_SUPPORT_UTILITY_TRIPLE_L1_WEIGHT * (triple_l1 if triple_l1 is not None else 1.0)
+        - VALIDATION_SUPPORT_UTILITY_COMPUTE_PENALTY * final_compute_units
+    )
+
+
+def _run_validation_support_utility_selector(
+    seed: int,
+    material_count: int,
+    epochs: int,
+    hidden_units: int,
+    feature_dimension: int,
+    learning_rate: float,
+) -> dict:
+    world = build_world(seed=seed, material_count=material_count)
+    split = split_observations(world.observations)
+    heldout_examples = build_evaluation_examples(split.heldout)
+
+    train_event_count = len(split.train)
+    candidate_records: list[dict] = []
+    selected_condition: str
+    selection_metric: str
+    selection_cost_units = 0
+    utility_score = 0.0
+
+    if train_event_count < VALIDATION_SUPPORT_PRECISION_COMPACT_MAX_EVENTS:
+        selected_condition = "compact_train_size_gated_induction"
+        pipeline = _build_neural_pipeline(selected_condition, split, world.rules)
+        selection_metric = "validation_support_expected_utility_compact_below_calibration_floor"
+    else:
+        calibration = _validation_support_precision_calibration(split)
+        precision_margin = calibration["precision"] - VALIDATION_SUPPORT_PRECISION_THRESHOLD
+        if precision_margin < VALIDATION_SUPPORT_UTILITY_MIN_SCORE:
+            utility_score = precision_margin
+            selection_cost_units = (
+                calibration["modeling_cost_tokens"]
+                + calibration["validation_scoring_cost_tokens"]
+            )
+            selected_condition = "raw_text"
+            pipeline = _build_neural_pipeline(selected_condition, split, world.rules)
+            candidate_records.append(
+                {
+                    "condition": "support_ramped_compact_induction",
+                    "pipeline": None,
+                    "support_utility_score": utility_score,
+                    "validation_precision": calibration["precision"],
+                    "validation_covered_count": calibration["covered"],
+                    "validation_correct_count": calibration["correct"],
+                    "validation_pair_coverage": None,
+                    "validation_triple_l1_distance": None,
+                    "synthetic_example_count": 0,
+                    "candidate_compute_units": selection_cost_units,
+                    "final_compute_units": 0,
+                    "min_support": calibration["min_support"],
+                    "min_confidence": calibration["min_confidence"],
+                }
+            )
+        else:
+            support_pipeline = _build_neural_pipeline("support_ramped_compact_induction", split, world.rules)
+            validation_examples = build_evaluation_examples(split.validation)
+            validation_eval_cost = sum(example.token_count for example in validation_examples)
+            coverage_record = _candidate_coverage_record(
+                condition="support_ramped_compact_induction",
+                pipeline=support_pipeline,
+                validation_motifs=_observation_motif_counts(split.validation),
+                validation_pairs=_observation_pair_counts(split.validation),
+                validation_eval_cost=validation_eval_cost,
+            )
+            support_final_compute_units = _pipeline_compute_units(pipeline=support_pipeline, epochs=epochs)
+            utility_score = _support_utility_score(
+                calibration=calibration,
+                coverage_record=coverage_record,
+                final_compute_units=support_final_compute_units,
+            )
+            selection_cost_units = (
+                _pipeline_compute_units(pipeline=support_pipeline, epochs=0)
+                + validation_eval_cost
+                + calibration["validation_scoring_cost_tokens"]
+            )
+            candidate_records.append(
+                {
+                    "condition": "support_ramped_compact_induction",
+                    "pipeline": support_pipeline,
+                    "support_utility_score": utility_score,
+                    "validation_precision": calibration["precision"],
+                    "validation_covered_count": calibration["covered"],
+                    "validation_correct_count": calibration["correct"],
+                    "validation_pair_coverage": coverage_record["coverage_pair_coverage"],
+                    "validation_triple_l1_distance": coverage_record["coverage_triple_l1_distance"],
+                    "synthetic_example_count": coverage_record["synthetic_example_count"],
+                    "candidate_compute_units": selection_cost_units,
+                    "final_compute_units": support_final_compute_units,
+                    "min_support": calibration["min_support"],
+                    "min_confidence": calibration["min_confidence"],
+                }
+            )
+            if utility_score >= VALIDATION_SUPPORT_UTILITY_MIN_SCORE:
+                selected_condition = "support_ramped_compact_induction"
+                pipeline = support_pipeline
+            else:
+                selected_condition = "raw_text"
+                pipeline = _build_neural_pipeline(selected_condition, split, world.rules)
+        selection_metric = (
+            "validation_support_expected_utility_precision_coverage_cost_min_"
+            f"{VALIDATION_SUPPORT_UTILITY_MIN_SCORE}"
+        )
+
+    model = TinyMlpClassifier(
+        feature_dimension=feature_dimension,
+        hidden_units=hidden_units,
+        learning_rate=learning_rate,
+    )
+    model.fit(pipeline.examples, epochs=epochs, seed=seed)
+    heldout = model.evaluate(heldout_examples)
+    baseline = majority_baseline(pipeline.examples, heldout_examples)
+    if selected_condition == "support_ramped_compact_induction" and candidate_records:
+        charged_compute_units = pipeline.internal_token_count * epochs + selection_cost_units
+    else:
+        charged_compute_units = _pipeline_compute_units(pipeline=pipeline, epochs=epochs) + selection_cost_units
+    improvement = heldout.accuracy - baseline.accuracy
+    signed_lsd = 1_000_000.0 * improvement / max(1, pipeline.external_event_count * charged_compute_units)
+
+    profile = model.training_profile
+    return {
+        "seed": seed,
+        "condition": VALIDATION_SUPPORT_UTILITY_SELECTOR,
+        "external_events": pipeline.external_event_count,
+        "internal_examples": pipeline.internal_example_count,
+        "internal_tokens": pipeline.internal_token_count,
+        "charged_compute_units": charged_compute_units,
+        "heldout_accuracy": _round(heldout.accuracy),
+        "majority_baseline_accuracy": _round(baseline.accuracy),
+        "accuracy_improvement_over_majority": _round(improvement),
+        "signed_learning_signal_density_per_1m_event_compute": _round(signed_lsd),
+        "neural_parameter_count": profile.parameter_count,
+        "neural_training_step_count": profile.training_step_count,
+        "estimated_neural_training_multiply_adds": profile.estimated_training_multiply_adds,
+        "portfolio_candidate_count": len(candidate_records),
+        "portfolio_selection_cost_units": selection_cost_units,
+        "portfolio_validation_score": _round(utility_score),
+        "portfolio_selected_condition": selected_condition,
+        "portfolio_candidate_conditions": [
+            record["condition"] for record in candidate_records
+        ],
+        "portfolio_selection_metric": selection_metric,
+        "portfolio_proxy_epochs": 0,
+        "portfolio_abstention_extra_correct": 0,
+        "portfolio_abstention_margin": _round(VALIDATION_SUPPORT_UTILITY_MIN_SCORE),
+        "portfolio_raw_text_abstention": 1 if selected_condition == "raw_text" else 0,
+        "portfolio_candidate_summaries": [
+            {
+                "condition": record["condition"],
+                "support_utility_score": _round(record["support_utility_score"]),
+                "validation_precision": _round(record["validation_precision"]),
+                "validation_covered_count": record["validation_covered_count"],
+                "validation_correct_count": record["validation_correct_count"],
+                "validation_pair_coverage": _round(record["validation_pair_coverage"])
+                if record["validation_pair_coverage"] is not None
+                else None,
+                "validation_triple_l1_distance": _round(record["validation_triple_l1_distance"])
+                if record["validation_triple_l1_distance"] is not None
+                else None,
+                "synthetic_example_count": record["synthetic_example_count"],
+                "candidate_compute_units": record["candidate_compute_units"],
+                "final_compute_units": record["final_compute_units"],
+                "min_support": record["min_support"],
+                "min_confidence": _round(record["min_confidence"]),
+            }
+            for record in candidate_records
+        ],
+    }
+
+
 def _run_validation_support_precision_selector(
     seed: int,
     material_count: int,
@@ -1349,6 +1551,15 @@ def run_neural_condition(
             learning_rate=learning_rate,
             use_transition_prior=False,
             selector_condition=VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR,
+        )
+    if condition == VALIDATION_SUPPORT_UTILITY_SELECTOR:
+        return _run_validation_support_utility_selector(
+            seed=seed,
+            material_count=material_count,
+            epochs=epochs,
+            hidden_units=hidden_units,
+            feature_dimension=feature_dimension,
+            learning_rate=learning_rate,
         )
 
     world = build_world(seed=seed, material_count=material_count)

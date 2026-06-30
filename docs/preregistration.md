@@ -147,6 +147,10 @@ is allowed only for train pairs.
 - Reuse-aware selector controls may avoid double-charging selected candidate
   construction only when the artifact explicitly marks that reuse policy and
   still charges unselected candidate inspection.
+- Validation utility selectors must disclose their utility weights, validation
+  label use, validation motif-distribution use, prefilter behavior, and
+  candidate-construction reuse; any validation scan or rejected support
+  candidate must be charged before the final heldout evaluation.
 - The current pilot must mark `neural_model=false`.
 - Tiny neural replication artifacts must mark `neural_model=true`, keep the
   same heldout isolation rules, and report neural parameter count, training

@@ -37,6 +37,11 @@ DEFAULT_SOURCE_ARTIFACTS: tuple[tuple[str, str, Path], ...] = (
         "Support-selector transfer stress",
         Path("results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json"),
     ),
+    (
+        "validation_support_utility",
+        "Validation support-utility selector",
+        Path("results/tiny_neural_budget_sweep_validation_support_utility_f1024.json"),
+    ),
 )
 DEFAULT_OUTPUT_JSON = Path("results/support_selector_error_audit_f1024.json")
 DEFAULT_OUTPUT_MD = Path("results/support_selector_error_audit_f1024.md")
@@ -56,6 +61,7 @@ SELECTOR_CONDITIONS = (
     "support_probe_window_selector",
     "validation_support_precision_selector",
     "validation_support_precision_gate_selector",
+    "validation_support_utility_selector",
 )
 
 CONDITION_LABELS = {
@@ -68,6 +74,7 @@ CONDITION_LABELS = {
     "train_support_density_selector": "Train support-density selector",
     "validation_support_precision_gate_selector": "Validation support-precision gate",
     "validation_support_precision_selector": "Validation support-precision selector",
+    "validation_support_utility_selector": "Validation support-utility selector",
 }
 
 

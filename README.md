@@ -95,6 +95,10 @@ The current pilot is intentionally modest:
   selector. It keeps the compact floor but removes the fixed 400--432 support
   transition, applying the same validation precision threshold everywhere above
   320 train events.
+- `validation_support_utility_selector` is the expected-utility follow-up. It
+  uses a cheap validation-precision prefilter before paying for a
+  validation-label, validation-motif-coverage, and compute-penalized support
+  utility score.
 - `late_confidence_ramped_compact_induction` is a train-only negative/mixed
   control for that tradeoff. It matches support-ramped compact until the train
   split reaches 432 events, then raises induced-label confidence from `0.55` to
@@ -288,6 +292,12 @@ using the same split and accounting discipline.
   1487`. The no-window gate transfers better than the fixed-transition
   validation selector (`0.005936` versus `0.005601` average signed LSD), but the
   simple train-only density-capped raw fallback remains stronger (`0.006115`).
+- `results/tiny_neural_budget_sweep_validation_support_utility_f1024.*` -
+  fresh-seed expected-utility support selector on seeds `1601 1607 1609 1613
+  1619`. The precision prefilter reduces raw-abstention cost and beats raw on
+  average (`0.005473` versus `0.004728` signed LSD), but it still loses to the
+  no-window precision gate (`0.005746`) and density-capped fallback
+  (`0.005721`).
 - `results/support_selector_error_audit_f1024.*` - post-hoc regret ledger over
   the committed high-budget support-selector artifacts. It marks heldout error
   analysis explicitly and does not promote a support selector: on the transfer
@@ -1006,6 +1016,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label f1024_16x8_support_selector_transfer
 ```
 
+Run the 16x8 1024-feature validation support-utility selector:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_utility_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_utility_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1601 1607 1609 1613 1619 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector validation_support_utility_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/support_mechanism_audit_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json \
+  --profile-label f1024_16x8_validation_support_utility
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -1078,6 +1108,12 @@ The repo reports three families of measurements:
   whether support-ramped generated labels became more reliable or broader.
   They did not on the transfer transition rows, so the support ramp should be
   treated as a cost/volume control rather than a reliability mechanism.
+- The validation support-utility selector is a deployable follow-up to that
+  diagnostic: it uses validation labels and validation motif distribution, never
+  heldout or the hidden rulebook, and charges the precision prefilter plus any
+  support-candidate coverage scan. Its first fresh-seed result is negative for
+  promotion because it trails both the precision gate and density-capped
+  fallback on average signed LSD.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 
@@ -1355,6 +1391,13 @@ The current artifacts show a useful split:
   fallback on signed LSD at only 104 materials. The next selector needs a
   utility model that balances expected gain, reliability, coverage, and
   inspection cost.
+- The validation support-utility selector is that next utility attempt, and it
+  is still negative for promotion. On fresh seeds `1601 1607 1609 1613 1619`,
+  the precision prefilter lowers raw-abstention overhead and the selector beats
+  raw on average (`0.005473` versus `0.004728` signed LSD), but it remains below
+  the no-window precision gate (`0.005746`) and density-capped fallback
+  (`0.005721`). The missing term is an expected-gain model, not more reliability
+  or coverage proxies alone.
 
 ## Research Thesis
 

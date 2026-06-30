@@ -4,7 +4,8 @@
     "support_probe_window",
     "validation_support_precision",
     "validation_support_precision_gate",
-    "support_selector_transfer"
+    "support_selector_transfer",
+    "validation_support_utility"
   ],
   "artifact_summaries": {
     "support_probe_window": {
@@ -969,6 +970,280 @@
       ],
       "source_artifact": "results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json",
       "source_generated_at": "2026-06-30T19:51:48Z"
+    },
+    "validation_support_utility": {
+      "best_fixed_simple_condition": "density_capped_compact_induction",
+      "best_fixed_simple_condition_label": "Density-capped compact",
+      "best_fixed_simple_lsd": 0.005721,
+      "best_selector_by_regret": "validation_support_precision_gate_selector",
+      "best_simple_by_material": {
+        "104": {
+          "charged_compute_units": 41888,
+          "condition": "raw_text",
+          "condition_label": "Raw text",
+          "gain": 0.0544,
+          "lsd": 0.003472
+        },
+        "112": {
+          "charged_compute_units": 45248,
+          "condition": "raw_text",
+          "condition_label": "Raw text",
+          "gain": 0.097015,
+          "lsd": 0.005307
+        },
+        "120": {
+          "charged_compute_units": 48384,
+          "condition": "raw_text",
+          "condition_label": "Raw text",
+          "gain": 0.119444,
+          "lsd": 0.005715
+        },
+        "128": {
+          "charged_compute_units": 51520,
+          "condition": "raw_text",
+          "condition_label": "Raw text",
+          "gain": 0.131169,
+          "lsd": 0.005535
+        },
+        "64": {
+          "charged_compute_units": 77335.6,
+          "condition": "compact_train_size_gated_induction",
+          "condition_label": "Compact train-size gated",
+          "gain": 0.142857,
+          "lsd": 0.008032
+        },
+        "80": {
+          "charged_compute_units": 79891.2,
+          "condition": "compact_train_size_gated_induction",
+          "condition_label": "Compact train-size gated",
+          "gain": 0.1875,
+          "lsd": 0.0082
+        },
+        "96": {
+          "charged_compute_units": 38752,
+          "condition": "raw_text",
+          "condition_label": "Raw text",
+          "gain": 0.064348,
+          "lsd": 0.004799
+        }
+      },
+      "display_label": "Validation support-utility selector",
+      "label": "validation_support_utility",
+      "material_counts": [
+        64,
+        80,
+        96,
+        104,
+        112,
+        120,
+        128
+      ],
+      "profile_label": "f1024_16x8_validation_support_utility",
+      "seeds": [
+        1601,
+        1607,
+        1609,
+        1613,
+        1619
+      ],
+      "selector_conditions": [
+        "train_support_density_selector",
+        "support_probe_window_selector",
+        "validation_support_precision_selector",
+        "validation_support_precision_gate_selector",
+        "validation_support_utility_selector"
+      ],
+      "selector_diagnostics": {
+        "support_probe_window_selector": {
+          "average_delta_vs_best_fixed_simple_lsd": -7.5e-05,
+          "average_gain": 0.125321,
+          "average_lsd": 0.005646,
+          "average_regret_vs_best_simple_lsd": 0.00022,
+          "average_selection_cost_units": 1927.3,
+          "beats_best_fixed_simple_average": false,
+          "budget_count": 7,
+          "budgets_beating_best_simple_count": 0,
+          "budgets_tying_best_simple_count": 5,
+          "condition": "support_probe_window_selector",
+          "condition_label": "Support-probe window selector",
+          "local_expected_value_positive": false,
+          "regret_by_material": {
+            "104": 0.000455,
+            "112": 0.001085,
+            "120": 0.0,
+            "128": 0.0,
+            "64": 0.0,
+            "80": 0.0,
+            "96": 0.0
+          },
+          "selected_condition_counts": {
+            "compact_train_size_gated_induction": 10,
+            "raw_text": 15,
+            "support_ramped_compact_induction": 10
+          },
+          "selected_condition_rates": {
+            "compact_train_size_gated_induction": 0.285714,
+            "raw_text": 0.428571,
+            "support_ramped_compact_induction": 0.285714
+          },
+          "total_decisions": 35,
+          "worst_regret_material_count": 112,
+          "worst_regret_vs_best_simple_lsd": 0.001085
+        },
+        "train_support_density_selector": {
+          "average_delta_vs_best_fixed_simple_lsd": -0.001329,
+          "average_gain": 0.136994,
+          "average_lsd": 0.004392,
+          "average_regret_vs_best_simple_lsd": 0.001473,
+          "average_selection_cost_units": 17911.8,
+          "beats_best_fixed_simple_average": false,
+          "budget_count": 7,
+          "budgets_beating_best_simple_count": 0,
+          "budgets_tying_best_simple_count": 0,
+          "condition": "train_support_density_selector",
+          "condition_label": "Train support-density selector",
+          "local_expected_value_positive": false,
+          "regret_by_material": {
+            "104": 0.001007,
+            "112": 0.001894,
+            "120": 0.001712,
+            "128": 0.001586,
+            "64": 0.001293,
+            "80": 0.001234,
+            "96": 0.001587
+          },
+          "selected_condition_counts": {
+            "compact_train_size_gated_induction": 10,
+            "raw_text": 9,
+            "support_ramped_compact_induction": 16
+          },
+          "selected_condition_rates": {
+            "compact_train_size_gated_induction": 0.285714,
+            "raw_text": 0.257143,
+            "support_ramped_compact_induction": 0.457143
+          },
+          "total_decisions": 35,
+          "worst_regret_material_count": 112,
+          "worst_regret_vs_best_simple_lsd": 0.001894
+        },
+        "validation_support_precision_gate_selector": {
+          "average_delta_vs_best_fixed_simple_lsd": 2.5e-05,
+          "average_gain": 0.131706,
+          "average_lsd": 0.005746,
+          "average_regret_vs_best_simple_lsd": 0.000119,
+          "average_selection_cost_units": 1910.0,
+          "beats_best_fixed_simple_average": true,
+          "budget_count": 7,
+          "budgets_beating_best_simple_count": 1,
+          "budgets_tying_best_simple_count": 2,
+          "condition": "validation_support_precision_gate_selector",
+          "condition_label": "Validation support-precision gate",
+          "local_expected_value_positive": false,
+          "regret_by_material": {
+            "104": -0.000543,
+            "112": 0.000461,
+            "120": 0.000249,
+            "128": 0.000426,
+            "64": 0.0,
+            "80": 0.0,
+            "96": 0.000243
+          },
+          "selected_condition_counts": {
+            "compact_train_size_gated_induction": 10,
+            "raw_text": 15,
+            "support_ramped_compact_induction": 10
+          },
+          "selected_condition_rates": {
+            "compact_train_size_gated_induction": 0.285714,
+            "raw_text": 0.428571,
+            "support_ramped_compact_induction": 0.285714
+          },
+          "total_decisions": 35,
+          "worst_regret_material_count": 112,
+          "worst_regret_vs_best_simple_lsd": 0.000461
+        },
+        "validation_support_precision_selector": {
+          "average_delta_vs_best_fixed_simple_lsd": -6.4e-05,
+          "average_gain": 0.133412,
+          "average_lsd": 0.005657,
+          "average_regret_vs_best_simple_lsd": 0.000209,
+          "average_selection_cost_units": 1533.6,
+          "beats_best_fixed_simple_average": false,
+          "budget_count": 7,
+          "budgets_beating_best_simple_count": 1,
+          "budgets_tying_best_simple_count": 2,
+          "condition": "validation_support_precision_selector",
+          "condition_label": "Validation support-precision selector",
+          "local_expected_value_positive": false,
+          "regret_by_material": {
+            "104": -0.000543,
+            "112": 0.001085,
+            "120": 0.000249,
+            "128": 0.000426,
+            "64": 0.0,
+            "80": 0.0,
+            "96": 0.000243
+          },
+          "selected_condition_counts": {
+            "compact_train_size_gated_induction": 10,
+            "raw_text": 12,
+            "support_ramped_compact_induction": 13
+          },
+          "selected_condition_rates": {
+            "compact_train_size_gated_induction": 0.285714,
+            "raw_text": 0.342857,
+            "support_ramped_compact_induction": 0.371429
+          },
+          "total_decisions": 35,
+          "worst_regret_material_count": 112,
+          "worst_regret_vs_best_simple_lsd": 0.001085
+        },
+        "validation_support_utility_selector": {
+          "average_delta_vs_best_fixed_simple_lsd": -0.000248,
+          "average_gain": 0.113571,
+          "average_lsd": 0.005473,
+          "average_regret_vs_best_simple_lsd": 0.000392,
+          "average_selection_cost_units": 4384.1,
+          "beats_best_fixed_simple_average": false,
+          "budget_count": 7,
+          "budgets_beating_best_simple_count": 0,
+          "budgets_tying_best_simple_count": 2,
+          "condition": "validation_support_utility_selector",
+          "condition_label": "Validation support-utility selector",
+          "local_expected_value_positive": false,
+          "regret_by_material": {
+            "104": 0.000335,
+            "112": 0.00061,
+            "120": 0.000639,
+            "128": 0.000426,
+            "64": 0.0,
+            "80": 0.0,
+            "96": 0.000736
+          },
+          "selected_condition_counts": {
+            "compact_train_size_gated_induction": 10,
+            "raw_text": 24,
+            "support_ramped_compact_induction": 1
+          },
+          "selected_condition_rates": {
+            "compact_train_size_gated_induction": 0.285714,
+            "raw_text": 0.685714,
+            "support_ramped_compact_induction": 0.028571
+          },
+          "total_decisions": 35,
+          "worst_regret_material_count": 96,
+          "worst_regret_vs_best_simple_lsd": 0.000736
+        }
+      },
+      "simple_comparator_conditions": [
+        "raw_text",
+        "compact_train_size_gated_induction",
+        "support_ramped_compact_induction",
+        "density_window_compact_induction",
+        "density_capped_compact_induction"
+      ],
+      "source_artifact": "results/tiny_neural_budget_sweep_validation_support_utility_f1024.json",
+      "source_generated_at": "2026-06-30T22:35:19Z"
     }
   },
   "claim_scope": {
@@ -981,7 +1256,7 @@
     "synthetic_domain": true,
     "uses_committed_fresh_seed_artifacts": true
   },
-  "generated_at": "2026-06-30T21:40:49Z",
+  "generated_at": "2026-06-30T22:36:27Z",
   "metric": "signed_learning_signal_density_per_1m_event_compute_mean",
   "recommendation": {
     "next_selector_requirement": "A future selector should be evaluated as an expected-value-of-information policy and should beat density-capped or raw fallback on fresh transfer seeds.",
@@ -998,12 +1273,13 @@
     "train_support_density_selector",
     "support_probe_window_selector",
     "validation_support_precision_selector",
-    "validation_support_precision_gate_selector"
+    "validation_support_precision_gate_selector",
+    "validation_support_utility_selector"
   ],
   "selector_cross_artifact_summary": {
     "support_probe_window_selector": {
       "condition_label": "Support-probe window selector",
-      "mean_average_regret_vs_best_simple_lsd": 0.000336,
+      "mean_average_regret_vs_best_simple_lsd": 0.000313,
       "positive_expected_value_source_count": 0,
       "rows": [
         {
@@ -1033,13 +1309,20 @@
           "average_regret_vs_best_simple_lsd": 0.000512,
           "budget_count": 7,
           "budgets_beating_best_simple_count": 0
+        },
+        {
+          "artifact": "validation_support_utility",
+          "average_lsd": 0.005646,
+          "average_regret_vs_best_simple_lsd": 0.00022,
+          "budget_count": 7,
+          "budgets_beating_best_simple_count": 0
         }
       ],
-      "source_count": 4
+      "source_count": 5
     },
     "train_support_density_selector": {
       "condition_label": "Train support-density selector",
-      "mean_average_regret_vs_best_simple_lsd": 0.001395,
+      "mean_average_regret_vs_best_simple_lsd": 0.001408,
       "positive_expected_value_source_count": 0,
       "rows": [
         {
@@ -1076,13 +1359,20 @@
           "average_regret_vs_best_simple_lsd": 0.002087,
           "budget_count": 7,
           "budgets_beating_best_simple_count": 0
+        },
+        {
+          "artifact": "validation_support_utility",
+          "average_lsd": 0.004392,
+          "average_regret_vs_best_simple_lsd": 0.001473,
+          "budget_count": 7,
+          "budgets_beating_best_simple_count": 0
         }
       ],
-      "source_count": 5
+      "source_count": 6
     },
     "validation_support_precision_gate_selector": {
       "condition_label": "Validation support-precision gate",
-      "mean_average_regret_vs_best_simple_lsd": 0.000253,
+      "mean_average_regret_vs_best_simple_lsd": 0.000208,
       "positive_expected_value_source_count": 0,
       "rows": [
         {
@@ -1098,13 +1388,20 @@
           "average_regret_vs_best_simple_lsd": 0.000496,
           "budget_count": 7,
           "budgets_beating_best_simple_count": 1
+        },
+        {
+          "artifact": "validation_support_utility",
+          "average_lsd": 0.005746,
+          "average_regret_vs_best_simple_lsd": 0.000119,
+          "budget_count": 7,
+          "budgets_beating_best_simple_count": 1
         }
       ],
-      "source_count": 2
+      "source_count": 3
     },
     "validation_support_precision_selector": {
       "condition_label": "Validation support-precision selector",
-      "mean_average_regret_vs_best_simple_lsd": 0.000254,
+      "mean_average_regret_vs_best_simple_lsd": 0.000243,
       "positive_expected_value_source_count": 1,
       "rows": [
         {
@@ -1127,9 +1424,31 @@
           "average_regret_vs_best_simple_lsd": 0.000831,
           "budget_count": 7,
           "budgets_beating_best_simple_count": 1
+        },
+        {
+          "artifact": "validation_support_utility",
+          "average_lsd": 0.005657,
+          "average_regret_vs_best_simple_lsd": 0.000209,
+          "budget_count": 7,
+          "budgets_beating_best_simple_count": 1
         }
       ],
-      "source_count": 3
+      "source_count": 4
+    },
+    "validation_support_utility_selector": {
+      "condition_label": "Validation support-utility selector",
+      "mean_average_regret_vs_best_simple_lsd": 0.000392,
+      "positive_expected_value_source_count": 0,
+      "rows": [
+        {
+          "artifact": "validation_support_utility",
+          "average_lsd": 0.005473,
+          "average_regret_vs_best_simple_lsd": 0.000392,
+          "budget_count": 7,
+          "budgets_beating_best_simple_count": 0
+        }
+      ],
+      "source_count": 1
     }
   },
   "simple_comparator_conditions": [
@@ -1144,7 +1463,8 @@
     "results/tiny_neural_budget_sweep_support_probe_window_f1024.json",
     "results/tiny_neural_budget_sweep_validation_support_precision_f1024.json",
     "results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json",
-    "results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json"
+    "results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json",
+    "results/tiny_neural_budget_sweep_validation_support_utility_f1024.json"
   ],
   "title": "Learning Signal Density Support-selector Error Audit"
 }

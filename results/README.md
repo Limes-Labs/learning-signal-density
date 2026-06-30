@@ -813,6 +813,33 @@ define the error ledger. The transfer block remains negative for promotion: the
 least-regret gate has `0.000496` average regret versus the best simple
 comparator and wins only `1/7` budgets.
 
+Run the validation support-utility selector follow-up:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_utility_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_utility_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1601 1607 1609 1613 1619 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector validation_support_utility_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/support_mechanism_audit_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json \
+  --profile-label f1024_16x8_validation_support_utility
+```
+
+The utility follow-up uses a validation-precision prefilter before paying for a
+validation-label, validation-motif-coverage, and compute-penalized support
+score. The prefilter improves accounting versus the first utility attempt, but
+the fresh-seed result remains negative for promotion: `0.005473` average signed
+LSD versus `0.005746` for the no-window precision gate and `0.005721` for the
+density-capped fallback.
+
 Build the post-hoc support-ramp mechanism audit:
 
 ```bash

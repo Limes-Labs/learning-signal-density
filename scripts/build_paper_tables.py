@@ -65,6 +65,9 @@ VALIDATION_SUPPORT_PRECISION_ARTIFACT = Path(
 VALIDATION_SUPPORT_PRECISION_GATE_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json"
 )
+VALIDATION_SUPPORT_UTILITY_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_validation_support_utility_f1024.json"
+)
 SUPPORT_SELECTOR_TRANSFER_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json"
 )
@@ -115,6 +118,7 @@ CONDITION_LABELS = {
     "validation_ranked_induction": "Validation-ranked",
     "validation_support_precision_gate_selector": "Validation support-precision gate",
     "validation_support_precision_selector": "Validation support-precision selector",
+    "validation_support_utility_selector": "Validation support-utility selector",
 }
 
 
@@ -452,6 +456,42 @@ def validate_validation_support_precision_gate_scope(artifact_path: Path, artifa
         raise ValueError(f"{artifact_path} must not use oracle labels for the validation gate")
 
 
+def validate_validation_support_utility_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    if artifact.get("seeds") != [1601, 1607, 1609, 1613, 1619]:
+        raise ValueError(f"{artifact_path} must use the preregistered utility fresh-seed block")
+    if artifact.get("confirmation_of") != str(SUPPORT_MECHANISM_AUDIT_ARTIFACT):
+        raise ValueError(f"{artifact_path} must identify the mechanism audit it follows")
+    if artifact.get("comparison_of") != str(SUPPORT_SELECTOR_TRANSFER_ARTIFACT):
+        raise ValueError(f"{artifact_path} must identify the transfer comparison artifact")
+    scope = artifact.get("condition_scope", {}).get("validation_support_utility_selector", {})
+    if scope.get("train_only_selection") is not False:
+        raise ValueError(f"{artifact_path} must mark validation-based support selection")
+    if scope.get("train_only_induction") is not True:
+        raise ValueError(f"{artifact_path} must keep induction train-only")
+    if scope.get("validation_used_for_policy_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation policy selection")
+    if scope.get("validation_used_for_transform_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation transform selection")
+    if scope.get("validation_labels_used_for_policy_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation-label use")
+    if scope.get("validation_motif_distribution_used_for_policy_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation-motif use")
+    if scope.get("validation_support_utility_selector") is not True:
+        raise ValueError(f"{artifact_path} must mark the validation support-utility selector")
+    if scope.get("validation_support_utility_min_score") != 0.0:
+        raise ValueError(f"{artifact_path} must disclose the utility score floor")
+    if scope.get("validation_support_utility_pair_coverage_weight") != 0.25:
+        raise ValueError(f"{artifact_path} must disclose the pair-coverage weight")
+    if scope.get("validation_support_utility_triple_l1_weight") != 0.20:
+        raise ValueError(f"{artifact_path} must disclose the triple-L1 weight")
+    if scope.get("validation_support_utility_compute_penalty") != 0.000001:
+        raise ValueError(f"{artifact_path} must disclose the compute penalty")
+    if scope.get("reuse_selected_candidate_construction") is not True:
+        raise ValueError(f"{artifact_path} must disclose selected-candidate reuse")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the utility selector")
+
+
 def validate_support_selector_transfer_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     if artifact.get("seeds") != [1459, 1471, 1481, 1483, 1487]:
         raise ValueError(f"{artifact_path} must use the preregistered transfer seed block")
@@ -625,6 +665,7 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "validation_support_precision_gate": load_json(
             repo_root / VALIDATION_SUPPORT_PRECISION_GATE_ARTIFACT
         ),
+        "validation_support_utility": load_json(repo_root / VALIDATION_SUPPORT_UTILITY_ARTIFACT),
         "support_selector_transfer": load_json(repo_root / SUPPORT_SELECTOR_TRANSFER_ARTIFACT),
         "support_selector_error_audit": load_json(repo_root / SUPPORT_SELECTOR_ERROR_AUDIT_ARTIFACT),
         "support_mechanism_audit": load_json(repo_root / SUPPORT_MECHANISM_AUDIT_ARTIFACT),
@@ -719,6 +760,14 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_validation_support_precision_gate_scope(
         VALIDATION_SUPPORT_PRECISION_GATE_ARTIFACT,
         artifacts["validation_support_precision_gate"],
+    )
+    validate_claim_scope(
+        VALIDATION_SUPPORT_UTILITY_ARTIFACT,
+        artifacts["validation_support_utility"],
+    )
+    validate_validation_support_utility_scope(
+        VALIDATION_SUPPORT_UTILITY_ARTIFACT,
+        artifacts["validation_support_utility"],
     )
     validate_claim_scope(SUPPORT_SELECTOR_TRANSFER_ARTIFACT, artifacts["support_selector_transfer"])
     validate_support_selector_transfer_scope(
@@ -1732,6 +1781,90 @@ def build_validation_support_precision_gate_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_validation_support_utility_selector_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["validation_support_utility"]
+    simple_conditions = (
+        "raw_text",
+        "compact_train_size_gated_induction",
+        "support_ramped_compact_induction",
+        "density_window_compact_induction",
+        "density_capped_compact_induction",
+    )
+    materials = ("96", "104", "112", "120", "128")
+    all_materials = [str(material) for material in artifact["material_counts"]]
+
+    def lsd(material: str, condition: str) -> float:
+        return artifact["budgets"][material][condition][
+            "signed_learning_signal_density_per_1m_event_compute_mean"
+        ]
+
+    utility_average = sum(lsd(material, "validation_support_utility_selector") for material in all_materials) / len(
+        all_materials
+    )
+    gate_average = sum(lsd(material, "validation_support_precision_gate_selector") for material in all_materials) / len(
+        all_materials
+    )
+    density_average = sum(lsd(material, "density_capped_compact_induction") for material in all_materials) / len(
+        all_materials
+    )
+    utility_regrets = [
+        max(lsd(material, condition) for condition in simple_conditions)
+        - lsd(material, "validation_support_utility_selector")
+        for material in all_materials
+    ]
+    utility_average_regret = sum(utility_regrets) / len(utility_regrets)
+
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Validation support-utility selector on fresh seeds 1601, 1607, 1609, 1613, and 1619. This follow-up adds a cheap validation-precision prefilter before a validation precision, motif coverage, and compute-cost utility score for support-ramped compact induction. The prefilter lowers raw-abstention cost, but the utility selector still loses average signed density to the no-window precision gate and the density-capped simple fallback.}",
+        r"\label{tab:validation-support-utility-selector}",
+        r"\small",
+        r"\setlength{\tabcolsep}{2pt}",
+        r"\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{0.22\linewidth}rrrr@{}}",
+        r"\toprule",
+        r"Budget & Utility choices & Utility LSD & Gate LSD & Density cap & Utility regret \\",
+        r"\midrule",
+        " & ".join(
+            [
+                "Avg.",
+                "--",
+                fmt_float(utility_average, digits=6),
+                fmt_float(gate_average, digits=6),
+                fmt_float(density_average, digits=6),
+                fmt_float(utility_average_regret, digits=6),
+            ]
+        )
+        + r" \\",
+    ]
+    for material in materials:
+        utility = artifact["budgets"][material]["validation_support_utility_selector"]
+        utility_regret = (
+            max(lsd(material, condition) for condition in simple_conditions)
+            - lsd(material, "validation_support_utility_selector")
+        )
+        row = [
+            material,
+            latex_escape(fmt_selection_counts(utility["portfolio_selected_condition_counts"])),
+            fmt_float(
+                utility["signed_learning_signal_density_per_1m_event_compute_mean"],
+                digits=6,
+            ),
+            fmt_float(
+                lsd(material, "validation_support_precision_gate_selector"),
+                digits=6,
+            ),
+            fmt_float(
+                lsd(material, "density_capped_compact_induction"),
+                digits=6,
+            ),
+            fmt_float(utility_regret, digits=6),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def build_support_selector_transfer_table(repo_root: Path) -> str:
     artifact = load_supporting_artifacts(repo_root)["support_selector_transfer"]
     conditions = (
@@ -1906,6 +2039,7 @@ def render_tables(repo_root: Path) -> str:
             build_support_probe_window_selector_table(repo_root),
             build_validation_support_precision_selector_table(repo_root),
             build_validation_support_precision_gate_table(repo_root),
+            build_validation_support_utility_selector_table(repo_root),
             build_support_selector_transfer_table(repo_root),
             build_support_selector_error_audit_table(repo_root),
             build_support_mechanism_audit_table(repo_root),

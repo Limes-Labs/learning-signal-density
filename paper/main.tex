@@ -182,6 +182,11 @@ one final tiny MLP.
 The latest coverage-prior control then adds a 96-train-event raw-text floor,
 prunes the coverage scan to a lean candidate set, and adds a small charged
 compute penalty to the validation-motif coverage score.
+The latest support-utility control applies the same expected-value framing to
+the high-budget support boundary: a cheap validation-precision prefilter runs
+before any support-candidate coverage scan, then a validation precision,
+validation motif-coverage, and compute-penalized utility score decides whether
+support-ramped compact induction is worth its cost.
 The latest train-only follow-up then lowers the sample-aware mid-budget
 synthetic ratio from 0.75 to 0.50 to test whether fewer generated labels repair
 the same failure without validation selection.
@@ -229,6 +234,7 @@ Table~\ref{tab:train-support-density-selector},
 Table~\ref{tab:support-probe-window-selector},
 Table~\ref{tab:validation-support-precision-selector},
 Table~\ref{tab:validation-support-precision-gate},
+Table~\ref{tab:validation-support-utility-selector},
 Table~\ref{tab:support-selector-transfer},
 Table~\ref{tab:support-selector-error-audit},
 Table~\ref{tab:support-mechanism-audit}, and
@@ -497,6 +503,18 @@ while the fixed-transition selector and support-ramped compact reach 0.005864.
 The fixed transition prior is therefore carrying real information in this
 frontier, even though it is not a final adaptive solution.
 
+Table~\ref{tab:validation-support-utility-selector} tests the first explicit
+expected-utility repair after the mechanism audit. The selector uses a cheap
+validation-precision prefilter before paying for support-candidate coverage;
+if the prefilter passes, it combines validation precision, validation motif
+coverage, and a compute penalty into a support utility score. On fresh seeds
+1601, 1607, 1609, 1613, and 1619, the prefilter reduces raw-abstention cost and
+the selector beats raw text on average, 0.005473 versus 0.004728 signed LSD.
+It is still not a promoted selector. The no-window precision gate reaches
+0.005746 average signed LSD, and the density-capped simple fallback reaches
+0.005721. The utility score helps accounting but does not yet predict expected
+heldout gain well enough.
+
 Table~\ref{tab:support-selector-transfer} reruns the support-selector family on
 fresh seeds 1459, 1471, 1481, 1483, and 1487 after the fixed-transition selector
 and no-window gate have both been developed. The no-window gate transfers better
@@ -626,6 +644,12 @@ reliability or motif coverage that the selector needs. It mostly reduces the
 synthetic set. The next experiment should therefore estimate when that reduced
 set is worth its opportunity cost, rather than simply raising the support
 threshold again.
+The validation support-utility follow-up in
+Table~\ref{tab:validation-support-utility-selector} is the first direct test of
+that idea, and it remains negative for promotion. Precision, validation motif
+coverage, and a small compute penalty can reduce wasted support scans, but they
+still do not estimate the expected heldout gain of support-ramped compact well
+enough to beat the simpler precision gate or density-capped fallback.
 The next selector should be evaluated as an expected-value-of-information
 problem: inspect or validate only when the anticipated gain over the raw or
 density-capped fallback exceeds the charged cost of obtaining that evidence.
