@@ -10,14 +10,17 @@ from statistics import mean
 
 from .domain import Observation, build_world, split_observations
 from .experiment import DEFAULT_SEEDS, _pipeline_compute_units, _round
+from .induction import fit_induced_rule_model
 from .learner import PerceptronClassifier, majority_baseline
 from .neural import TinyMlpClassifier
 from .pipelines import (
     CONDITION_SCOPE,
     PipelineExamples,
     TrainingExample,
+    _support_ramped_compact_ranked_policy,
     build_evaluation_examples,
     build_pipeline_examples,
+    raw_observation_example,
 )
 
 
@@ -40,6 +43,7 @@ VALIDATION_COVERAGE_PROXY_SELECTOR = "validation_coverage_proxy_selector"
 VALIDATION_COVERAGE_PRIOR_SELECTOR = "validation_coverage_prior_selector"
 TRAIN_SUPPORT_DENSITY_SELECTOR = "train_support_density_selector"
 SUPPORT_PROBE_WINDOW_SELECTOR = "support_probe_window_selector"
+VALIDATION_SUPPORT_PRECISION_SELECTOR = "validation_support_precision_selector"
 VALIDATION_PORTFOLIO_CANDIDATES = (
     "raw_text",
     "self_ranked_induction",
@@ -69,6 +73,10 @@ TRAIN_SUPPORT_DENSITY_MIN_KEPT_PER_COMPUTE = 0.00145
 SUPPORT_PROBE_RAW_MIN_EVENTS = 320
 SUPPORT_PROBE_MIN_EVENTS = 360
 SUPPORT_PROBE_MAX_EVENTS = 432
+VALIDATION_SUPPORT_PRECISION_COMPACT_MAX_EVENTS = 320
+VALIDATION_SUPPORT_PRECISION_TRANSITION_MIN_EVENTS = 400
+VALIDATION_SUPPORT_PRECISION_TRANSITION_MAX_EVENTS = 432
+VALIDATION_SUPPORT_PRECISION_THRESHOLD = 0.825758
 GENERATED_SOURCE_KINDS = frozenset({
     "agreement_gated_self_ranked_induced",
     "compact_diverse_sample_aware_self_ranked_induced",
@@ -142,6 +150,22 @@ SUPPORT_PROBE_WINDOW_SCOPE = {
     "support_density_min_kept_per_compute": TRAIN_SUPPORT_DENSITY_MIN_KEPT_PER_COMPUTE,
     "reuse_selected_candidate_construction": True,
 }
+VALIDATION_SUPPORT_PRECISION_SCOPE = {
+    "oracle_generated_labels": False,
+    "train_only_selection": False,
+    "train_only_induction": True,
+    "validation_used_for_threshold": True,
+    "validation_used_for_transform_selection": True,
+    "validation_used_for_policy_selection": True,
+    "compact_original_encoding_at_large_samples": True,
+    "validation_support_precision_selector": True,
+    "validation_support_precision_threshold": VALIDATION_SUPPORT_PRECISION_THRESHOLD,
+    "validation_support_compact_max_train_events": VALIDATION_SUPPORT_PRECISION_COMPACT_MAX_EVENTS,
+    "validation_support_transition_min_train_events": VALIDATION_SUPPORT_PRECISION_TRANSITION_MIN_EVENTS,
+    "validation_support_transition_max_train_events": VALIDATION_SUPPORT_PRECISION_TRANSITION_MAX_EVENTS,
+    "support_density_min_kept_per_compute": TRAIN_SUPPORT_DENSITY_MIN_KEPT_PER_COMPUTE,
+    "reuse_selected_candidate_construction": True,
+}
 VALIDATION_SELECTOR_CONDITIONS = frozenset({
     VALIDATION_ABSTAINING_PROXY_SELECTOR,
     VALIDATION_COVERAGE_PRIOR_SELECTOR,
@@ -150,6 +174,7 @@ VALIDATION_SELECTOR_CONDITIONS = frozenset({
     VALIDATION_LINEAR_PROXY_SELECTOR,
     TRAIN_SUPPORT_DENSITY_SELECTOR,
     SUPPORT_PROBE_WINDOW_SELECTOR,
+    VALIDATION_SUPPORT_PRECISION_SELECTOR,
 })
 
 UNSUPPORTED_NEURAL_CONDITIONS = frozenset({
@@ -208,6 +233,8 @@ def neural_condition_scope(condition: str) -> dict:
         return TRAIN_SUPPORT_DENSITY_SCOPE
     if condition == SUPPORT_PROBE_WINDOW_SELECTOR:
         return SUPPORT_PROBE_WINDOW_SCOPE
+    if condition == VALIDATION_SUPPORT_PRECISION_SELECTOR:
+        return VALIDATION_SUPPORT_PRECISION_SCOPE
     return CONDITION_SCOPE[condition]
 
 
@@ -1068,6 +1095,149 @@ def _run_support_probe_window_selector(
     }
 
 
+def _validation_support_precision_calibration(split) -> dict:
+    min_support, min_confidence, _ = _support_ramped_compact_ranked_policy(split.train)
+    model = fit_induced_rule_model(split.train)
+    modeling_cost_tokens = sum(raw_observation_example(item).token_count for item in split.train)
+    validation_scoring_cost_tokens = sum(
+        raw_observation_example(item).token_count for item in split.validation
+    )
+
+    covered = 0
+    correct = 0
+    for item in split.validation:
+        prediction = model.predict(item.family, item.stimulus, item.modifier)
+        if prediction.support < min_support or prediction.confidence < min_confidence:
+            continue
+        covered += 1
+        correct += int(prediction.label == item.label)
+
+    precision = (correct + 1) / (covered + 2) if covered else 0.5
+    return {
+        "precision": precision,
+        "covered": covered,
+        "correct": correct,
+        "min_support": min_support,
+        "min_confidence": min_confidence,
+        "modeling_cost_tokens": modeling_cost_tokens,
+        "validation_scoring_cost_tokens": validation_scoring_cost_tokens,
+    }
+
+
+def _run_validation_support_precision_selector(
+    seed: int,
+    material_count: int,
+    epochs: int,
+    hidden_units: int,
+    feature_dimension: int,
+    learning_rate: float,
+) -> dict:
+    world = build_world(seed=seed, material_count=material_count)
+    split = split_observations(world.observations)
+    heldout_examples = build_evaluation_examples(split.heldout)
+
+    train_event_count = len(split.train)
+    candidate_records: list[dict] = []
+    validation_score = 0.0
+    selection_cost_units = 0
+    selected_condition: str
+    selection_metric: str
+
+    if train_event_count < VALIDATION_SUPPORT_PRECISION_COMPACT_MAX_EVENTS:
+        selected_condition = "compact_train_size_gated_induction"
+        pipeline = _build_neural_pipeline(selected_condition, split, world.rules)
+        selection_metric = "validation_support_precision_compact_below_calibration_floor"
+    elif (
+        VALIDATION_SUPPORT_PRECISION_TRANSITION_MIN_EVENTS
+        <= train_event_count
+        < VALIDATION_SUPPORT_PRECISION_TRANSITION_MAX_EVENTS
+    ):
+        selected_condition = "support_ramped_compact_induction"
+        pipeline = _build_neural_pipeline(selected_condition, split, world.rules)
+        selection_metric = "validation_support_precision_transition_prior_support"
+    else:
+        calibration = _validation_support_precision_calibration(split)
+        validation_score = calibration["precision"]
+        support_by_precision = validation_score >= VALIDATION_SUPPORT_PRECISION_THRESHOLD
+        selected_condition = "support_ramped_compact_induction" if support_by_precision else "raw_text"
+        pipeline = _build_neural_pipeline(selected_condition, split, world.rules)
+        if selected_condition == "support_ramped_compact_induction":
+            selection_cost_units = calibration["validation_scoring_cost_tokens"]
+        else:
+            selection_cost_units = (
+                calibration["modeling_cost_tokens"]
+                + calibration["validation_scoring_cost_tokens"]
+            )
+        selection_metric = (
+            "validation_support_precision_min_"
+            f"{VALIDATION_SUPPORT_PRECISION_THRESHOLD}_eligible_prediction_precision"
+        )
+        candidate_records.append(
+            {
+                "condition": "support_ramped_compact_induction",
+                "validation_precision": validation_score,
+                "validation_covered_count": calibration["covered"],
+                "validation_correct_count": calibration["correct"],
+                "candidate_compute_units": selection_cost_units,
+                "min_support": calibration["min_support"],
+                "min_confidence": calibration["min_confidence"],
+            }
+        )
+
+    model = TinyMlpClassifier(
+        feature_dimension=feature_dimension,
+        hidden_units=hidden_units,
+        learning_rate=learning_rate,
+    )
+    model.fit(pipeline.examples, epochs=epochs, seed=seed)
+    heldout = model.evaluate(heldout_examples)
+    baseline = majority_baseline(pipeline.examples, heldout_examples)
+    charged_compute_units = _pipeline_compute_units(pipeline=pipeline, epochs=epochs) + selection_cost_units
+    improvement = heldout.accuracy - baseline.accuracy
+    signed_lsd = 1_000_000.0 * improvement / max(1, pipeline.external_event_count * charged_compute_units)
+
+    profile = model.training_profile
+    return {
+        "seed": seed,
+        "condition": VALIDATION_SUPPORT_PRECISION_SELECTOR,
+        "external_events": pipeline.external_event_count,
+        "internal_examples": pipeline.internal_example_count,
+        "internal_tokens": pipeline.internal_token_count,
+        "charged_compute_units": charged_compute_units,
+        "heldout_accuracy": _round(heldout.accuracy),
+        "majority_baseline_accuracy": _round(baseline.accuracy),
+        "accuracy_improvement_over_majority": _round(improvement),
+        "signed_learning_signal_density_per_1m_event_compute": _round(signed_lsd),
+        "neural_parameter_count": profile.parameter_count,
+        "neural_training_step_count": profile.training_step_count,
+        "estimated_neural_training_multiply_adds": profile.estimated_training_multiply_adds,
+        "portfolio_candidate_count": len(candidate_records),
+        "portfolio_selection_cost_units": selection_cost_units,
+        "portfolio_validation_score": _round(validation_score),
+        "portfolio_selected_condition": selected_condition,
+        "portfolio_candidate_conditions": [
+            record["condition"] for record in candidate_records
+        ],
+        "portfolio_selection_metric": selection_metric,
+        "portfolio_proxy_epochs": 0,
+        "portfolio_abstention_extra_correct": 0,
+        "portfolio_abstention_margin": _round(VALIDATION_SUPPORT_PRECISION_THRESHOLD),
+        "portfolio_raw_text_abstention": 1 if selected_condition == "raw_text" else 0,
+        "portfolio_candidate_summaries": [
+            {
+                "condition": record["condition"],
+                "validation_precision": _round(record["validation_precision"]),
+                "validation_covered_count": record["validation_covered_count"],
+                "validation_correct_count": record["validation_correct_count"],
+                "candidate_compute_units": record["candidate_compute_units"],
+                "min_support": record["min_support"],
+                "min_confidence": _round(record["min_confidence"]),
+            }
+            for record in candidate_records
+        ],
+    }
+
+
 def run_neural_condition(
     seed: int,
     condition: str,
@@ -1135,6 +1305,15 @@ def run_neural_condition(
         )
     if condition == SUPPORT_PROBE_WINDOW_SELECTOR:
         return _run_support_probe_window_selector(
+            seed=seed,
+            material_count=material_count,
+            epochs=epochs,
+            hidden_units=hidden_units,
+            feature_dimension=feature_dimension,
+            learning_rate=learning_rate,
+        )
+    if condition == VALIDATION_SUPPORT_PRECISION_SELECTOR:
+        return _run_validation_support_precision_selector(
             seed=seed,
             material_count=material_count,
             epochs=epochs,

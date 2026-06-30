@@ -708,5 +708,38 @@ selector chooses support, but raw/density-capped is denser (`0.007103` versus
 denser (`0.004240` versus `0.003588`). The artifact isolates accounting reuse
 from the harder policy-selection problem.
 
+16x8 1024-feature validation support-precision selector:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_precision_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_precision_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1259 1277 1279 1283 1289 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_support_probe_window_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_support_probe_window_f1024.json \
+  --profile-label f1024_16x8_validation_support_precision
+```
+
+The validation support-precision selector keeps the compact floor below 320
+train events and the fixed 400--432 support transition, then uses validation
+labels only outside that fixed transition to estimate eligible induced-prediction
+precision before choosing support-ramped compact or raw text. On seeds `1259
+1277 1279 1283 1289`, it improves the raw/support boundary at 96 materials
+(`0.004198` signed LSD versus `0.002075` for support-probe/raw) and at 104
+materials (`0.004455` versus `0.004331` for support-probe/support-ramped). The
+average signed LSD across 64--128 materials is `0.006138`, above the
+support-probe window's `0.005941`, but the misses remain visible: at 120
+materials raw/support-probe reaches `0.006246` while the selector reaches
+`0.005723`, and at 128 raw reaches `0.005206` while the selector reaches
+`0.004866`.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

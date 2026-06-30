@@ -65,6 +65,11 @@ internal processing cost.
   the 360--432 train-event support-probe window, and inside the window inspects
   only support-ramped compact induction before training the selected final tiny
   MLP.
+- `validation_support_precision_selector`: a validation-calibrated high-budget
+  support/raw selector. It keeps compact induction below 320 train events, keeps
+  support-ramped compact in the fixed 400--432 train-event transition, and
+  otherwise uses validation labels only to estimate eligible induced-prediction
+  precision before selecting support-ramped compact or raw text.
 - `mdl_rule_expansion`: train-only empirical rules are scored on validation
   with a description-length penalty, then only selected compact rules are used
   for counterfactual generation.

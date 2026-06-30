@@ -97,6 +97,9 @@ dynamically, with candidate inspection charged before final training.
 A reuse-aware support-probe window control then tests the value-of-information
 version: only inspect support-ramped compact inside a narrow train-event window
 and reuse the selected candidate construction rather than charging it twice.
+A validation support-precision selector then tests whether a cheap validation
+label calibration can override the raw/support choice outside the fixed
+transition band without training candidate neural models.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -281,6 +284,13 @@ and reuse the selected candidate construction rather than charging it twice.
   at 112 and support-ramped reaches `0.004240` at 120. The next useful selector
   needs a train-only utility signal that can override the fixed window when the
   local evidence changes.
+- Treat cheap validation calibration as partial boundary progress. On fresh
+  seeds `1259 1277 1279 1283 1289`, the validation support-precision selector
+  improves the 96-material row to `0.004198` signed LSD and the 104-material row
+  to `0.004455`, lifting average signed LSD across 64--128 materials to
+  `0.006138` versus `0.005941` for the support-probe window. It is still mixed:
+  validation false positives lower density at 120 and 128, so the result is a
+  useful boundary selector, not a solved adaptive policy.
 
 ## Phase 3: Continual-Learning Replay
 

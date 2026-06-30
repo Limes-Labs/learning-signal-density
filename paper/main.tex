@@ -52,11 +52,11 @@ the compact density frontier, separating candidate-order coverage from
 representation cost. A high-budget density cap then shows the frontier can
 switch back to raw text once external evidence is abundant, trading absolute
 gain for better learning-signal density. Support-ramped, fixed-window,
-train-support-density, and reuse-aware support-probe follow-ups expose the
-remaining selector problem: local transition windows can improve one
-high-budget density row, while a train-only selector can choose plausible
-candidates but lose its advantage to charged inspection overhead or fixed-window
-errors.
+train-support-density, reuse-aware support-probe, and validation-calibrated
+support-precision follow-ups expose the remaining selector problem: local
+transition windows can improve boundary rows, and cheap validation calibration
+can improve the average high-budget frontier, but late false positives and
+inspection cost still prevent a solved adaptive policy.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -225,7 +225,8 @@ Table~\ref{tab:support-ramped-compact},
 Table~\ref{tab:late-confidence-ramped-compact},
 Table~\ref{tab:density-window-compact},
 Table~\ref{tab:train-support-density-selector},
-Table~\ref{tab:support-probe-window-selector}, and
+Table~\ref{tab:support-probe-window-selector},
+Table~\ref{tab:validation-support-precision-selector}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -467,6 +468,19 @@ signed LSD versus 0.005161; at 120 materials, the no-probe raw fallback reaches
 0.003588 while support-ramped compact reaches 0.004240. Accounting reuse helps,
 but the train-only policy signal is still too coarse.
 
+Table~\ref{tab:validation-support-precision-selector} adds a cheap validation
+calibration to the same raw/support boundary. The selector keeps compact below
+320 train events, keeps the fixed 400--432 support transition, and otherwise
+uses validation labels only to estimate eligible induced-prediction precision
+before choosing support-ramped compact or raw text. On fresh seeds 1259, 1277,
+1279, 1283, and 1289, it improves the 96-material signed LSD from the
+support-probe/raw row's 0.002075 to 0.004198 and the 104-material row from
+0.004331 to 0.004455. Averaged across 64--128 materials, it reaches 0.006138
+signed LSD versus 0.005941 for the support-probe window. The result remains
+mixed rather than final: at 120 materials raw/support-probe reaches 0.006246
+while the validation selector reaches 0.005723, and at 128 raw reaches 0.005206
+while the selector reaches 0.004866.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -545,6 +559,12 @@ selected candidate construction, but it leaves a policy-quality failure: fixed
 train-event windows still choose the wrong side of the raw/support tradeoff on
 some fresh seed rows. A stronger selector needs train-only evidence about
 expected heldout gain, not only support density and event-count windows.
+The validation support-precision selector shows that a cheap validation signal
+can improve the boundary rows and the average high-budget density frontier, but
+it also creates late false positives once support-ramped compact is no longer
+consistently denser than raw text. The next selector should combine reliability
+calibration with an explicit expected-cost term rather than treating high
+precision as sufficient evidence to synthesize.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be
