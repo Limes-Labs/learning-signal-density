@@ -741,5 +741,34 @@ materials raw/support-probe reaches `0.006246` while the selector reaches
 `0.005723`, and at 128 raw reaches `0.005206` while the selector reaches
 `0.004866`.
 
+16x8 1024-feature no-window validation support-precision gate:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1381 1399 1409 1423 1427 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_support_precision_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_support_precision_f1024.json \
+  --profile-label f1024_16x8_validation_support_precision_gate
+```
+
+The no-window gate removes the fixed 400--432 train-event support prior and
+applies the same validation precision threshold everywhere above the compact
+floor. On seeds `1381 1399 1409 1423 1427`, it slightly improves over the
+support-probe average (`0.006104` versus `0.006074`) but falls below the
+fixed-transition validation selector (`0.006223`). The main miss is at 112
+materials: the gate reaches `0.005031` signed LSD while the fixed-transition
+selector and support-ramped compact reach `0.005864`. This is a negative control
+for removing the transition prior, not a promoted selector.
+
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

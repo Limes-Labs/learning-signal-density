@@ -62,6 +62,9 @@ SUPPORT_PROBE_WINDOW_ARTIFACT = Path(
 VALIDATION_SUPPORT_PRECISION_ARTIFACT = Path(
     "results/tiny_neural_budget_sweep_validation_support_precision_f1024.json"
 )
+VALIDATION_SUPPORT_PRECISION_GATE_ARTIFACT = Path(
+    "results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json"
+)
 SELECTOR_TRANSFER_ARTIFACT = Path("results/tiny_neural_budget_sweep_selector_transfer_f1024.json")
 TRAIN_SIZE_GATED_ARTIFACT = Path("results/tiny_neural_budget_sweep_train_size_gated_f1024.json")
 GENERATED_LABEL_AUDIT_ARTIFACT = Path("results/generated_label_audit_selector_transfer_f1024.json")
@@ -105,6 +108,7 @@ CONDITION_LABELS = {
     "validation_linear_proxy_selector": "Linear proxy selector",
     "validation_portfolio_selector": "Validation portfolio selector",
     "validation_ranked_induction": "Validation-ranked",
+    "validation_support_precision_gate_selector": "Validation support-precision gate",
     "validation_support_precision_selector": "Validation support-precision selector",
 }
 
@@ -417,6 +421,32 @@ def validate_validation_support_precision_scope(artifact_path: Path, artifact: d
         raise ValueError(f"{artifact_path} must not use oracle labels for the validation selector")
 
 
+def validate_validation_support_precision_gate_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    scope = artifact.get("condition_scope", {}).get("validation_support_precision_gate_selector", {})
+    if scope.get("train_only_selection") is not False:
+        raise ValueError(f"{artifact_path} must mark validation-based support selection")
+    if scope.get("train_only_induction") is not True:
+        raise ValueError(f"{artifact_path} must keep induction train-only")
+    if scope.get("validation_used_for_policy_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation policy selection")
+    if scope.get("validation_used_for_transform_selection") is not True:
+        raise ValueError(f"{artifact_path} must disclose validation transform selection")
+    if scope.get("validation_support_precision_gate_selector") is not True:
+        raise ValueError(f"{artifact_path} must mark the no-window validation support gate")
+    if scope.get("validation_support_precision_selector") is not False:
+        raise ValueError(f"{artifact_path} must distinguish the gate from the fixed-window selector")
+    if scope.get("validation_support_precision_threshold") != 0.825758:
+        raise ValueError(f"{artifact_path} must disclose the validation precision threshold")
+    if scope.get("validation_support_compact_max_train_events") != 320:
+        raise ValueError(f"{artifact_path} must disclose the compact floor")
+    if scope.get("validation_support_uses_fixed_transition_prior") is not False:
+        raise ValueError(f"{artifact_path} must disclose that the fixed transition prior is removed")
+    if scope.get("reuse_selected_candidate_construction") is not True:
+        raise ValueError(f"{artifact_path} must disclose selected-candidate reuse")
+    if scope.get("oracle_generated_labels") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for the validation gate")
+
+
 def validate_tempered_sample_aware_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     scope = artifact.get("condition_scope", {}).get("tempered_sample_aware_self_ranked_induction", {})
     if scope.get("train_only_selection") is not True:
@@ -528,6 +558,9 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
         "train_support_density": load_json(repo_root / TRAIN_SUPPORT_DENSITY_ARTIFACT),
         "support_probe_window": load_json(repo_root / SUPPORT_PROBE_WINDOW_ARTIFACT),
         "validation_support_precision": load_json(repo_root / VALIDATION_SUPPORT_PRECISION_ARTIFACT),
+        "validation_support_precision_gate": load_json(
+            repo_root / VALIDATION_SUPPORT_PRECISION_GATE_ARTIFACT
+        ),
         "selector_transfer": load_json(repo_root / SELECTOR_TRANSFER_ARTIFACT),
         "train_size_gated": load_json(repo_root / TRAIN_SIZE_GATED_ARTIFACT),
         "generated_label_audit": load_json(repo_root / GENERATED_LABEL_AUDIT_ARTIFACT),
@@ -611,6 +644,14 @@ def load_supporting_artifacts(repo_root: Path) -> dict[str, dict[str, Any]]:
     validate_validation_support_precision_scope(
         VALIDATION_SUPPORT_PRECISION_ARTIFACT,
         artifacts["validation_support_precision"],
+    )
+    validate_claim_scope(
+        VALIDATION_SUPPORT_PRECISION_GATE_ARTIFACT,
+        artifacts["validation_support_precision_gate"],
+    )
+    validate_validation_support_precision_gate_scope(
+        VALIDATION_SUPPORT_PRECISION_GATE_ARTIFACT,
+        artifacts["validation_support_precision_gate"],
     )
     validate_claim_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
     validate_abstaining_proxy_scope(SELECTOR_TRANSFER_ARTIFACT, artifacts["selector_transfer"])
@@ -1524,7 +1565,7 @@ def build_validation_support_precision_selector_table(repo_root: Path) -> str:
         r"\label{tab:validation-support-precision-selector}",
         r"\small",
         r"\setlength{\tabcolsep}{3pt}",
-        r"\begin{tabular}{@{}r>{\raggedright\arraybackslash}p{0.25\linewidth}rrlr@{}}",
+        r"\begin{tabular}{@{}r>{\raggedright\arraybackslash}p{0.22\linewidth}rr>{\raggedright\arraybackslash}p{0.20\linewidth}r@{}}",
         r"\toprule",
         r"Budget & Selector choices & Sel. LSD & Sel. cost & Best comparator & Best LSD \\",
         r"\midrule",
@@ -1546,6 +1587,60 @@ def build_validation_support_precision_selector_table(repo_root: Path) -> str:
                 digits=6,
             ),
             fmt_float(selector["portfolio_selection_cost_units_mean"], digits=1),
+            latex_escape(condition_label(best_condition)),
+            fmt_float(
+                best["signed_learning_signal_density_per_1m_event_compute_mean"],
+                digits=6,
+            ),
+        ]
+        lines.append(" & ".join(row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
+def build_validation_support_precision_gate_table(repo_root: Path) -> str:
+    artifact = load_supporting_artifacts(repo_root)["validation_support_precision_gate"]
+    comparator_conditions = (
+        "raw_text",
+        "support_ramped_compact_induction",
+        "support_probe_window_selector",
+        "validation_support_precision_selector",
+        "density_capped_compact_induction",
+    )
+    materials = ("96", "104", "112", "120", "128")
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{No-window validation support-precision gate on fresh seeds 1381, 1399, 1409, 1423, and 1427. This control removes the unconditional 400--432 train-event support transition from Table~\ref{tab:validation-support-precision-selector} and applies the same validation precision threshold everywhere above the compact floor. It slightly beats the support-probe average, but falls below the fixed-transition validation selector because it gives up the 112-material support prior.}",
+        r"\label{tab:validation-support-precision-gate}",
+        r"\small",
+        r"\setlength{\tabcolsep}{2pt}",
+        r"\begin{tabular}{@{}r>{\raggedright\arraybackslash}p{0.20\linewidth}rr>{\raggedright\arraybackslash}p{0.18\linewidth}r@{}}",
+        r"\toprule",
+        r"Budget & Gate choices & Gate LSD & Fixed-val. LSD & Best comp. & Best LSD \\",
+        r"\midrule",
+    ]
+    for material in materials:
+        gate = artifact["budgets"][material]["validation_support_precision_gate_selector"]
+        fixed = artifact["budgets"][material]["validation_support_precision_selector"]
+        best_condition = max(
+            comparator_conditions,
+            key=lambda condition: artifact["budgets"][material][condition][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        best = artifact["budgets"][material][best_condition]
+        row = [
+            material,
+            latex_escape(fmt_selection_counts(gate["portfolio_selected_condition_counts"])),
+            fmt_float(
+                gate["signed_learning_signal_density_per_1m_event_compute_mean"],
+                digits=6,
+            ),
+            fmt_float(
+                fixed["signed_learning_signal_density_per_1m_event_compute_mean"],
+                digits=6,
+            ),
             latex_escape(condition_label(best_condition)),
             fmt_float(
                 best["signed_learning_signal_density_per_1m_event_compute_mean"],
@@ -1581,6 +1676,7 @@ def render_tables(repo_root: Path) -> str:
             build_train_support_density_selector_table(repo_root),
             build_support_probe_window_selector_table(repo_root),
             build_validation_support_precision_selector_table(repo_root),
+            build_validation_support_precision_gate_table(repo_root),
             build_low_budget_failure_table(repo_root),
         ]
     )

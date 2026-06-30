@@ -1778,6 +1778,115 @@ class CommittedResultArtifactTests(unittest.TestCase):
         ) / len(selector["material_counts"])
         self.assertGreater(selector_average, support_probe_average)
 
+    def test_f1024_validation_support_precision_gate_artifact_records_no_window_control(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1381, 1399, 1409, 1423, 1427])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_validation_support_precision_gate")
+        self.assertEqual(
+            selector["confirmation_of"],
+            "results/tiny_neural_budget_sweep_validation_support_precision_f1024.json",
+        )
+        self.assertEqual(
+            selector["comparison_of"],
+            "results/tiny_neural_budget_sweep_validation_support_precision_f1024.json",
+        )
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_support_precision_gate_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["validation_support_precision_gate_selector"]
+        self.assertEqual(scope["train_only_selection"], False)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_used_for_transform_selection"], True)
+        self.assertEqual(scope["validation_support_precision_gate_selector"], True)
+        self.assertEqual(scope["validation_support_precision_selector"], False)
+        self.assertEqual(scope["validation_support_precision_threshold"], 0.825758)
+        self.assertEqual(scope["validation_support_compact_max_train_events"], 320)
+        self.assertEqual(scope["validation_support_uses_fixed_transition_prior"], False)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            selector["budgets"]["64"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"compact_train_size_gated_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["96"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 2, "support_ramped_compact_induction": 3},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 3, "support_ramped_compact_induction": 2},
+        )
+        self.assertEqual(
+            selector["budgets"]["112"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 2, "support_ramped_compact_induction": 3},
+        )
+        self.assertEqual(
+            selector["budgets"]["120"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 3, "support_ramped_compact_induction": 2},
+        )
+        self.assertEqual(
+            selector["budgets"]["128"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+
+        self.assertLess(
+            selector["budgets"]["112"]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["112"]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["128"]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["128"]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
+        gate_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        current_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        support_probe_average = sum(
+            selector["budgets"][str(material)]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        self.assertLess(gate_average, current_average)
+        self.assertGreater(gate_average, support_probe_average)
+
 
 if __name__ == "__main__":
     unittest.main()

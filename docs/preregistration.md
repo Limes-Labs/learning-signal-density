@@ -70,6 +70,10 @@ internal processing cost.
   support-ramped compact in the fixed 400--432 train-event transition, and
   otherwise uses validation labels only to estimate eligible induced-prediction
   precision before selecting support-ramped compact or raw text.
+- `validation_support_precision_gate_selector`: the no-window control for the
+  validation support-precision selector. It removes the fixed support transition
+  prior and applies the same validation precision threshold everywhere above 320
+  train events.
 - `mdl_rule_expansion`: train-only empirical rules are scored on validation
   with a description-length penalty, then only selected compact rules are used
   for counterfactual generation.

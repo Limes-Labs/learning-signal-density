@@ -44,6 +44,7 @@ VALIDATION_COVERAGE_PRIOR_SELECTOR = "validation_coverage_prior_selector"
 TRAIN_SUPPORT_DENSITY_SELECTOR = "train_support_density_selector"
 SUPPORT_PROBE_WINDOW_SELECTOR = "support_probe_window_selector"
 VALIDATION_SUPPORT_PRECISION_SELECTOR = "validation_support_precision_selector"
+VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR = "validation_support_precision_gate_selector"
 VALIDATION_PORTFOLIO_CANDIDATES = (
     "raw_text",
     "self_ranked_induction",
@@ -166,6 +167,12 @@ VALIDATION_SUPPORT_PRECISION_SCOPE = {
     "support_density_min_kept_per_compute": TRAIN_SUPPORT_DENSITY_MIN_KEPT_PER_COMPUTE,
     "reuse_selected_candidate_construction": True,
 }
+VALIDATION_SUPPORT_PRECISION_GATE_SCOPE = {
+    **VALIDATION_SUPPORT_PRECISION_SCOPE,
+    "validation_support_precision_selector": False,
+    "validation_support_precision_gate_selector": True,
+    "validation_support_uses_fixed_transition_prior": False,
+}
 VALIDATION_SELECTOR_CONDITIONS = frozenset({
     VALIDATION_ABSTAINING_PROXY_SELECTOR,
     VALIDATION_COVERAGE_PRIOR_SELECTOR,
@@ -175,6 +182,7 @@ VALIDATION_SELECTOR_CONDITIONS = frozenset({
     TRAIN_SUPPORT_DENSITY_SELECTOR,
     SUPPORT_PROBE_WINDOW_SELECTOR,
     VALIDATION_SUPPORT_PRECISION_SELECTOR,
+    VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR,
 })
 
 UNSUPPORTED_NEURAL_CONDITIONS = frozenset({
@@ -235,6 +243,8 @@ def neural_condition_scope(condition: str) -> dict:
         return SUPPORT_PROBE_WINDOW_SCOPE
     if condition == VALIDATION_SUPPORT_PRECISION_SELECTOR:
         return VALIDATION_SUPPORT_PRECISION_SCOPE
+    if condition == VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR:
+        return VALIDATION_SUPPORT_PRECISION_GATE_SCOPE
     return CONDITION_SCOPE[condition]
 
 
@@ -1131,6 +1141,8 @@ def _run_validation_support_precision_selector(
     hidden_units: int,
     feature_dimension: int,
     learning_rate: float,
+    use_transition_prior: bool = True,
+    selector_condition: str = VALIDATION_SUPPORT_PRECISION_SELECTOR,
 ) -> dict:
     world = build_world(seed=seed, material_count=material_count)
     split = split_observations(world.observations)
@@ -1148,6 +1160,8 @@ def _run_validation_support_precision_selector(
         pipeline = _build_neural_pipeline(selected_condition, split, world.rules)
         selection_metric = "validation_support_precision_compact_below_calibration_floor"
     elif (
+        use_transition_prior
+        and
         VALIDATION_SUPPORT_PRECISION_TRANSITION_MIN_EVENTS
         <= train_event_count
         < VALIDATION_SUPPORT_PRECISION_TRANSITION_MAX_EVENTS
@@ -1169,8 +1183,12 @@ def _run_validation_support_precision_selector(
                 + calibration["validation_scoring_cost_tokens"]
             )
         selection_metric = (
-            "validation_support_precision_min_"
-            f"{VALIDATION_SUPPORT_PRECISION_THRESHOLD}_eligible_prediction_precision"
+            (
+                "validation_support_precision_min_"
+                if use_transition_prior
+                else "validation_support_precision_gate_min_"
+            )
+            + f"{VALIDATION_SUPPORT_PRECISION_THRESHOLD}_eligible_prediction_precision"
         )
         candidate_records.append(
             {
@@ -1199,7 +1217,7 @@ def _run_validation_support_precision_selector(
     profile = model.training_profile
     return {
         "seed": seed,
-        "condition": VALIDATION_SUPPORT_PRECISION_SELECTOR,
+        "condition": selector_condition,
         "external_events": pipeline.external_event_count,
         "internal_examples": pipeline.internal_example_count,
         "internal_tokens": pipeline.internal_token_count,
@@ -1320,6 +1338,17 @@ def run_neural_condition(
             hidden_units=hidden_units,
             feature_dimension=feature_dimension,
             learning_rate=learning_rate,
+        )
+    if condition == VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR:
+        return _run_validation_support_precision_selector(
+            seed=seed,
+            material_count=material_count,
+            epochs=epochs,
+            hidden_units=hidden_units,
+            feature_dimension=feature_dimension,
+            learning_rate=learning_rate,
+            use_transition_prior=False,
+            selector_condition=VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR,
         )
 
     world = build_world(seed=seed, material_count=material_count)

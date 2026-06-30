@@ -52,11 +52,12 @@ the compact density frontier, separating candidate-order coverage from
 representation cost. A high-budget density cap then shows the frontier can
 switch back to raw text once external evidence is abundant, trading absolute
 gain for better learning-signal density. Support-ramped, fixed-window,
-train-support-density, reuse-aware support-probe, and validation-calibrated
-support-precision follow-ups expose the remaining selector problem: local
-transition windows can improve boundary rows, and cheap validation calibration
-can improve the average high-budget frontier, but late false positives and
-inspection cost still prevent a solved adaptive policy.
+train-support-density, reuse-aware support-probe, validation-calibrated
+support-precision, and no-window gate follow-ups expose the remaining selector
+problem: local transition windows can improve boundary rows, and cheap
+validation calibration can improve the average high-budget frontier, but late
+false positives, transition-prior dependence, and inspection cost still prevent
+a solved adaptive policy.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -226,7 +227,8 @@ Table~\ref{tab:late-confidence-ramped-compact},
 Table~\ref{tab:density-window-compact},
 Table~\ref{tab:train-support-density-selector},
 Table~\ref{tab:support-probe-window-selector},
-Table~\ref{tab:validation-support-precision-selector}, and
+Table~\ref{tab:validation-support-precision-selector},
+Table~\ref{tab:validation-support-precision-gate}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
@@ -481,6 +483,17 @@ mixed rather than final: at 120 materials raw/support-probe reaches 0.006246
 while the validation selector reaches 0.005723, and at 128 raw reaches 0.005206
 while the selector reaches 0.004866.
 
+Table~\ref{tab:validation-support-precision-gate} asks whether the fixed
+400--432 support transition is still needed once validation precision is
+available. The no-window gate applies the same precision threshold everywhere
+above the compact floor. On fresh seeds 1381, 1399, 1409, 1423, and 1427, this
+slightly beats the support-probe average, 0.006104 versus 0.006074 signed LSD,
+but it falls below the fixed-transition validation selector at 0.006223. The
+clearest miss is 112 materials: the no-window gate reaches 0.005031 signed LSD,
+while the fixed-transition selector and support-ramped compact reach 0.005864.
+The fixed transition prior is therefore carrying real information in this
+frontier, even though it is not a final adaptive solution.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -565,6 +578,11 @@ it also creates late false positives once support-ramped compact is no longer
 consistently denser than raw text. The next selector should combine reliability
 calibration with an explicit expected-cost term rather than treating high
 precision as sufficient evidence to synthesize.
+The no-window gate narrows that lesson: validation precision alone does not
+replace the transition prior. It can avoid some late support choices, but it also
+gives up useful support at the 112-material transition. A deployable selector
+needs a utility model that combines validation reliability, train-event regime,
+and representation cost instead of depending on any one of those signals alone.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

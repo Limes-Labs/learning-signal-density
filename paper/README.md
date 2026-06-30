@@ -41,6 +41,7 @@ The generator currently reads:
 - `results/tiny_neural_budget_sweep_train_support_density_f1024.json`
 - `results/tiny_neural_budget_sweep_support_probe_window_f1024.json`
 - `results/tiny_neural_budget_sweep_validation_support_precision_f1024.json`
+- `results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json`
 
 It refuses artifacts whose claim scope says heldout data was used for selection,
 the artifact is not a fresh-seed confirmation, or the artifact is already marked
@@ -112,6 +113,10 @@ construction reuse.
 The validation support-precision artifact must use fresh seeds, disclose
 validation-based policy and transform selection, keep heldout out of selection,
 disclose the fixed precision threshold and transition window, and mark
+selected-candidate construction reuse.
+The no-window validation support-precision gate artifact must use fresh seeds,
+disclose validation-based policy and transform selection, keep heldout out of
+selection, mark that the fixed transition prior was removed, and mark
 selected-candidate construction reuse.
 
 ## Release Checklist

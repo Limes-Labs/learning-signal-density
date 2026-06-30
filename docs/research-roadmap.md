@@ -100,6 +100,9 @@ and reuse the selected candidate construction rather than charging it twice.
 A validation support-precision selector then tests whether a cheap validation
 label calibration can override the raw/support choice outside the fixed
 transition band without training candidate neural models.
+A no-window validation support-precision gate then removes that fixed transition
+prior to test whether validation precision alone can carry the high-budget
+raw/support decision.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -291,6 +294,12 @@ transition band without training candidate neural models.
   `0.006138` versus `0.005941` for the support-probe window. It is still mixed:
   validation false positives lower density at 120 and 128, so the result is a
   useful boundary selector, not a solved adaptive policy.
+- Treat the fixed transition prior as useful, not arbitrary. On fresh seeds
+  `1381 1399 1409 1423 1427`, removing the unconditional 400--432 support
+  transition lowers average signed LSD from `0.006223` for the fixed-transition
+  validation selector to `0.006104` for the no-window gate. The main miss is at
+  112 materials (`0.005031` versus `0.005864`), so validation precision alone is
+  not yet a sufficient high-budget utility signal.
 
 ## Phase 3: Continual-Learning Replay
 

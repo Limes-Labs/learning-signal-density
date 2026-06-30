@@ -91,6 +91,10 @@ The current pilot is intentionally modest:
   train events and the fixed 400--432 support transition, then otherwise uses
   validation labels only to estimate eligible induced-prediction precision
   before choosing support-ramped compact or raw text.
+- `validation_support_precision_gate_selector` is the no-window control for that
+  selector. It keeps the compact floor but removes the fixed 400--432 support
+  transition, applying the same validation precision threshold everywhere above
+  320 train events.
 - `late_confidence_ramped_compact_induction` is a train-only negative/mixed
   control for that tradeoff. It matches support-ramped compact until the train
   split reaches 432 events, then raises induced-label confidence from `0.55` to
@@ -274,6 +278,11 @@ using the same split and accounting discipline.
   frontier in this artifact (`0.006138` versus `0.005941` for the support-probe
   window), improves the 96 and 104 material boundary rows, and still records
   late false-positive misses at 120 and 128 materials.
+- `results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.*` -
+  fresh-seed no-window validation precision control on seeds `1381 1399 1409
+  1423 1427`. It slightly beats the support-probe average (`0.006104` versus
+  `0.006074`) but does not beat the fixed-transition validation selector
+  (`0.006223`), mainly because it loses the 112-material support prior.
 - `results/tiny_neural_profile_sweep.*` - fresh-seed tiny-MLP epoch/width
   frontier at the 64-material budget.
 - `paper/` - working paper draft, generated result tables, BibTeX file, and
@@ -938,6 +947,26 @@ python3 -m learning_signal_density.neural_sweep \
   --confirmation-of results/tiny_neural_budget_sweep_support_probe_window_f1024.json \
   --comparison-of results/tiny_neural_budget_sweep_support_probe_window_f1024.json \
   --profile-label f1024_16x8_validation_support_precision
+```
+
+Run the 16x8 1024-feature no-window validation support-precision gate:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1381 1399 1409 1423 1427 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_support_precision_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_support_precision_f1024.json \
+  --profile-label f1024_16x8_validation_support_precision_gate
 ```
 
 ## Metrics
