@@ -187,6 +187,10 @@ the high-budget support boundary: a cheap validation-precision prefilter runs
 before any support-candidate coverage scan, then a validation precision,
 validation motif-coverage, and compute-penalized utility score decides whether
 support-ramped compact induction is worth its cost.
+The direct gain-gate follow-up then tests the missing term explicitly: after
+the same cheap support-precision prefilter, it trains two-epoch linear proxies
+for raw text and support-ramped compact only when support is eligible, then
+charges the proxy evidence before the final heldout evaluation.
 The latest train-only follow-up then lowers the sample-aware mid-budget
 synthetic ratio from 0.75 to 0.50 to test whether fewer generated labels repair
 the same failure without validation selection.
@@ -235,6 +239,7 @@ Table~\ref{tab:support-probe-window-selector},
 Table~\ref{tab:validation-support-precision-selector},
 Table~\ref{tab:validation-support-precision-gate},
 Table~\ref{tab:validation-support-utility-selector},
+Table~\ref{tab:validation-support-gain-gate},
 Table~\ref{tab:support-selector-transfer},
 Table~\ref{tab:support-selector-error-audit},
 Table~\ref{tab:support-mechanism-audit}, and
@@ -515,6 +520,18 @@ It is still not a promoted selector. The no-window precision gate reaches
 0.005721. The utility score helps accounting but does not yet predict expected
 heldout gain well enough.
 
+Table~\ref{tab:validation-support-gain-gate} tests the direct expected-gain
+variant suggested by that failure. The selector first runs the cheap validation
+support-precision prefilter; only when support is eligible does it train
+two-epoch linear proxies for raw text and support-ramped compact, charging the
+proxy work before the final tiny MLP. On fresh seeds 1667, 1669, 1693, 1697,
+and 1699, this lowers some wasted scans but still fails as a promotion
+candidate. It beats raw text on average, 0.004684 versus 0.003941 signed LSD,
+but loses to the utility selector at 0.004929, the no-window precision gate at
+0.005303, the density-capped fallback at 0.005421, and support-ramped compact
+at 0.005469. Direct validation-gain evidence is therefore not enough unless it
+can be obtained more cheaply or made to transfer more reliably to heldout.
+
 Table~\ref{tab:support-selector-transfer} reruns the support-selector family on
 fresh seeds 1459, 1471, 1481, 1483, and 1487 after the fixed-transition selector
 and no-window gate have both been developed. The no-window gate transfers better
@@ -650,6 +667,12 @@ that idea, and it remains negative for promotion. Precision, validation motif
 coverage, and a small compute penalty can reduce wasted support scans, but they
 still do not estimate the expected heldout gain of support-ramped compact well
 enough to beat the simpler precision gate or density-capped fallback.
+The gain-gate follow-up in Table~\ref{tab:validation-support-gain-gate} makes
+the failure more specific: even a direct raw-versus-support validation-gain
+proxy loses once proxy training is charged. The next selector should therefore
+not simply spend more validation compute; it should either reduce evidence cost
+substantially or change the support representation so that validation gains
+transfer more reliably.
 The next selector should be evaluated as an expected-value-of-information
 problem: inspect or validate only when the anticipated gain over the raw or
 density-capped fallback exceeds the charged cost of obtaining that evidence.

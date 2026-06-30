@@ -326,6 +326,14 @@ robust adaptive policy.
   precision gate (`0.005746`) and density-capped fallback (`0.005721`). The
   next selector needs an explicit expected-gain predictor or a cheaper abstain
   rule, not more proxy terms alone.
+- Do not assume a direct validation-gain proxy is sufficient either. The
+  prefiltered validation support-gain gate tests a two-epoch raw/support proxy
+  on fresh seeds `1667 1669 1693 1697 1699`. It beats raw on average
+  (`0.004684` versus `0.003941` signed LSD), but loses to the utility selector
+  (`0.004929`), precision gate (`0.005303`), density-capped fallback
+  (`0.005421`), and support-ramped compact (`0.005469`). The next useful
+  direction is cheaper evidence or a mechanism-level support representation
+  change, not a costlier validation selector.
 
 ## Phase 3: Continual-Learning Replay
 

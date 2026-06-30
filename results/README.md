@@ -840,6 +840,34 @@ the fresh-seed result remains negative for promotion: `0.005473` average signed
 LSD versus `0.005746` for the no-window precision gate and `0.005721` for the
 density-capped fallback.
 
+Run the validation support-gain gate follow-up:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_gain_gate_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_gain_gate_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1667 1669 1693 1697 1699 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector validation_support_utility_selector validation_support_gain_gate_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_support_utility_f1024.json \
+  --comparison-of results/support_selector_error_audit_f1024.json \
+  --profile-label f1024_16x8_validation_support_gain_gate
+```
+
+The gain-gate follow-up tests direct expected-gain selection after the utility
+failure. It first runs the cheap validation support-precision prefilter, then
+trains two-epoch linear proxies for raw text and support-ramped compact only
+when support is eligible. The clean fresh-seed result is still negative for
+promotion: `0.004684` average signed LSD, below the utility selector
+(`0.004929`), no-window precision gate (`0.005303`), density-capped fallback
+(`0.005421`), and support-ramped compact (`0.005469`).
+
 Build the post-hoc support-ramp mechanism audit:
 
 ```bash

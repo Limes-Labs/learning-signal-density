@@ -46,6 +46,7 @@ SUPPORT_PROBE_WINDOW_SELECTOR = "support_probe_window_selector"
 VALIDATION_SUPPORT_PRECISION_SELECTOR = "validation_support_precision_selector"
 VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR = "validation_support_precision_gate_selector"
 VALIDATION_SUPPORT_UTILITY_SELECTOR = "validation_support_utility_selector"
+VALIDATION_SUPPORT_GAIN_GATE_SELECTOR = "validation_support_gain_gate_selector"
 VALIDATION_PORTFOLIO_CANDIDATES = (
     "raw_text",
     "self_ranked_induction",
@@ -83,6 +84,9 @@ VALIDATION_SUPPORT_UTILITY_PAIR_COVERAGE_WEIGHT = 0.25
 VALIDATION_SUPPORT_UTILITY_TRIPLE_L1_WEIGHT = 0.20
 VALIDATION_SUPPORT_UTILITY_COMPUTE_PENALTY = 0.000001
 VALIDATION_SUPPORT_UTILITY_MIN_SCORE = 0.0
+VALIDATION_SUPPORT_GAIN_PROXY_EPOCHS = 2
+VALIDATION_SUPPORT_GAIN_COMPUTE_PENALTY = 0.0000005
+VALIDATION_SUPPORT_GAIN_MIN_SCORE = 0.0
 GENERATED_SOURCE_KINDS = frozenset({
     "agreement_gated_self_ranked_induced",
     "compact_diverse_sample_aware_self_ranked_induced",
@@ -190,6 +194,25 @@ VALIDATION_SUPPORT_UTILITY_SCOPE = {
     "validation_support_utility_triple_l1_weight": VALIDATION_SUPPORT_UTILITY_TRIPLE_L1_WEIGHT,
     "validation_support_utility_compute_penalty": VALIDATION_SUPPORT_UTILITY_COMPUTE_PENALTY,
 }
+VALIDATION_SUPPORT_GAIN_GATE_SCOPE = {
+    "oracle_generated_labels": False,
+    "train_only_selection": False,
+    "train_only_induction": True,
+    "validation_used_for_threshold": True,
+    "validation_used_for_transform_selection": True,
+    "validation_used_for_policy_selection": True,
+    "compact_original_encoding_at_large_samples": True,
+    "validation_labels_used_for_policy_selection": True,
+    "low_fidelity_proxy_selector": True,
+    "validation_support_gain_gate_selector": True,
+    "validation_support_gain_precision_prefilter": True,
+    "validation_support_precision_threshold": VALIDATION_SUPPORT_PRECISION_THRESHOLD,
+    "validation_support_gain_proxy_epochs": VALIDATION_SUPPORT_GAIN_PROXY_EPOCHS,
+    "validation_support_gain_min_score": VALIDATION_SUPPORT_GAIN_MIN_SCORE,
+    "validation_support_gain_compute_penalty": VALIDATION_SUPPORT_GAIN_COMPUTE_PENALTY,
+    "validation_support_compact_max_train_events": VALIDATION_SUPPORT_PRECISION_COMPACT_MAX_EVENTS,
+    "reuse_selected_candidate_construction": True,
+}
 VALIDATION_SELECTOR_CONDITIONS = frozenset({
     VALIDATION_ABSTAINING_PROXY_SELECTOR,
     VALIDATION_COVERAGE_PRIOR_SELECTOR,
@@ -201,6 +224,7 @@ VALIDATION_SELECTOR_CONDITIONS = frozenset({
     VALIDATION_SUPPORT_PRECISION_SELECTOR,
     VALIDATION_SUPPORT_PRECISION_GATE_SELECTOR,
     VALIDATION_SUPPORT_UTILITY_SELECTOR,
+    VALIDATION_SUPPORT_GAIN_GATE_SELECTOR,
 })
 
 UNSUPPORTED_NEURAL_CONDITIONS = frozenset({
@@ -265,6 +289,8 @@ def neural_condition_scope(condition: str) -> dict:
         return VALIDATION_SUPPORT_PRECISION_GATE_SCOPE
     if condition == VALIDATION_SUPPORT_UTILITY_SELECTOR:
         return VALIDATION_SUPPORT_UTILITY_SCOPE
+    if condition == VALIDATION_SUPPORT_GAIN_GATE_SELECTOR:
+        return VALIDATION_SUPPORT_GAIN_GATE_SCOPE
     return CONDITION_SCOPE[condition]
 
 
@@ -1336,6 +1362,227 @@ def _run_validation_support_utility_selector(
     }
 
 
+def _validation_gain_proxy_candidate_record(
+    condition: str,
+    pipeline: PipelineExamples,
+    validation_examples: tuple[TrainingExample, ...],
+    validation_eval_cost: int,
+    seed: int,
+    final_epochs: int,
+) -> dict:
+    proxy = PerceptronClassifier()
+    proxy.fit(
+        pipeline.examples,
+        epochs=VALIDATION_SUPPORT_GAIN_PROXY_EPOCHS,
+        seed=seed,
+    )
+    validation = proxy.evaluate(validation_examples)
+    validation_baseline = majority_baseline(pipeline.examples, validation_examples)
+    validation_gain = validation.accuracy - validation_baseline.accuracy
+    return {
+        "condition": condition,
+        "pipeline": pipeline,
+        "validation_accuracy": validation.accuracy,
+        "validation_baseline_accuracy": validation_baseline.accuracy,
+        "validation_gain": validation_gain,
+        "candidate_compute_units": (
+            _pipeline_compute_units(
+                pipeline=pipeline,
+                epochs=VALIDATION_SUPPORT_GAIN_PROXY_EPOCHS,
+            )
+            + validation_eval_cost
+        ),
+        "final_compute_units": _pipeline_compute_units(
+            pipeline=pipeline,
+            epochs=final_epochs,
+        ),
+    }
+
+
+def _run_validation_support_gain_gate_selector(
+    seed: int,
+    material_count: int,
+    epochs: int,
+    hidden_units: int,
+    feature_dimension: int,
+    learning_rate: float,
+) -> dict:
+    world = build_world(seed=seed, material_count=material_count)
+    split = split_observations(world.observations)
+    heldout_examples = build_evaluation_examples(split.heldout)
+
+    train_event_count = len(split.train)
+    candidate_records: list[dict] = []
+    selected_condition: str
+    selection_metric: str
+    selection_cost_units = 0
+    support_score = 0.0
+
+    if train_event_count < VALIDATION_SUPPORT_PRECISION_COMPACT_MAX_EVENTS:
+        selected_condition = "compact_train_size_gated_induction"
+        pipeline = _build_neural_pipeline(selected_condition, split, world.rules)
+        selection_metric = "validation_support_gain_gate_compact_below_proxy_floor"
+        proxy_epochs = 0
+    else:
+        raw_pipeline = _build_neural_pipeline("raw_text", split, world.rules)
+        calibration = _validation_support_precision_calibration(split)
+        precision_margin = calibration["precision"] - VALIDATION_SUPPORT_PRECISION_THRESHOLD
+        if precision_margin < 0:
+            selected_condition = "raw_text"
+            pipeline = raw_pipeline
+            support_score = precision_margin
+            selection_cost_units = (
+                calibration["modeling_cost_tokens"]
+                + calibration["validation_scoring_cost_tokens"]
+            )
+            candidate_records.append(
+                {
+                    "condition": "support_ramped_compact_induction",
+                    "pipeline": None,
+                    "validation_accuracy": None,
+                    "validation_baseline_accuracy": None,
+                    "validation_gain": None,
+                    "validation_gain_delta_vs_raw": None,
+                    "validation_gain_gate_score": support_score,
+                    "extra_final_compute_vs_raw": 0,
+                    "validation_precision": calibration["precision"],
+                    "validation_covered_count": calibration["covered"],
+                    "validation_correct_count": calibration["correct"],
+                    "candidate_compute_units": selection_cost_units,
+                    "final_compute_units": 0,
+                }
+            )
+            selection_metric = (
+                "validation_support_gain_gate_precision_prefilter_min_"
+                f"{VALIDATION_SUPPORT_PRECISION_THRESHOLD}"
+            )
+            proxy_epochs = 0
+        else:
+            validation_examples = build_evaluation_examples(split.validation)
+            validation_eval_cost = sum(example.token_count for example in validation_examples)
+            support_pipeline = _build_neural_pipeline("support_ramped_compact_induction", split, world.rules)
+            raw_record = _validation_gain_proxy_candidate_record(
+                condition="raw_text",
+                pipeline=raw_pipeline,
+                validation_examples=validation_examples,
+                validation_eval_cost=validation_eval_cost,
+                seed=seed,
+                final_epochs=epochs,
+            )
+            support_record = _validation_gain_proxy_candidate_record(
+                condition="support_ramped_compact_induction",
+                pipeline=support_pipeline,
+                validation_examples=validation_examples,
+                validation_eval_cost=validation_eval_cost,
+                seed=seed,
+                final_epochs=epochs,
+            )
+            support_record["validation_precision"] = calibration["precision"]
+            support_record["validation_covered_count"] = calibration["covered"]
+            support_record["validation_correct_count"] = calibration["correct"]
+            raw_validation_gain = raw_record["validation_gain"]
+            for record in (raw_record, support_record):
+                validation_gain_delta = record["validation_gain"] - raw_validation_gain
+                extra_final_compute = max(
+                    0,
+                    record["final_compute_units"] - raw_record["final_compute_units"],
+                )
+                record["validation_gain_delta_vs_raw"] = validation_gain_delta
+                record["validation_gain_gate_score"] = (
+                    validation_gain_delta
+                    - VALIDATION_SUPPORT_GAIN_COMPUTE_PENALTY * extra_final_compute
+                )
+                record["extra_final_compute_vs_raw"] = extra_final_compute
+                candidate_records.append(record)
+
+            support_score = support_record["validation_gain_gate_score"]
+            if support_score >= VALIDATION_SUPPORT_GAIN_MIN_SCORE:
+                selected_condition = "support_ramped_compact_induction"
+                pipeline = support_pipeline
+            else:
+                selected_condition = "raw_text"
+                pipeline = raw_pipeline
+            selection_cost_units = sum(record["candidate_compute_units"] for record in candidate_records)
+            selection_metric = (
+                "validation_support_gain_gate_precision_prefilter_then_proxy_epochs_"
+                f"{VALIDATION_SUPPORT_GAIN_PROXY_EPOCHS}_min_"
+                f"{VALIDATION_SUPPORT_GAIN_MIN_SCORE}_compute_penalty_"
+                f"{VALIDATION_SUPPORT_GAIN_COMPUTE_PENALTY}"
+            )
+            proxy_epochs = VALIDATION_SUPPORT_GAIN_PROXY_EPOCHS
+
+    model = TinyMlpClassifier(
+        feature_dimension=feature_dimension,
+        hidden_units=hidden_units,
+        learning_rate=learning_rate,
+    )
+    model.fit(pipeline.examples, epochs=epochs, seed=seed)
+    heldout = model.evaluate(heldout_examples)
+    baseline = majority_baseline(pipeline.examples, heldout_examples)
+    if selected_condition == "support_ramped_compact_induction" and candidate_records:
+        charged_compute_units = pipeline.internal_token_count * epochs + selection_cost_units
+    else:
+        charged_compute_units = _pipeline_compute_units(pipeline=pipeline, epochs=epochs) + selection_cost_units
+    improvement = heldout.accuracy - baseline.accuracy
+    signed_lsd = 1_000_000.0 * improvement / max(1, pipeline.external_event_count * charged_compute_units)
+
+    profile = model.training_profile
+    return {
+        "seed": seed,
+        "condition": VALIDATION_SUPPORT_GAIN_GATE_SELECTOR,
+        "external_events": pipeline.external_event_count,
+        "internal_examples": pipeline.internal_example_count,
+        "internal_tokens": pipeline.internal_token_count,
+        "charged_compute_units": charged_compute_units,
+        "heldout_accuracy": _round(heldout.accuracy),
+        "majority_baseline_accuracy": _round(baseline.accuracy),
+        "accuracy_improvement_over_majority": _round(improvement),
+        "signed_learning_signal_density_per_1m_event_compute": _round(signed_lsd),
+        "neural_parameter_count": profile.parameter_count,
+        "neural_training_step_count": profile.training_step_count,
+        "estimated_neural_training_multiply_adds": profile.estimated_training_multiply_adds,
+        "portfolio_candidate_count": len(candidate_records),
+        "portfolio_selection_cost_units": selection_cost_units,
+        "portfolio_validation_score": _round(support_score),
+        "portfolio_selected_condition": selected_condition,
+        "portfolio_candidate_conditions": [
+            record["condition"] for record in candidate_records
+        ],
+        "portfolio_selection_metric": selection_metric,
+        "portfolio_proxy_epochs": proxy_epochs,
+        "portfolio_abstention_extra_correct": 0,
+        "portfolio_abstention_margin": _round(VALIDATION_SUPPORT_GAIN_MIN_SCORE),
+        "portfolio_raw_text_abstention": 1 if selected_condition == "raw_text" else 0,
+        "portfolio_candidate_summaries": [
+            {
+                "condition": record["condition"],
+                "validation_accuracy": _round(record["validation_accuracy"])
+                if record.get("validation_accuracy") is not None
+                else None,
+                "validation_baseline_accuracy": _round(record["validation_baseline_accuracy"])
+                if record.get("validation_baseline_accuracy") is not None
+                else None,
+                "validation_gain": _round(record["validation_gain"])
+                if record.get("validation_gain") is not None
+                else None,
+                "validation_gain_delta_vs_raw": _round(record["validation_gain_delta_vs_raw"])
+                if record.get("validation_gain_delta_vs_raw") is not None
+                else None,
+                "validation_gain_gate_score": _round(record["validation_gain_gate_score"]),
+                "validation_precision": _round(record["validation_precision"])
+                if record.get("validation_precision") is not None
+                else None,
+                "validation_covered_count": record.get("validation_covered_count"),
+                "validation_correct_count": record.get("validation_correct_count"),
+                "extra_final_compute_vs_raw": record["extra_final_compute_vs_raw"],
+                "candidate_compute_units": record["candidate_compute_units"],
+                "final_compute_units": record["final_compute_units"],
+            }
+            for record in candidate_records
+        ],
+    }
+
+
 def _run_validation_support_precision_selector(
     seed: int,
     material_count: int,
@@ -1554,6 +1801,15 @@ def run_neural_condition(
         )
     if condition == VALIDATION_SUPPORT_UTILITY_SELECTOR:
         return _run_validation_support_utility_selector(
+            seed=seed,
+            material_count=material_count,
+            epochs=epochs,
+            hidden_units=hidden_units,
+            feature_dimension=feature_dimension,
+            learning_rate=learning_rate,
+        )
+    if condition == VALIDATION_SUPPORT_GAIN_GATE_SELECTOR:
+        return _run_validation_support_gain_gate_selector(
             seed=seed,
             material_count=material_count,
             epochs=epochs,

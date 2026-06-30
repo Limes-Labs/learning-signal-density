@@ -2066,6 +2066,91 @@ class CommittedResultArtifactTests(unittest.TestCase):
             ],
         )
 
+    def test_f1024_validation_support_gain_gate_artifact_records_prefiltered_negative_result(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_support_gain_gate_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1667, 1669, 1693, 1697, 1699])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_validation_support_gain_gate")
+        self.assertEqual(
+            selector["confirmation_of"],
+            "results/tiny_neural_budget_sweep_validation_support_utility_f1024.json",
+        )
+        self.assertEqual(selector["comparison_of"], "results/support_selector_error_audit_f1024.json")
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_support_gain_gate_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["validation_support_gain_gate_selector"]
+        self.assertEqual(scope["validation_support_gain_gate_selector"], True)
+        self.assertEqual(scope["validation_support_gain_precision_prefilter"], True)
+        self.assertEqual(scope["validation_labels_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_support_gain_proxy_epochs"], 2)
+        self.assertEqual(scope["validation_support_gain_min_score"], 0.0)
+        self.assertEqual(scope["validation_support_gain_compute_penalty"], 0.0000005)
+        self.assertEqual(scope["validation_support_precision_threshold"], 0.825758)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            selector["budgets"]["96"]["validation_support_gain_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 4, "support_ramped_compact_induction": 1},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["validation_support_gain_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 3, "support_ramped_compact_induction": 2},
+        )
+        self.assertEqual(
+            selector["budgets"]["128"]["validation_support_gain_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+
+        gain_gate_average = sum(
+            selector["budgets"][str(material)]["validation_support_gain_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        utility_average = sum(
+            selector["budgets"][str(material)]["validation_support_utility_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        precision_gate_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        support_average = sum(
+            selector["budgets"][str(material)]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        raw_average = sum(
+            selector["budgets"][str(material)]["raw_text"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+
+        self.assertEqual(round(gain_gate_average, 6), 0.004684)
+        self.assertGreater(gain_gate_average, raw_average)
+        self.assertLess(gain_gate_average, utility_average)
+        self.assertLess(gain_gate_average, precision_gate_average)
+        self.assertLess(gain_gate_average, support_average)
+
 
 if __name__ == "__main__":
     unittest.main()

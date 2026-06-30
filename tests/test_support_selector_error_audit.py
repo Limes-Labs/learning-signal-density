@@ -31,6 +31,7 @@ class SupportSelectorErrorAuditTests(unittest.TestCase):
                 "results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json",
                 "results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json",
                 "results/tiny_neural_budget_sweep_validation_support_utility_f1024.json",
+                "results/tiny_neural_budget_sweep_validation_support_gain_gate_f1024.json",
             ],
         )
         self.assertEqual(audit["metric"], "signed_learning_signal_density_per_1m_event_compute_mean")
@@ -84,6 +85,22 @@ class SupportSelectorErrorAuditTests(unittest.TestCase):
             utility["average_regret_vs_best_simple_lsd"],
         )
 
+        gain_source = audit["artifact_summaries"]["validation_support_gain_gate"]
+        gain_gate = gain_source["selector_diagnostics"]["validation_support_gain_gate_selector"]
+        gain_precision_gate = gain_source["selector_diagnostics"][
+            "validation_support_precision_gate_selector"
+        ]
+        self.assertEqual(gain_source["best_fixed_simple_condition"], "support_ramped_compact_induction")
+        self.assertEqual(gain_source["best_fixed_simple_lsd"], 0.005469)
+        self.assertEqual(gain_gate["average_lsd"], 0.004684)
+        self.assertEqual(gain_gate["average_regret_vs_best_simple_lsd"], 0.001017)
+        self.assertEqual(gain_gate["budgets_beating_best_simple_count"], 0)
+        self.assertEqual(gain_gate["average_selection_cost_units"], 10880.3)
+        self.assertLess(
+            gain_precision_gate["average_regret_vs_best_simple_lsd"],
+            gain_gate["average_regret_vs_best_simple_lsd"],
+        )
+
     def test_generator_rebuilds_committed_audit_and_markdown(self) -> None:
         audit_builder = load_audit_builder()
 
@@ -104,8 +121,10 @@ class SupportSelectorErrorAuditTests(unittest.TestCase):
         self.assertIn("post-hoc support-selector error audit", markdown)
         self.assertIn("validation_support_precision_gate_selector", markdown)
         self.assertIn("validation_support_utility_selector", markdown)
+        self.assertIn("validation_support_gain_gate_selector", markdown)
         self.assertIn("0.000496", markdown)
         self.assertIn("0.000392", markdown)
+        self.assertIn("0.001017", markdown)
 
 
 if __name__ == "__main__":

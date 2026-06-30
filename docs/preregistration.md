@@ -151,6 +151,11 @@ is allowed only for train pairs.
   label use, validation motif-distribution use, prefilter behavior, and
   candidate-construction reuse; any validation scan or rejected support
   candidate must be charged before the final heldout evaluation.
+- Validation gain-gate selectors must disclose their precision prefilter,
+  validation-label use, proxy model class/epochs, gain threshold, compute
+  penalty, and selected-candidate reuse. They must charge cheap rejected
+  prefilter scans and any raw/support proxy training before final heldout
+  evaluation.
 - The current pilot must mark `neural_model=false`.
 - Tiny neural replication artifacts must mark `neural_model=true`, keep the
   same heldout isolation rules, and report neural parameter count, training

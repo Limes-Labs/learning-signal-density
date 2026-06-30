@@ -99,6 +99,11 @@ The current pilot is intentionally modest:
   uses a cheap validation-precision prefilter before paying for a
   validation-label, validation-motif-coverage, and compute-penalized support
   utility score.
+- `validation_support_gain_gate_selector` is the direct expected-gain follow-up.
+  It first applies the same cheap validation-precision prefilter, then trains
+  two-epoch linear proxies for raw text and support-ramped compact only when
+  support is eligible. The proxy scan is charged, and selected support
+  construction is reused rather than double-charged.
 - `late_confidence_ramped_compact_induction` is a train-only negative/mixed
   control for that tradeoff. It matches support-ramped compact until the train
   split reaches 432 events, then raises induced-label confidence from `0.55` to
@@ -298,6 +303,13 @@ using the same split and accounting discipline.
   average (`0.005473` versus `0.004728` signed LSD), but it still loses to the
   no-window precision gate (`0.005746`) and density-capped fallback
   (`0.005721`).
+- `results/tiny_neural_budget_sweep_validation_support_gain_gate_f1024.*` -
+  fresh-seed direct expected-gain support selector on seeds `1667 1669 1693
+  1697 1699`. The precision prefilter plus two-epoch raw/support proxy beats
+  raw on average (`0.004684` versus `0.003941` signed LSD), but loses to the
+  utility selector (`0.004929`), no-window precision gate (`0.005303`),
+  density-capped fallback (`0.005421`), and support-ramped compact
+  (`0.005469`).
 - `results/support_selector_error_audit_f1024.*` - post-hoc regret ledger over
   the committed high-budget support-selector artifacts. It marks heldout error
   analysis explicitly and does not promote a support selector: on the transfer
@@ -1036,6 +1048,26 @@ python3 -m learning_signal_density.neural_sweep \
   --profile-label f1024_16x8_validation_support_utility
 ```
 
+Run the 16x8 1024-feature validation support-gain gate:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_gain_gate_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_gain_gate_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1667 1669 1693 1697 1699 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector validation_support_utility_selector validation_support_gain_gate_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_support_utility_f1024.json \
+  --comparison-of results/support_selector_error_audit_f1024.json \
+  --profile-label f1024_16x8_validation_support_gain_gate
+```
+
 ## Metrics
 
 The repo reports three families of measurements:
@@ -1114,6 +1146,12 @@ The repo reports three families of measurements:
   support-candidate coverage scan. Its first fresh-seed result is negative for
   promotion because it trails both the precision gate and density-capped
   fallback on average signed LSD.
+- The validation support-gain gate is the next deployable follow-up: it uses
+  validation labels to estimate raw-versus-support gain with a two-epoch linear
+  proxy only after a cheap support-precision prefilter passes. Its first clean
+  seed block is also negative for promotion because charged proxy evidence
+  lowers average signed LSD below the simpler precision gate and support-ramped
+  compact baseline.
 
 The aim is to map a Pareto frontier, not to crown one universal pipeline.
 
@@ -1398,6 +1436,13 @@ The current artifacts show a useful split:
   the no-window precision gate (`0.005746`) and density-capped fallback
   (`0.005721`). The missing term is an expected-gain model, not more reliability
   or coverage proxies alone.
+- The validation support-gain gate tests that missing term directly, and it is
+  also negative. On fresh seeds `1667 1669 1693 1697 1699`, the prefiltered
+  two-epoch proxy selector beats raw on average (`0.004684` versus `0.003941`
+  signed LSD), but trails the utility selector (`0.004929`), precision gate
+  (`0.005303`), density-capped fallback (`0.005421`), and support-ramped compact
+  (`0.005469`). The bottleneck is not just identifying possible gain; it is
+  obtaining gain evidence cheaply enough and transferring it to heldout.
 
 ## Research Thesis
 
