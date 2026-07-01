@@ -59,11 +59,14 @@ and cheap validation calibration can improve one high-budget frontier, but late
 false positives, seed-block transfer, transition-prior dependence, and
 inspection cost still prevent a solved adaptive policy.
 As a first non-synthetic sanity check, we also run the same accounting style on
-UCI SMS Spam Collection. That real-text pilot shows the useful but sobering
-pattern a paper should preserve: class-balanced and validation-selected samples
-can improve spam F1, but once label-index construction, proxy validation, and
-unreused candidate costs are charged, uniform random sampling remains the
-strongest density baseline in most rows.
+UCI SMS Spam Collection. We then derive and audit a selector break-even
+condition: at fixed external budget, a selected policy improves density only
+when its heldout-quality multiplier exceeds its charged-compute multiplier.
+The real-text result is useful precisely because it is negative under that
+test. Class-balanced and validation-selected samples can improve spam F1, but
+after label-index construction, proxy validation, and unreused candidate costs
+are charged, every tested non-random SMS policy remains below random sampling
+on learning-signal density.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -79,10 +82,13 @@ learning system selects observations, rewrites them, asks questions, generates
 counterfactuals, replays fragments, receives feedback, and spends internal
 compute before any parameter update becomes useful.
 Nearby mechanisms include token/data selection
-\cite{lin2024rho1,li2024datacomp,xia2024less}, process feedback
-\cite{lightman2023verify}, and replay \cite{schaul2015prioritized}. This draft
-does not treat those literatures as interchangeable; it asks how to charge and
-compare them inside one loop-level measurement protocol.
+\cite{lin2024rho1,li2024datacomp,xia2024less}, active data selection
+\cite{mackay1992active,settles2009activelearning}, process feedback
+\cite{lightman2023verify}, replay \cite{schaul2015prioritized}, and the older
+decision-analysis idea that information has value only relative to decision
+payoff and acquisition cost \cite{howard1966information}. This draft does not
+treat those literatures as interchangeable; it asks how to charge and compare
+them inside one loop-level measurement protocol.
 
 The research question is therefore not ``are language models or brains more
 sample efficient?'' The sharper question is:
@@ -138,6 +144,26 @@ and
 \]
 The reported signed version uses improvement over the majority baseline as
 $\Delta Q$. Negative values remain negative instead of being clipped away.
+
+\paragraph{Selector break-even lemma.}
+For two policies $a$ and $b$ with signed gains $G_a,G_b>0$, external-event
+counts $N_a,N_b$, and charged internal compute $C_a,C_b$, policy $a$ has higher
+learning-signal density than policy $b$ if and only if
+\[
+\frac{G_a}{G_b} >
+\frac{N_a C_a}{N_b C_b}.
+\]
+In the common fixed-budget case $N_a=N_b$, this reduces to
+\[
+\frac{G_a}{G_b} >
+\frac{C_a}{C_b}.
+\]
+This elementary inequality is the mathematical guardrail for the experiments:
+an active or selected policy can improve heldout quality and still be a density
+loss if its quality multiplier is smaller than its charged compute multiplier.
+The point aligns with practical active-learning concerns: selecting labels can
+reduce labeled examples in theory, but real systems may fail to reduce total
+annotation, engineering, or computation cost \cite{settles2011theories}.
 
 \section{Anti-Cheat Rules}
 
@@ -238,6 +264,7 @@ F1 gains are smaller than their selection and validation overhead.
 
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
+Table~\ref{tab:sms-spam-break-even},
 Table~\ref{tab:f1024-profile-frontier},
 Table~\ref{tab:validation-selected-reliability-probe},
 Table~\ref{tab:post-hoc-policy-envelope},
@@ -277,11 +304,18 @@ label-index balanced sample improves heldout spam F1 over random sampling
 further to 0.582. But random sampling still has much higher signed learning
 signal density, 4.991051 versus 2.585588 for label-index balance and 0.526972
 for the selector, because the extra class-index and validation-proxy costs are
-charged. Shrinking the validation set from 800 to 200 lowers selector cost and
-raises the 32-budget selector density to 1.019898, but it still does not beat
-random sampling in the matched artifact. This is the kind of negative control
-the paper needs: absolute quality gains are not enough unless the selector can
-pay for itself.
+charged. Table~\ref{tab:sms-spam-break-even} shows the algebraic reason. The
+32-message label-index policy has a quality multiplier of 1.348, but an
+event-compute multiplier of 2.565; it would need a break-even F1 gain of 1.046,
+which is outside the metric bound. Even at perfect spam F1 gain, its maximum
+possible density ratio would be 0.956. The validation label-index selector is
+clearer: its quality multiplier is 1.426, but its event-compute multiplier is
+13.297, so it would need a break-even gain of 5.423 and its perfect-quality
+density ratio would be only 0.184. Shrinking the validation set from 800 to 200
+lowers selector cost and raises the 32-budget selector density to 1.019898, but
+it still does not beat random sampling in the matched artifact. This is the kind
+of negative control the paper needs: absolute quality gains are not enough
+unless the selector can pay for itself.
 
 The current frontier has two useful signals and one important failure. First,
 the 16x8 profile halves neural training operations relative to 32x8 for the

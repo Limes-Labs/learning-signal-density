@@ -25,6 +25,18 @@ python3 -m learning_signal_density.real_text_experiment \
   --output-md results/sms_spam_real_text_selection_cost_v200.md
 ```
 
+Real-text break-even selector-cost audit:
+
+```bash
+python3 scripts/build_break_even_analysis.py \
+  --output-json results/sms_spam_break_even_analysis.json \
+  --output-md results/sms_spam_break_even_analysis.md
+```
+
+This audit introduces no new policy. It derives, for each non-random SMS policy,
+whether the observed spam-F1 gain is large enough to pay for the charged
+event-compute multiplier relative to random sampling.
+
 Current canonical pilot:
 
 ```bash

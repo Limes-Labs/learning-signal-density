@@ -29,6 +29,9 @@ The current pilot is intentionally modest:
   whether class-balanced and validation-selected sampling improve spam F1 after
   label-index construction, proxy validation, and candidate-selection costs are
   charged.
+- A break-even audit now turns that real-text result into a simple mathematical
+  test: at fixed external budget, a selector improves density only when its
+  quality multiplier exceeds its charged-compute multiplier.
 - A first tiny neural replication now uses a deterministic CPU MLP with the
   same split discipline and cost accounting; it is still not a language-model
   or frontier-model result.
@@ -171,6 +174,10 @@ using the same split and accounting discipline.
   selection-cost pilot with 800 validation examples.
 - `results/sms_spam_real_text_selection_cost_v200.*` - validation-size
   ablation of the same real-text selector setup with 200 validation examples.
+- `results/sms_spam_break_even_analysis.*` - mathematical break-even audit
+  showing that the current non-random SMS policies do not pay for their charged
+  selection cost; in the strongest low-budget cases, even perfect spam F1 would
+  not beat random sampling on density.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation
   accounting.

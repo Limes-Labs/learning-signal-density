@@ -28,6 +28,30 @@ rather than universal.
 - Xia et al., "LESS: Selecting Influential Data for Targeted Instruction
   Tuning", 2024. <https://arxiv.org/abs/2402.04333>
 
+MacKay's information-based active data selection is an early mathematical prior
+for choosing data by expected informativeness. It is useful here because it
+frames selection as a value problem rather than a generic preprocessing step.
+
+- MacKay, "Information-Based Objective Functions for Active Data Selection",
+  1992. <https://authors.library.caltech.edu/records/efefp-2j353>
+
+Settles' active-learning survey and later practice-oriented paper provide the
+right caution for this repo: active learning can reduce labeled examples, but
+real deployments may still fail to reduce total cost once practical overhead is
+included.
+
+- Settles, "Active Learning Literature Survey", 2009.
+  <https://research.cs.wisc.edu/techreports/2009/TR1648.pdf>
+- Settles, "From Theories to Queries: Active Learning in Practice", 2011.
+  <https://proceedings.mlr.press/v16/settles11a.html>
+
+Howard's information value theory is the broader decision-analysis ancestor:
+information should be valued jointly with the decision it improves and the cost
+of acquiring it.
+
+- Howard, "Information Value Theory", 1966.
+  <https://ui.adsabs.harvard.edu/abs/1966ITSSC...2...22H/abstract>
+
 ## Real-Text Dataset Probe
 
 UCI SMS Spam Collection is the first non-synthetic dataset used in this repo.

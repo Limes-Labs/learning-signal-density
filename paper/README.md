@@ -16,6 +16,7 @@ The generator currently reads:
 
 - `results/sms_spam_real_text_selection_cost.json`
 - `results/sms_spam_real_text_selection_cost_v200.json`
+- `results/sms_spam_break_even_analysis.json`
 - `results/tiny_neural_feature_sweep_wide.json`
 - `results/tiny_neural_profile_sweep_f1024.json`
 - `results/tiny_neural_budget_sweep_32x8_f1024.json`
@@ -128,6 +129,12 @@ The real-text SMS Spam artifacts must identify the UCI dataset, record the
 checked SHA-256 and CC BY 4.0 license, mark `synthetic_domain=false`, keep
 heldout out of selection, disclose label-index selection cost, and keep
 `paper_ready_claim=false`.
+The SMS break-even artifact must analyze those committed real-text artifacts,
+use random sampling as the reference condition, state the selector break-even
+inequality, mark itself as a post-hoc diagnostic, and preserve the current
+finding that no tested non-random SMS selector beats random on density. It must
+also record the configured quality upper bound used for the perfect-quality
+feasibility check.
 
 ## Release Checklist
 

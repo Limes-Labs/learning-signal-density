@@ -206,4 +206,7 @@ class with these rules:
 - Validation selectors may use validation labels for policy selection only when
   the condition scope discloses that use and charges proxy/scoring overhead.
 - Heldout examples may not be used for sampling-policy selection.
+- Break-even analysis may be run after the SMS artifacts are committed. It is a
+  mathematical diagnostic, not a new policy, and must use random sampling as the
+  reference unless a later addendum states otherwise.
 - The artifact remains exploratory and must mark `paper_ready_claim=false`.

@@ -41,6 +41,32 @@ class CommittedResultArtifactTests(unittest.TestCase):
             default["budgets"]["32"]["conditions"]["validation_label_index_selector"]["charged_compute_units_mean"],
         )
 
+    def test_sms_spam_break_even_artifact_records_selector_cost_inequality(self) -> None:
+        artifact = json.loads(Path("results/sms_spam_break_even_analysis.json").read_text())
+
+        self.assertEqual(artifact["reference_condition"], "random_sample")
+        self.assertEqual(
+            artifact["theorem"]["general_inequality"],
+            "G_candidate / G_reference > (N_candidate C_candidate) / (N_reference C_reference)",
+        )
+        self.assertEqual(artifact["claim_scope"]["post_hoc_diagnostic"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(artifact["quality_upper_bound"], 1.0)
+
+        v800_budget_32 = artifact["comparisons"]["SMS Spam v800"]["32"]
+        self.assertGreater(v800_budget_32["label_index_balanced_sample"]["break_even_quality"], 1.0)
+        self.assertFalse(v800_budget_32["label_index_balanced_sample"]["perfect_quality_can_beat"])
+        self.assertLess(v800_budget_32["label_index_balanced_sample"]["max_possible_density_ratio"], 1.0)
+        self.assertGreater(v800_budget_32["validation_label_index_selector"]["break_even_quality"], 1.0)
+        self.assertFalse(v800_budget_32["validation_label_index_selector"]["perfect_quality_can_beat"])
+        self.assertLess(v800_budget_32["validation_label_index_selector"]["max_possible_density_ratio"], 0.2)
+        self.assertEqual(v800_budget_32["validation_label_index_selector"]["candidate_density_wins"], False)
+
+        for by_budget in artifact["comparisons"].values():
+            for by_condition in by_budget.values():
+                for row in by_condition.values():
+                    self.assertLess(row["density_ratio"], 1.0)
+
     def test_confirmation_sweep_uses_disjoint_seeds_and_records_sample_aware_result(self) -> None:
         discovery = json.loads(Path("results/sample_budget_sweep.json").read_text())
         confirmation = json.loads(Path("results/confirmation_budget_sweep.json").read_text())
