@@ -20,6 +20,7 @@ The generator currently reads:
 - `results/twenty_newsgroups_active_selection.json`
 - `results/twenty_newsgroups_break_even_analysis.json`
 - `results/twenty_newsgroups_retrieval_cost_audit.json`
+- `results/twenty_newsgroups_self_training_audit.json`
 - `results/tiny_neural_feature_sweep_wide.json`
 - `results/tiny_neural_profile_sweep_f1024.json`
 - `results/tiny_neural_budget_sweep_32x8_f1024.json`
@@ -152,6 +153,10 @@ The Twenty Newsgroups retrieval-cost audit must disclose that it is a post-hoc
 optimization attempt, sweep the committed length-penalty grid, keep heldout
 closed, and preserve the finding that length penalties improve some
 retrieval-family rows without producing a random-density win.
+The Twenty Newsgroups self-training audit must use teacher predictions as
+pseudo-labels, keep oracle train labels diagnostic-only, keep heldout closed,
+and preserve the finding that pseudo-label agreement is too low for the tested
+margin filters to beat random or class-balanced density.
 
 ## Release Checklist
 

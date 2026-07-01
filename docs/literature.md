@@ -73,7 +73,9 @@ beat random sampling on heldout-quality multiplier by more than it increases
 event-compute multiplier. A second retrieval-cost audit sweeps a length penalty
 inside prototype retrieval; it is useful because it shows that cheaper selected
 documents help some retrieval rows, but do not remove the dominant full-scan
-cost.
+cost. A self-training audit then tests pseudo-label filtering as a small
+distillation analogue; the current teacher's pseudo-label agreement is too low
+for confidence-margin filtering to pay for itself.
 
 - "Twenty Newsgroups", UCI Machine Learning Repository.
   <https://archive.ics.uci.edu/ml/datasets/Twenty+Newsgroups>

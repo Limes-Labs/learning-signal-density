@@ -68,10 +68,13 @@ heldout-quality multiplier exceeds its charged event-compute multiplier. UCI SMS
 Spam Collection remains only a smaller binary sanity check for the same
 algebra. A length-penalized retrieval audit then tests whether the retrieval
 failure is mainly selected-document length or index/scan cost; it improves some
-retrieval rows but still does not beat random density. We extend the audit with
-an amortized-cost corollary that distinguishes selectors that could pay for
-themselves after enough independent reuse from selectors whose nonreusable cost
-is already too high.
+retrieval rows but still does not beat random density. A self-training audit
+then tests pseudo-label filtering as a small distillation analogue; the teacher
+labels are too noisy in this scarce-label regime and do not pay for their
+scoring and student-training cost. We extend the audit with an amortized-cost
+corollary that distinguishes selectors that could pay for themselves after
+enough independent reuse from selectors whose nonreusable cost is already too
+high.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -116,10 +119,11 @@ Newsgroups active-selection pilot for random sampling, class balancing,
 curriculum, prototype retrieval, and validation selection, together with a
 break-even audit that separates accuracy wins from density wins and a
 length-penalized retrieval audit that tests whether cheaper selected documents
-are enough. Sixth, it keeps a smaller SMS Spam binary sanity check for
-selector-cost algebra. Seventh, it adds selector break-even and amortization
-audits that turn selection overhead into explicit inequalities rather than
-qualitative caveats.
+are enough. Sixth, it adds a self-training pseudo-label audit that tests a
+distillation/filtering failure mode on the same real-text split. Seventh, it
+keeps a smaller SMS Spam binary sanity check for selector-cost algebra. Eighth,
+it adds selector break-even and amortization audits that turn selection overhead
+into explicit inequalities rather than qualitative caveats.
 
 \paragraph{Non-claims.}
 This is not a transformer-scale result, not a language-model leaderboard, and
@@ -314,6 +318,7 @@ their selection and validation overhead.
 Table~\ref{tab:twenty-newsgroups-active-selection},
 Table~\ref{tab:twenty-newsgroups-break-even},
 Table~\ref{tab:twenty-newsgroups-retrieval-cost-audit},
+Table~\ref{tab:twenty-newsgroups-self-training-audit},
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
 Table~\ref{tab:sms-spam-break-even},
@@ -390,6 +395,20 @@ documents, \(\alpha=0.5\) gives the best retrieval-family density, 0.000811
 versus 0.000675 for unpenalized prototype retrieval, but random is still
 0.006005. So selected-document length matters, but it is not the main bottleneck
 under this accounting; the full prototype/index scan remains too expensive.
+
+Table~\ref{tab:twenty-newsgroups-self-training-audit} tests a second path:
+pseudo-label filtering as a small, auditable analogue of distillation or
+synthetic-data filtering. A class-balanced teacher labels the train-only pool,
+we keep the highest-margin pseudo-labels globally or by predicted class, and a
+student trains on labeled plus pseudo-labeled examples. The result is a clean
+negative control. The best 40-document self-training row has pseudo-label
+agreement 0.154 and density 0.001270, far below class-balanced density 0.036293
+and random density 0.060065. At 80 documents, the best self-training row has
+agreement 0.175 and density 0.000875, again far below class-balanced 0.016884.
+At 160 documents, agreement rises only to 0.226 and density remains 0.000583.
+This says the current bottleneck is not merely filtering threshold choice; the
+teacher signal itself is too weak for pseudo-label expansion to be useful under
+charged scoring and student-training cost.
 
 The SMS Spam pilot is useful precisely because it does not produce an easy
 selector win. At 32 training messages with 800 validation examples, the

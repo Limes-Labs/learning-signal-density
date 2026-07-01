@@ -201,6 +201,11 @@ using the same split and accounting discipline.
   length-penalized prototype-retrieval audit. It improves some retrieval-family
   rows but preserves the negative conclusion that no tested retrieval alpha
   beats random sampling on learning-signal density.
+- `results/twenty_newsgroups_self_training_audit.*` - pseudo-label
+  self-training audit for distillation/filtering. It records that teacher
+  pseudo-label agreement is too low in the scarce-label regime and no tested
+  margin filter beats random or class-balanced density once scoring and student
+  training costs are charged.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation
   accounting.

@@ -104,6 +104,44 @@ class CommittedResultArtifactTests(unittest.TestCase):
             for row in budget_row["alpha_results"].values():
                 self.assertFalse(row["break_even_vs_random"]["candidate_density_wins"])
 
+    def test_twenty_newsgroups_self_training_audit_records_noisy_pseudo_labels(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_self_training_audit.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(artifact["pseudo_multipliers"], [1, 2])
+        self.assertEqual(artifact["filter_modes"], ["global_margin", "balanced_margin"])
+        self.assertEqual(artifact["claim_scope"]["pseudo_labels_use_teacher_predictions"], True)
+        self.assertEqual(artifact["claim_scope"]["oracle_train_labels_used_for_pseudo_label_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+
+        budget_40 = artifact["budgets"]["40"]
+        self.assertEqual(budget_40["best_self_training_condition"], "class_balanced_self_training_balanced_margin_2x")
+        self.assertLess(
+            budget_40["condition_results"][budget_40["best_self_training_condition"]]["pseudo_label_agreement_mean"],
+            0.2,
+        )
+        budget_80 = artifact["budgets"]["80"]
+        self.assertEqual(budget_80["best_self_training_condition"], "class_balanced_self_training_balanced_margin_1x")
+        self.assertLess(
+            budget_80["condition_results"][budget_80["best_self_training_condition"]][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            budget_80["class_balanced_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        budget_160 = artifact["budgets"]["160"]
+        self.assertLess(
+            budget_160["condition_results"][budget_160["best_self_training_condition"]]["pseudo_label_agreement_mean"],
+            0.25,
+        )
+        for budget_row in artifact["budgets"].values():
+            for row in budget_row["condition_results"].values():
+                self.assertLess(
+                    row["signed_learning_signal_density_per_1m_event_compute_mean"],
+                    budget_row["random_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+                )
+
     def test_sms_spam_real_text_artifacts_record_dataset_scope_and_cost_tradeoff(self) -> None:
         default = json.loads(Path("results/sms_spam_real_text_selection_cost.json").read_text())
         v200 = json.loads(Path("results/sms_spam_real_text_selection_cost_v200.json").read_text())

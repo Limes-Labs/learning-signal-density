@@ -9,6 +9,7 @@ from learning_signal_density.newsgroups_experiment import (
     run_newsgroups_seedset,
 )
 from scripts.build_newsgroups_retrieval_cost_audit import length_penalized_prototype_sample
+from scripts.build_newsgroups_self_training_audit import _select_pseudo_rows
 
 
 def _tiny_newsgroups_payload() -> bytes:
@@ -108,6 +109,19 @@ class NewsgroupsExperimentTests(unittest.TestCase):
             ["rec.autos", "sci.space", "talk.politics"],
         )
         self.assertEqual(candidate.selection_cost_tokens, sum(record.token_count for record in records) * 2)
+
+    def test_balanced_pseudo_row_selection_uses_teacher_predictions_not_true_labels(self) -> None:
+        rows = [
+            (NewsRecord("a", "true-a", "short"), "pred-a", 0.1),
+            (NewsRecord("b", "true-b", "short"), "pred-a", 0.9),
+            (NewsRecord("c", "true-c", "short"), "pred-b", 0.2),
+            (NewsRecord("d", "true-d", "short"), "pred-b", 0.8),
+        ]
+
+        selected = _select_pseudo_rows(rows, pseudo_count=2, filter_mode="balanced_margin")
+
+        self.assertEqual([row[0].record_id for row in selected], ["b", "d"])
+        self.assertEqual([row[1] for row in selected], ["pred-a", "pred-b"])
 
 
 if __name__ == "__main__":
