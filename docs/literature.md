@@ -62,12 +62,25 @@ of acquiring it.
 
 ## Real-Text Dataset Probe
 
+UCI Twenty Newsgroups is the first broader NLP active-selection pilot in this
+repo. It is multi-class topic classification rather than binary filtering, and
+it supports active-learning, curriculum, retrieval/prototype, and selector-cost
+questions. The experiment strips headers, quote lines, and reply boilerplate
+before splitting because metadata leakage is a known practical issue for this
+dataset family.
+
+- "Twenty Newsgroups", UCI Machine Learning Repository.
+  <https://archive.ics.uci.edu/ml/datasets/Twenty+Newsgroups>
+- Rennie's 20 Newsgroups page records the common description of the corpus as
+  approximately 20,000 documents partitioned across 20 newsgroups.
+  <https://qwone.com/~jason/20Newsgroups/>
+
 UCI SMS Spam Collection is the first non-synthetic dataset used in this repo.
 It is small enough for stdlib-only CI-style experiments, public, licensed CC BY
 4.0, and directly aligned with class-imbalanced binary text classification. The
-current use is not an SMS-filtering leaderboard; it is a selection-cost sanity
-check where spam-class F1 is measured against charged sampling and validation
-overhead.
+current use is not the central NLP benchmark and not an SMS-filtering
+leaderboard; it is a selection-cost sanity check where spam-class F1 is
+measured against charged sampling and validation overhead.
 
 - Almeida and Hidalgo, "SMS Spam Collection", UCI Machine Learning Repository,
   2011. <https://archive.ics.uci.edu/dataset/228/sms+spam+collection>

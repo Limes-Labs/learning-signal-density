@@ -17,6 +17,7 @@ The generator currently reads:
 - `results/sms_spam_real_text_selection_cost.json`
 - `results/sms_spam_real_text_selection_cost_v200.json`
 - `results/sms_spam_break_even_analysis.json`
+- `results/twenty_newsgroups_active_selection.json`
 - `results/tiny_neural_feature_sweep_wide.json`
 - `results/tiny_neural_profile_sweep_f1024.json`
 - `results/tiny_neural_budget_sweep_32x8_f1024.json`
@@ -136,6 +137,10 @@ finding that no tested non-random SMS selector beats random on density. It must
 also record the configured quality upper bound used for the perfect-quality
 feasibility check and the reusable-cost keys used for selector-cost
 amortization.
+The Twenty Newsgroups artifact must use the UCI mini corpus, mark itself as
+real and non-synthetic, strip metadata/quotes before splitting, keep heldout
+closed for selection, and include random, class-balanced, curriculum,
+prototype-retrieval, and validation-selector conditions.
 
 ## Release Checklist
 

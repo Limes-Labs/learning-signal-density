@@ -25,10 +25,12 @@ The current pilot is intentionally modest:
 
 - It is not a neural language-model result.
 - It uses an online linear learner as the first audit instrument.
-- A first real-text sanity check now runs on UCI SMS Spam Collection. It tests
-  whether class-balanced and validation-selected sampling improve spam F1 after
-  label-index construction, proxy validation, and candidate-selection costs are
-  charged.
+- The first broader NLP active-selection pilot now runs on UCI Twenty
+  Newsgroups mini: random sampling, class balancing, length curriculum,
+  prototype retrieval, and a validation selector are compared after stripping
+  headers, quotes, and reply boilerplate.
+- UCI SMS Spam Collection remains as a small binary sanity check for selector
+  break-even algebra. It is not the intended central NLP benchmark.
 - A break-even audit now turns that real-text result into a simple mathematical
   test: at fixed external budget, a selector improves density only when its
   quality multiplier exceeds its charged-compute multiplier.
@@ -166,6 +168,9 @@ using the same split and accounting discipline.
 - `learning_signal_density/real_text_experiment.py` - stdlib-only real-text SMS
   Spam loader, stratified splitter, sampling-policy probes, cost accounting,
   and artifact writer.
+- `learning_signal_density/newsgroups_experiment.py` - stdlib-only UCI Twenty
+  Newsgroups loader, metadata stripping, multiclass perceptron, curriculum,
+  prototype-retrieval, validation-selector, and cost-accounting artifact writer.
 - `tests/` - unit tests for split isolation, pipeline accounting, and artifact
   honesty flags.
 - `docs/preregistration.md` - first locked hypothesis, metrics, anti-cheat
@@ -182,6 +187,11 @@ using the same split and accounting discipline.
   selection cost; in the strongest low-budget cases, even perfect spam F1 would
   not beat random sampling on density. It also records whether reusable selector
   cost could be amortized over enough downstream uses to change the conclusion.
+- `results/twenty_newsgroups_active_selection.*` - real NLP active-selection
+  pilot showing the core tradeoff: prototype retrieval can improve heldout
+  accuracy, but random or class-balanced sampling can dominate on
+  learning-signal density once retrieval and validation-selection costs are
+  charged.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation
   accounting.

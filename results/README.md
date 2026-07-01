@@ -25,6 +25,19 @@ python3 -m learning_signal_density.real_text_experiment \
   --output-md results/sms_spam_real_text_selection_cost_v200.md
 ```
 
+Twenty Newsgroups active-selection pilot:
+
+```bash
+python3 -m learning_signal_density.newsgroups_experiment \
+  --output-json results/twenty_newsgroups_active_selection.json \
+  --output-md results/twenty_newsgroups_active_selection.md
+```
+
+This is the first broader NLP dataset probe. It compares random sampling,
+class-balanced sampling, length curriculum, prototype retrieval, and a
+validation selector after stripping newsgroup headers, quote lines, and reply
+boilerplate.
+
 Real-text break-even selector-cost audit:
 
 ```bash

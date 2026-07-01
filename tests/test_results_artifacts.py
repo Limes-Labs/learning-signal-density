@@ -4,6 +4,45 @@ from pathlib import Path
 
 
 class CommittedResultArtifactTests(unittest.TestCase):
+    def test_twenty_newsgroups_artifact_records_real_nlp_selection_tradeoffs(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_active_selection.json").read_text())
+
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(artifact["dataset"]["label_count"], 20)
+        self.assertEqual(artifact["dataset"]["license"], "CC BY 4.0")
+        self.assertEqual(
+            artifact["dataset"]["sha256"],
+            "cfbb360d6c1e55c06d33a4c5da0789a93b78db74833a70be8ff2e133cc4e6a6e",
+        )
+        self.assertEqual(artifact["claim_scope"]["real_dataset"], True)
+        self.assertEqual(artifact["claim_scope"]["synthetic_domain"], False)
+        self.assertEqual(artifact["claim_scope"]["metadata_stripped"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertIn("prototype_retrieval_sample", artifact["condition_scope"])
+        self.assertIn("length_curriculum_sample", artifact["condition_scope"])
+        self.assertIn("validation_selector", artifact["condition_scope"])
+
+        budget_40 = artifact["budgets"]["40"]["conditions"]
+        self.assertGreater(
+            budget_40["prototype_retrieval_sample"]["heldout_accuracy_mean"],
+            budget_40["random_sample"]["heldout_accuracy_mean"],
+        )
+        self.assertGreater(
+            budget_40["random_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_40["prototype_retrieval_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        self.assertGreater(
+            budget_40["validation_selector"]["charged_compute_units_mean"],
+            budget_40["prototype_retrieval_sample"]["charged_compute_units_mean"],
+        )
+
+        budget_80 = artifact["budgets"]["80"]["conditions"]
+        self.assertGreater(
+            budget_80["class_balanced_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_80["random_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+
     def test_sms_spam_real_text_artifacts_record_dataset_scope_and_cost_tradeoff(self) -> None:
         default = json.loads(Path("results/sms_spam_real_text_selection_cost.json").read_text())
         v200 = json.loads(Path("results/sms_spam_real_text_selection_cost_v200.json").read_text())

@@ -14,7 +14,7 @@
 
 \title{Learning Signal Density: External-Sample and Internal-Compute Efficiency in Learning Loops}
 \author{Francesco Giannicola \\ Limes Labs}
-\date{June 2026}
+\date{July 2026}
 
 \newcommand{\LSD}{\mathrm{LSD}}
 \newcommand{\E}{\mathbb{E}}
@@ -58,18 +58,17 @@ remaining selector problem: local transition windows can improve boundary rows,
 and cheap validation calibration can improve one high-budget frontier, but late
 false positives, seed-block transfer, transition-prior dependence, and
 inspection cost still prevent a solved adaptive policy.
-As a first non-synthetic sanity check, we also run the same accounting style on
-UCI SMS Spam Collection. We then derive and audit a selector break-even
-condition: at fixed external budget, a selected policy improves density only
-when its heldout-quality multiplier exceeds its charged-compute multiplier.
-We extend the audit with an amortized-cost corollary that distinguishes
-selectors that could pay for themselves after enough independent reuse from
-selectors whose nonreusable cost is already too high. The real-text result is
-useful precisely because it is negative under per-run charging. Class-balanced
-and validation-selected samples can improve spam F1, but after label-index
-construction, proxy validation, and unreused candidate costs are charged, every
-tested non-random SMS policy remains below random sampling on learning-signal
-density.
+As a first broader non-synthetic NLP probe, we run the same accounting style on
+UCI Twenty Newsgroups mini. Prototype retrieval improves heldout accuracy at
+some scarce-label budgets, but random or class-balanced sampling remains
+stronger on learning-signal density once retrieval scans and validation-selector
+costs are charged. UCI SMS Spam Collection remains only a smaller binary sanity
+check for the selector break-even algebra. We derive that break-even condition:
+at fixed external budget, a selected policy improves density only when its
+heldout-quality multiplier exceeds its charged-compute multiplier. We extend
+the audit with an amortized-cost corollary that distinguishes selectors that
+could pay for themselves after enough independent reuse from selectors whose
+nonreusable cost is already too high.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -102,18 +101,19 @@ because the hidden rulebook, train/validation/heldout split, and generated-label
 provenance can be controlled exactly.
 
 \paragraph{Contributions in the current repository.}
-The repository currently provides five pieces of evidence. First, it defines a
+The repository currently provides seven pieces of evidence. First, it defines a
 costed artifact schema for external events, internal examples, internal tokens,
 charged transform cost, neural step count, estimated neural operations, and
 claim scope. Second, it implements train-only and oracle transformation
 policies under fixed heldout isolation. Third, it records fresh-seed tiny-MLP
 sample-budget, feature-width, and epoch/width ablations. Fourth, the paper
 tables below are generated from committed result JSON, so the manuscript cannot
-silently drift away from the artifacts. Fifth, it adds a real-text SMS Spam
-selection-cost pilot to test whether the same accounting catches selector-cost
-failure outside the synthetic causal world. Sixth, it adds a selector
-break-even and amortization audit that turns selection overhead into explicit
-inequalities rather than qualitative caveats.
+silently drift away from the artifacts. Fifth, it adds a real-text Twenty
+Newsgroups active-selection pilot for random sampling, class balancing,
+curriculum, prototype retrieval, and validation selection. Sixth, it keeps a
+smaller SMS Spam binary sanity check for selector-cost algebra. Seventh, it
+adds a selector break-even and amortization audit that turns selection overhead
+into explicit inequalities rather than qualitative caveats.
 
 \paragraph{Non-claims.}
 This is not a transformer-scale result, not a language-model leaderboard, and
@@ -281,19 +281,31 @@ A fixed-window high-budget control then asks whether simple train-event
 breakpoints are enough: compact below 320 train events, raw from 320 to 400,
 support-ramped compact from 400 to 432, and raw again after 432.
 
-The real-text pilot uses UCI SMS Spam Collection \cite{almeida2011smsdataset},
-a public binary SMS classification dataset with 5,574 labeled messages. The
-learner is the same dependency-light linear text learner used by the synthetic
-pilot, and the primary metric is spam-class F1 rather than accuracy because the
-dataset is class-imbalanced. We compare uniform random sampling, full-pool
-class-balanced sampling, a cheaper label-index balanced variant, and validation
-selectors that choose between random and balanced candidates before heldout is
-opened. The point is not to claim state-of-the-art SMS filtering. The point is
-to check whether the cost accounting rejects selector policies whose absolute
-F1 gains are smaller than their selection and validation overhead.
+The primary real-text NLP pilot uses UCI Twenty Newsgroups
+\cite{twentynewsgroupsuci,rennie20newsgroups}, a public multi-class topic
+classification corpus. We use the UCI mini corpus for a dependency-light
+artifact, strip headers, quote lines, and reply boilerplate before splitting,
+then compare uniform random sampling, class-balanced sampling, a simple
+length-curriculum policy, a label-conditioned prototype-retrieval policy, and a
+validation selector that chooses among those candidates before heldout is
+opened. This is the first experiment in the paper aligned with active learning,
+retrieval, and curriculum learning; it is still a pilot, not a leaderboard.
+
+The smaller real-text sanity check uses UCI SMS Spam Collection
+\cite{almeida2011smsdataset}, a public binary SMS classification dataset with
+5,574 labeled messages. The learner is the same dependency-light linear text
+learner used by the synthetic pilot, and the primary metric is spam-class F1
+rather than accuracy because the dataset is class-imbalanced. We compare
+uniform random sampling, full-pool class-balanced sampling, a cheaper
+label-index balanced variant, and validation selectors that choose between
+random and balanced candidates before heldout is opened. The point is not to
+claim state-of-the-art SMS filtering. The point is to check whether the cost
+accounting rejects selector policies whose absolute F1 gains are smaller than
+their selection and validation overhead.
 
 \section{Results}
 
+Table~\ref{tab:twenty-newsgroups-active-selection},
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
 Table~\ref{tab:sms-spam-break-even},
@@ -329,6 +341,20 @@ artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
 
 \input{generated/results_tables.tex}
+
+The Twenty Newsgroups pilot is the result that better matches active learning,
+retrieval, and curriculum learning. At 40 training documents, prototype
+retrieval improves heldout accuracy over random sampling, 0.102 versus 0.093,
+but its signed density is much lower, 0.001772 versus 0.060065, because the
+prototype scan is charged. At 80 documents, class-balanced sampling ties random
+accuracy at 0.102 while using less charged compute, so it has higher density
+(0.016884 versus 0.013418). At 160 documents, prototype retrieval again has the
+best heldout accuracy, 0.145, but random sampling has much higher density
+(0.006005 versus 0.000675). The validation selector is a useful negative
+control: in this small pilot it pays proxy and validation costs but does not
+recover enough quality to beat the simple baselines. This is the paper's core
+real-NLP lesson so far: retrieval or active selection can improve accuracy, but
+under a costed learning-loop metric it must also beat the selection bill.
 
 The SMS Spam pilot is useful precisely because it does not produce an easy
 selector win. At 32 training messages with 800 validation examples, the
