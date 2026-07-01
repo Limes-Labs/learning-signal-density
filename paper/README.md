@@ -134,7 +134,8 @@ use random sampling as the reference condition, state the selector break-even
 inequality, mark itself as a post-hoc diagnostic, and preserve the current
 finding that no tested non-random SMS selector beats random on density. It must
 also record the configured quality upper bound used for the perfect-quality
-feasibility check.
+feasibility check and the reusable-cost keys used for selector-cost
+amortization.
 
 ## Release Checklist
 

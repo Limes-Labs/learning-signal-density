@@ -28,10 +28,18 @@ CANDIDATE_CONDITIONS = (
 )
 QUALITY_KEY = "spam_f1_improvement_over_majority_mean"
 QUALITY_UPPER_BOUND = 1.0
+REUSABLE_COMPUTE_KEYS = ("selection_cost_tokens_mean", "validation_tuning_cost_tokens_mean")
 
 
 def _round(value: float) -> float:
     return round(value, 6)
+
+
+def _mean_optional(values: list[int | float | None]) -> float | None:
+    finite = [value for value in values if value is not None]
+    if not finite:
+        return None
+    return _round(mean(finite))
 
 
 def load_json(path: Path) -> dict:
@@ -61,6 +69,7 @@ def build_sms_break_even_analysis(repo_root: Path) -> dict:
                     candidate=candidate,
                     quality_key=QUALITY_KEY,
                     quality_upper_bound=QUALITY_UPPER_BOUND,
+                    reusable_compute_keys=REUSABLE_COMPUTE_KEYS,
                 )
                 comparisons[label][budget_key][condition] = row
                 condition_records[condition].append(row)
@@ -75,6 +84,9 @@ def build_sms_break_even_analysis(repo_root: Path) -> dict:
                 "mean_event_compute_multiplier": _round(mean(row["event_compute_multiplier"] for row in rows)),
                 "mean_quality_multiplier": _round(mean(row["quality_multiplier"] for row in rows)),
                 "mean_compute_over_break_even": _round(mean(row["compute_over_break_even"] for row in rows)),
+                "mean_amortized_reuses_to_density_win": _mean_optional(
+                    [row["amortized_reuses_to_density_win"] for row in rows]
+                ),
             }
 
     return {
@@ -85,6 +97,14 @@ def build_sms_break_even_analysis(repo_root: Path) -> dict:
         "candidate_conditions": list(CANDIDATE_CONDITIONS),
         "quality_metric": QUALITY_KEY,
         "quality_upper_bound": QUALITY_UPPER_BOUND,
+        "amortization_model": {
+            "reusable_compute_keys": list(REUSABLE_COMPUTE_KEYS),
+            "formula": "C_candidate(K) = C_nonreusable + C_reusable / K",
+            "interpretation": (
+                "K is the number of independent downstream uses over which selector construction "
+                "and validation-tuning costs can be reused without changing the observed quality gain."
+            ),
+        },
         "theorem": {
             "name": "same-budget selector break-even",
             "statement": (
@@ -96,6 +116,10 @@ def build_sms_break_even_analysis(repo_root: Path) -> dict:
             "bounded_metric_corollary": (
                 "If break_even_quality is greater than or equal to the metric upper bound, even perfect "
                 "candidate quality cannot strictly beat the reference density under the charged cost model."
+            ),
+            "amortized_reuse_corollary": (
+                "With reusable selector cost R and nonreusable cost F, same-budget density can win after K "
+                "reuses exactly when F + R/K is below the candidate max_affordable_compute_units."
             ),
         },
         "claim_scope": {
@@ -131,8 +155,8 @@ def render_markdown(result: dict) -> str:
             [
                 f"## {artifact_label}",
                 "",
-                "| Budget | Candidate | Quality mult. | Event-compute mult. | Density ratio | Max possible density | Break-even quality | Compute over break-even |",
-                "| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+                "| Budget | Candidate | Quality mult. | Event-compute mult. | Density ratio | Max possible density | Break-even quality | Compute over break-even | Reuses to win | Fully amortized ratio |",
+                "| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
             ]
         )
         for budget, candidates in budgets.items():
@@ -149,6 +173,12 @@ def render_markdown(result: dict) -> str:
                             f"{row['max_possible_density_ratio']:.3f}",
                             f"{row['break_even_quality']:.3f}",
                             f"{row['compute_over_break_even']:.3f}",
+                            str(row["amortized_reuses_to_density_win"])
+                            if row["amortized_reuses_to_density_win"] is not None
+                            else "never",
+                            f"{row['fully_amortized_density_ratio']:.3f}"
+                            if row["fully_amortized_density_ratio"] is not None
+                            else "n/a",
                         ]
                     )
                     + " |"
@@ -162,6 +192,8 @@ def render_markdown(result: dict) -> str:
             "- `break_even_quality >= quality_upper_bound` means the candidate could not strictly beat random even with perfect spam F1 under the charged cost model.",
             "- `max_possible_density_ratio` is the best density ratio reachable at the configured quality upper bound.",
             "- `compute_over_break_even` is the factor by which charged compute exceeds what the observed quality gain can afford.",
+            "- `amortized_reuses_to_density_win` is the minimum number of independent downstream uses needed if selector and validation-tuning costs are reusable.",
+            "- `fully_amortized_density_ratio` is the limiting ratio after the reusable cost is spread over infinitely many uses.",
             "",
             "## Scope Flags",
             "",

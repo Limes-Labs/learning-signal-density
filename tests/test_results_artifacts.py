@@ -52,15 +52,26 @@ class CommittedResultArtifactTests(unittest.TestCase):
         self.assertEqual(artifact["claim_scope"]["post_hoc_diagnostic"], True)
         self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
         self.assertEqual(artifact["quality_upper_bound"], 1.0)
+        self.assertEqual(
+            artifact["amortization_model"]["reusable_compute_keys"],
+            ["selection_cost_tokens_mean", "validation_tuning_cost_tokens_mean"],
+        )
 
         v800_budget_32 = artifact["comparisons"]["SMS Spam v800"]["32"]
         self.assertGreater(v800_budget_32["label_index_balanced_sample"]["break_even_quality"], 1.0)
         self.assertFalse(v800_budget_32["label_index_balanced_sample"]["perfect_quality_can_beat"])
         self.assertLess(v800_budget_32["label_index_balanced_sample"]["max_possible_density_ratio"], 1.0)
+        self.assertEqual(v800_budget_32["label_index_balanced_sample"]["amortized_reuses_to_density_win"], 9)
+        self.assertGreater(v800_budget_32["label_index_balanced_sample"]["fully_amortized_density_ratio"], 1.0)
         self.assertGreater(v800_budget_32["validation_label_index_selector"]["break_even_quality"], 1.0)
         self.assertFalse(v800_budget_32["validation_label_index_selector"]["perfect_quality_can_beat"])
         self.assertLess(v800_budget_32["validation_label_index_selector"]["max_possible_density_ratio"], 0.2)
+        self.assertEqual(v800_budget_32["validation_label_index_selector"]["amortized_reuses_to_density_win"], 47)
         self.assertEqual(v800_budget_32["validation_label_index_selector"]["candidate_density_wins"], False)
+
+        v200_budget_32 = artifact["comparisons"]["SMS Spam v200"]["32"]["validation_label_index_selector"]
+        self.assertIsNone(v200_budget_32["amortized_reuses_to_density_win"])
+        self.assertLess(v200_budget_32["fully_amortized_density_ratio"], 1.0)
 
         for by_budget in artifact["comparisons"].values():
             for by_condition in by_budget.values():

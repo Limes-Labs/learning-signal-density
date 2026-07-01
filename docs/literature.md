@@ -45,6 +45,14 @@ included.
 - Settles, "From Theories to Queries: Active Learning in Practice", 2011.
   <https://proceedings.mlr.press/v16/settles11a.html>
 
+Baldridge and Osborne make the reuse caveat concrete for language technology:
+training material selected actively for one model can be brittle when reused
+with other models, so total annotation cost and reusability have to be measured
+instead of assumed.
+
+- Baldridge and Osborne, "Active Learning and the Total Cost of Annotation",
+  2004. <https://aclanthology.org/W04-3202/>
+
 Howard's information value theory is the broader decision-analysis ancestor:
 information should be valued jointly with the decision it improves and the cost
 of acquiring it.

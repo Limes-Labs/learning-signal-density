@@ -32,6 +32,9 @@ The current pilot is intentionally modest:
 - A break-even audit now turns that real-text result into a simple mathematical
   test: at fixed external budget, a selector improves density only when its
   quality multiplier exceeds its charged-compute multiplier.
+- The same audit includes a selector-cost amortization check: if selection and
+  validation-tuning costs are reusable, the artifact reports the minimum reuse
+  count needed to beat random density, or records that no finite reuse can win.
 - A first tiny neural replication now uses a deterministic CPU MLP with the
   same split discipline and cost accounting; it is still not a language-model
   or frontier-model result.
@@ -177,7 +180,8 @@ using the same split and accounting discipline.
 - `results/sms_spam_break_even_analysis.*` - mathematical break-even audit
   showing that the current non-random SMS policies do not pay for their charged
   selection cost; in the strongest low-budget cases, even perfect spam F1 would
-  not beat random sampling on density.
+  not beat random sampling on density. It also records whether reusable selector
+  cost could be amortized over enough downstream uses to change the conclusion.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation
   accounting.

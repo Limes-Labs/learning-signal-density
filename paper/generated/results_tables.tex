@@ -65,6 +65,26 @@ SMS Spam v200 & Label-index balanced & 256 & 1.023 & 1.479 & 0.691 & 0.871 & 1.1
 
 \begin{table}[htbp]
 \centering
+\caption{Amortized selector-cost audit for SMS Spam. Reuses is the minimum number of independent downstream uses needed to beat random density if selector construction and validation-tuning costs are reusable; Never means the nonreusable compute already exceeds the observed-gain affordability bound. Limit ratio is the density ratio after spreading reusable cost over infinitely many uses.}
+\label{tab:sms-spam-amortized-reuse}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}rlrrrrrr@{}}
+\toprule
+Artifact & Candidate & Budget & Reuse frac. & Fixed cost & Affordable & Reuses & Limit ratio \\
+\midrule
+SMS Spam v800 & Label-index balanced & 32 & 0.537 & 3.1k & 3.5k & 9 & 1.136 \\
+SMS Spam v800 & Validation label-index selector & 32 & 0.913 & 3.0k & 3.7k & 47 & 1.226 \\
+SMS Spam v800 & Label-index balanced & 64 & 0.368 & 6.1k & 6.0k & Never & 0.980 \\
+SMS Spam v800 & Validation label-index selector & 512 & 0.617 & 40.8k & 41.6k & 82 & 1.020 \\
+SMS Spam v200 & Validation label-index selector & 32 & 0.803 & 3.2k & 3.0k & Never & 0.934 \\
+SMS Spam v200 & Validation label-index selector & 256 & 0.586 & 20.4k & 20.6k & 161 & 1.009 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
 \caption{Fresh-seed f1024 neural frontier. First target is the smallest external-material budget reaching \LsdPaperTargetGain{} signed gain. Best LSD is signed learning-signal density per one million event-compute units.}
 \label{tab:f1024-profile-frontier}
 \begin{tabular}{@{}llrrrr@{}}

@@ -35,7 +35,9 @@ python3 scripts/build_break_even_analysis.py \
 
 This audit introduces no new policy. It derives, for each non-random SMS policy,
 whether the observed spam-F1 gain is large enough to pay for the charged
-event-compute multiplier relative to random sampling.
+event-compute multiplier relative to random sampling. It also reports an
+amortized variant where selector construction and validation-tuning costs are
+spread across repeated downstream uses.
 
 Current canonical pilot:
 

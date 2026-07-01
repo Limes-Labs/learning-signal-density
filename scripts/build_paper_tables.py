@@ -166,6 +166,12 @@ def fmt_target(value: int | None) -> str:
     return str(value)
 
 
+def fmt_reuse_count(value: int | None) -> str:
+    if value is None:
+        return "Never"
+    return str(value)
+
+
 def fmt_ops(value: float) -> str:
     if value >= 1_000_000:
         return f"{value / 1_000_000:.2f}M"
@@ -723,6 +729,12 @@ def validate_break_even_scope(artifact_path: Path, artifact: dict[str, Any]) -> 
         raise ValueError(f"{artifact_path} must use random sampling as the break-even reference")
     if artifact.get("quality_upper_bound") != 1.0:
         raise ValueError(f"{artifact_path} must record the spam F1 gain upper bound")
+    amortization = artifact.get("amortization_model", {})
+    if amortization.get("reusable_compute_keys") != [
+        "selection_cost_tokens_mean",
+        "validation_tuning_cost_tokens_mean",
+    ]:
+        raise ValueError(f"{artifact_path} must record the selector-cost amortization model")
     scope = artifact.get("claim_scope", {})
     if scope.get("real_dataset") is not True:
         raise ValueError(f"{artifact_path} must be marked as a real-dataset audit")
@@ -743,6 +755,8 @@ def validate_break_even_scope(artifact_path: Path, artifact: dict[str, Any]) -> 
                     raise ValueError(f"{artifact_path} must preserve the current no-selector-density-win finding")
                 if "max_possible_density_ratio" not in row or "perfect_quality_can_beat" not in row:
                     raise ValueError(f"{artifact_path} must record bounded-metric break-even fields")
+                if "amortized_reuses_to_density_win" not in row or "fully_amortized_density_ratio" not in row:
+                    raise ValueError(f"{artifact_path} must record amortized-reuse break-even fields")
 
 
 def load_break_even_artifact(repo_root: Path) -> dict[str, Any]:
@@ -2347,6 +2361,49 @@ def build_sms_break_even_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_sms_amortized_reuse_table(repo_root: Path) -> str:
+    artifact = load_break_even_artifact(repo_root)
+    rows_to_show = (
+        ("SMS Spam v800", "32", "label_index_balanced_sample"),
+        ("SMS Spam v800", "32", "validation_label_index_selector"),
+        ("SMS Spam v800", "64", "label_index_balanced_sample"),
+        ("SMS Spam v800", "512", "validation_label_index_selector"),
+        ("SMS Spam v200", "32", "validation_label_index_selector"),
+        ("SMS Spam v200", "256", "validation_label_index_selector"),
+    )
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Amortized selector-cost audit for SMS Spam. Reuses is the minimum number of independent downstream uses needed to beat random density if selector construction and validation-tuning costs are reusable; Never means the nonreusable compute already exceeds the observed-gain affordability bound. Limit ratio is the density ratio after spreading reusable cost over infinitely many uses.}",
+        r"\label{tab:sms-spam-amortized-reuse}",
+        r"\scriptsize",
+        r"\setlength{\tabcolsep}{2pt}",
+        r"\begin{tabular}{@{}rlrrrrrr@{}}",
+        r"\toprule",
+        r"Artifact & Candidate & Budget & Reuse frac. & Fixed cost & Affordable & Reuses & Limit ratio \\",
+        r"\midrule",
+    ]
+    for artifact_label, budget, condition in rows_to_show:
+        row = artifact["comparisons"][artifact_label][budget][condition]
+        lines.append(
+            " & ".join(
+                [
+                    latex_escape(artifact_label),
+                    latex_escape(condition_label(condition)),
+                    budget,
+                    fmt_float(row["reusable_compute_fraction"], digits=3),
+                    latex_escape(fmt_ops(row["candidate_nonreusable_compute_units"])),
+                    latex_escape(fmt_ops(row["max_affordable_compute_units"])),
+                    fmt_reuse_count(row["amortized_reuses_to_density_win"]),
+                    fmt_float(row["fully_amortized_density_ratio"], digits=3),
+                ]
+            )
+            + r" \\"
+        )
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def render_tables(repo_root: Path) -> str:
     return "\n".join(
         [
@@ -2354,6 +2411,7 @@ def render_tables(repo_root: Path) -> str:
             build_real_text_selection_cost_table(repo_root),
             build_real_text_validation_size_table(repo_root),
             build_sms_break_even_table(repo_root),
+            build_sms_amortized_reuse_table(repo_root),
             build_frontier_table(repo_root),
             build_validation_selected_table(repo_root),
             build_policy_envelope_table(repo_root),

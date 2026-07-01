@@ -209,4 +209,7 @@ class with these rules:
 - Break-even analysis may be run after the SMS artifacts are committed. It is a
   mathematical diagnostic, not a new policy, and must use random sampling as the
   reference unless a later addendum states otherwise.
+- Amortized selector-cost analysis may treat selector construction and
+  validation-tuning cost as reusable only when the artifact explicitly records
+  the reusable keys and reports the required reuse count.
 - The artifact remains exploratory and must mark `paper_ready_claim=false`.

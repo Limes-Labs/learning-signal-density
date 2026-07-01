@@ -62,11 +62,14 @@ As a first non-synthetic sanity check, we also run the same accounting style on
 UCI SMS Spam Collection. We then derive and audit a selector break-even
 condition: at fixed external budget, a selected policy improves density only
 when its heldout-quality multiplier exceeds its charged-compute multiplier.
-The real-text result is useful precisely because it is negative under that
-test. Class-balanced and validation-selected samples can improve spam F1, but
-after label-index construction, proxy validation, and unreused candidate costs
-are charged, every tested non-random SMS policy remains below random sampling
-on learning-signal density.
+We extend the audit with an amortized-cost corollary that distinguishes
+selectors that could pay for themselves after enough independent reuse from
+selectors whose nonreusable cost is already too high. The real-text result is
+useful precisely because it is negative under per-run charging. Class-balanced
+and validation-selected samples can improve spam F1, but after label-index
+construction, proxy validation, and unreused candidate costs are charged, every
+tested non-random SMS policy remains below random sampling on learning-signal
+density.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -108,7 +111,9 @@ sample-budget, feature-width, and epoch/width ablations. Fourth, the paper
 tables below are generated from committed result JSON, so the manuscript cannot
 silently drift away from the artifacts. Fifth, it adds a real-text SMS Spam
 selection-cost pilot to test whether the same accounting catches selector-cost
-failure outside the synthetic causal world.
+failure outside the synthetic causal world. Sixth, it adds a selector
+break-even and amortization audit that turns selection overhead into explicit
+inequalities rather than qualitative caveats.
 
 \paragraph{Non-claims.}
 This is not a transformer-scale result, not a language-model leaderboard, and
@@ -164,6 +169,33 @@ loss if its quality multiplier is smaller than its charged compute multiplier.
 The point aligns with practical active-learning concerns: selecting labels can
 reduce labeled examples in theory, but real systems may fail to reduce total
 annotation, engineering, or computation cost \cite{settles2011theories}.
+It also mirrors earlier total-cost and reuse cautions in active learning:
+selected material can be brittle when later reused with different models
+\cite{baldridge2004active}.
+
+\paragraph{Amortized selector-cost corollary.}
+Some selector costs are paid once and reused. Let a candidate's charged compute
+decompose into nonreusable cost $F_a$ and reusable selector cost $R_a$. If the
+selector is reused across $K$ independent downstream uses with the same observed
+gain, its effective compute is
+\[
+C_a(K)=F_a+\frac{R_a}{K}.
+\]
+For fixed external budget against reference policy $b$, policy $a$ wins exactly
+when
+\[
+F_a+\frac{R_a}{K}
+<
+\frac{C_bG_a}{G_b}.
+\]
+Thus there are three regimes: it wins at $K=1$; it can win only after
+\[
+K>
+\frac{R_a}{C_bG_a/G_b-F_a};
+\]
+or no finite reuse can make it win because $F_a\ge C_bG_a/G_b$. The last case is
+important: amortization cannot rescue a selector whose nonreusable training
+cost already exceeds the observed-gain affordability bound.
 
 \section{Anti-Cheat Rules}
 
@@ -265,6 +297,7 @@ F1 gains are smaller than their selection and validation overhead.
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
 Table~\ref{tab:sms-spam-break-even},
+Table~\ref{tab:sms-spam-amortized-reuse},
 Table~\ref{tab:f1024-profile-frontier},
 Table~\ref{tab:validation-selected-reliability-probe},
 Table~\ref{tab:post-hoc-policy-envelope},
@@ -316,6 +349,18 @@ lowers selector cost and raises the 32-budget selector density to 1.019898, but
 it still does not beat random sampling in the matched artifact. This is the kind
 of negative control the paper needs: absolute quality gains are not enough
 unless the selector can pay for itself.
+
+Table~\ref{tab:sms-spam-amortized-reuse} asks the more generous question: what
+if selector construction and validation-tuning costs are reusable? This changes
+the interpretation without erasing the negative result. The 32-message v800
+label-index policy would need 9 independent downstream uses to beat random
+density at its observed F1 gain, and the 32-message validation label-index
+selector would need 47. By contrast, the 32-message v200 validation selector
+cannot win even after infinite reuse, because its nonreusable cost is already
+larger than the cost justified by its observed gain. This gives the paper a
+usable decision rule: selection overhead is acceptable only when either the
+observed gain is large enough immediately, or the reuse count is explicit and
+large enough to amortize the selector.
 
 The current frontier has two useful signals and one important failure. First,
 the 16x8 profile halves neural training operations relative to 32x8 for the
