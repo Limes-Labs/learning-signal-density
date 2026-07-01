@@ -28,6 +28,18 @@ rather than universal.
 - Xia et al., "LESS: Selecting Influential Data for Targeted Instruction
   Tuning", 2024. <https://arxiv.org/abs/2402.04333>
 
+## Real-Text Dataset Probe
+
+UCI SMS Spam Collection is the first non-synthetic dataset used in this repo.
+It is small enough for stdlib-only CI-style experiments, public, licensed CC BY
+4.0, and directly aligned with class-imbalanced binary text classification. The
+current use is not an SMS-filtering leaderboard; it is a selection-cost sanity
+check where spam-class F1 is measured against charged sampling and validation
+overhead.
+
+- Almeida and Hidalgo, "SMS Spam Collection", UCI Machine Learning Repository,
+  2011. <https://archive.ics.uci.edu/dataset/228/sms+spam+collection>
+
 ## Transformation And Synthetic Views
 
 The phi-1 work is a useful reference for the transformation axis because it

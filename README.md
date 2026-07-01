@@ -25,6 +25,10 @@ The current pilot is intentionally modest:
 
 - It is not a neural language-model result.
 - It uses an online linear learner as the first audit instrument.
+- A first real-text sanity check now runs on UCI SMS Spam Collection. It tests
+  whether class-balanced and validation-selected sampling improve spam F1 after
+  label-index construction, proxy validation, and candidate-selection costs are
+  charged.
 - A first tiny neural replication now uses a deterministic CPU MLP with the
   same split discipline and cost accounting; it is still not a language-model
   or frontier-model result.
@@ -153,6 +157,9 @@ using the same split and accounting discipline.
 
 - `learning_signal_density/` - deterministic causal-domain generator, pipeline
   transforms, simple learner, metrics, and artifact writer.
+- `learning_signal_density/real_text_experiment.py` - stdlib-only real-text SMS
+  Spam loader, stratified splitter, sampling-policy probes, cost accounting,
+  and artifact writer.
 - `tests/` - unit tests for split isolation, pipeline accounting, and artifact
   honesty flags.
 - `docs/preregistration.md` - first locked hypothesis, metrics, anti-cheat
@@ -160,6 +167,10 @@ using the same split and accounting discipline.
 - `docs/literature.md` - source-backed research map for data selection,
   transformation, dense feedback, replay, and world-model imagination.
 - `results/` - checked-in result cards and JSON artifacts.
+- `results/sms_spam_real_text_selection_cost.*` - real-text SMS Spam
+  selection-cost pilot with 800 validation examples.
+- `results/sms_spam_real_text_selection_cost_v200.*` - validation-size
+  ablation of the same real-text selector setup with 200 validation examples.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation
   accounting.

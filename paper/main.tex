@@ -58,6 +58,12 @@ remaining selector problem: local transition windows can improve boundary rows,
 and cheap validation calibration can improve one high-budget frontier, but late
 false positives, seed-block transfer, transition-prior dependence, and
 inspection cost still prevent a solved adaptive policy.
+As a first non-synthetic sanity check, we also run the same accounting style on
+UCI SMS Spam Collection. That real-text pilot shows the useful but sobering
+pattern a paper should preserve: class-balanced and validation-selected samples
+can improve spam F1, but once label-index construction, proxy validation, and
+unreused candidate costs are charged, uniform random sampling remains the
+strongest density baseline in most rows.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -87,14 +93,16 @@ because the hidden rulebook, train/validation/heldout split, and generated-label
 provenance can be controlled exactly.
 
 \paragraph{Contributions in the current repository.}
-The repository currently provides four pieces of evidence. First, it defines a
+The repository currently provides five pieces of evidence. First, it defines a
 costed artifact schema for external events, internal examples, internal tokens,
 charged transform cost, neural step count, estimated neural operations, and
 claim scope. Second, it implements train-only and oracle transformation
 policies under fixed heldout isolation. Third, it records fresh-seed tiny-MLP
 sample-budget, feature-width, and epoch/width ablations. Fourth, the paper
 tables below are generated from committed result JSON, so the manuscript cannot
-silently drift away from the artifacts.
+silently drift away from the artifacts. Fifth, it adds a real-text SMS Spam
+selection-cost pilot to test whether the same accounting catches selector-cost
+failure outside the synthetic causal world.
 
 \paragraph{Non-claims.}
 This is not a transformer-scale result, not a language-model leaderboard, and
@@ -215,8 +223,21 @@ A fixed-window high-budget control then asks whether simple train-event
 breakpoints are enough: compact below 320 train events, raw from 320 to 400,
 support-ramped compact from 400 to 432, and raw again after 432.
 
+The real-text pilot uses UCI SMS Spam Collection \cite{almeida2011smsdataset},
+a public binary SMS classification dataset with 5,574 labeled messages. The
+learner is the same dependency-light linear text learner used by the synthetic
+pilot, and the primary metric is spam-class F1 rather than accuracy because the
+dataset is class-imbalanced. We compare uniform random sampling, full-pool
+class-balanced sampling, a cheaper label-index balanced variant, and validation
+selectors that choose between random and balanced candidates before heldout is
+opened. The point is not to claim state-of-the-art SMS filtering. The point is
+to check whether the cost accounting rejects selector policies whose absolute
+F1 gains are smaller than their selection and validation overhead.
+
 \section{Results}
 
+Table~\ref{tab:sms-spam-real-text-selection-cost},
+Table~\ref{tab:sms-spam-validation-size},
 Table~\ref{tab:f1024-profile-frontier},
 Table~\ref{tab:validation-selected-reliability-probe},
 Table~\ref{tab:post-hoc-policy-envelope},
@@ -248,6 +269,19 @@ artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
 
 \input{generated/results_tables.tex}
+
+The SMS Spam pilot is useful precisely because it does not produce an easy
+selector win. At 32 training messages with 800 validation examples, the
+label-index balanced sample improves heldout spam F1 over random sampling
+(0.550 versus 0.408), and the validation label-index selector improves F1
+further to 0.582. But random sampling still has much higher signed learning
+signal density, 4.991051 versus 2.585588 for label-index balance and 0.526972
+for the selector, because the extra class-index and validation-proxy costs are
+charged. Shrinking the validation set from 800 to 200 lowers selector cost and
+raises the 32-budget selector density to 1.019898, but it still does not beat
+random sampling in the matched artifact. This is the kind of negative control
+the paper needs: absolute quality gains are not enough unless the selector can
+pay for itself.
 
 The current frontier has two useful signals and one important failure. First,
 the 16x8 profile halves neural training operations relative to 32x8 for the

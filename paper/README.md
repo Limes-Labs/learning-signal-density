@@ -14,6 +14,8 @@ python3 scripts/build_paper_tables.py
 
 The generator currently reads:
 
+- `results/sms_spam_real_text_selection_cost.json`
+- `results/sms_spam_real_text_selection_cost_v200.json`
 - `results/tiny_neural_feature_sweep_wide.json`
 - `results/tiny_neural_profile_sweep_f1024.json`
 - `results/tiny_neural_budget_sweep_32x8_f1024.json`
@@ -122,6 +124,10 @@ selected-candidate construction reuse.
 The support-selector transfer artifact must use the fresh transfer seed block,
 disclose the same selector scopes, keep heldout out of selection, and identify
 the no-window validation gate artifact it stress-tests.
+The real-text SMS Spam artifacts must identify the UCI dataset, record the
+checked SHA-256 and CC BY 4.0 license, mark `synthetic_domain=false`, keep
+heldout out of selection, disclose label-index selection cost, and keep
+`paper_ready_claim=false`.
 
 ## Release Checklist
 

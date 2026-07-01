@@ -3,6 +3,28 @@
 This directory stores checked-in result artifacts that can be regenerated from
 the repository.
 
+Real-text SMS Spam selection-cost pilot:
+
+```bash
+python3 -m learning_signal_density.real_text_experiment \
+  --output-json results/sms_spam_real_text_selection_cost.json \
+  --output-md results/sms_spam_real_text_selection_cost.md
+```
+
+The script downloads UCI SMS Spam Collection to `data/external/`, verifies the
+archive SHA-256, and leaves the raw dataset out of git. It compares random
+sampling, full-text class-balanced sampling, label-index class-balanced
+sampling, and validation selectors under heldout isolation.
+
+Real-text validation-size ablation:
+
+```bash
+python3 -m learning_signal_density.real_text_experiment \
+  --validation-size 200 \
+  --output-json results/sms_spam_real_text_selection_cost_v200.json \
+  --output-md results/sms_spam_real_text_selection_cost_v200.md
+```
+
 Current canonical pilot:
 
 ```bash

@@ -4,6 +4,43 @@ from pathlib import Path
 
 
 class CommittedResultArtifactTests(unittest.TestCase):
+    def test_sms_spam_real_text_artifacts_record_dataset_scope_and_cost_tradeoff(self) -> None:
+        default = json.loads(Path("results/sms_spam_real_text_selection_cost.json").read_text())
+        v200 = json.loads(Path("results/sms_spam_real_text_selection_cost_v200.json").read_text())
+
+        for artifact in (default, v200):
+            self.assertEqual(artifact["dataset"]["name"], "UCI SMS Spam Collection")
+            self.assertEqual(artifact["dataset"]["record_count"], 5574)
+            self.assertEqual(artifact["dataset"]["license"], "CC BY 4.0")
+            self.assertEqual(
+                artifact["dataset"]["sha256"],
+                "1587ea43e58e82b14ff1f5425c88e17f8496bfcdb67a583dbff9eefaf9963ce3",
+            )
+            self.assertEqual(artifact["claim_scope"]["synthetic_domain"], False)
+            self.assertEqual(artifact["claim_scope"]["real_dataset"], True)
+            self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+            self.assertEqual(artifact["claim_scope"]["paper_ready_claim"], False)
+            self.assertIn("label_index_balanced_sample", artifact["condition_scope"])
+            self.assertIn("validation_label_index_selector", artifact["condition_scope"])
+
+        budget_32 = default["budgets"]["32"]["conditions"]
+        self.assertGreater(
+            budget_32["label_index_balanced_sample"]["heldout_spam_f1_mean"],
+            budget_32["random_sample"]["heldout_spam_f1_mean"],
+        )
+        self.assertGreater(
+            budget_32["random_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_32["label_index_balanced_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        self.assertGreater(
+            budget_32["validation_label_index_selector"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_32["validation_sample_selector"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        self.assertLess(
+            v200["budgets"]["32"]["conditions"]["validation_label_index_selector"]["charged_compute_units_mean"],
+            default["budgets"]["32"]["conditions"]["validation_label_index_selector"]["charged_compute_units_mean"],
+        )
+
     def test_confirmation_sweep_uses_disjoint_seeds_and_records_sample_aware_result(self) -> None:
         discovery = json.loads(Path("results/sample_budget_sweep.json").read_text())
         confirmation = json.loads(Path("results/confirmation_budget_sweep.json").read_text())

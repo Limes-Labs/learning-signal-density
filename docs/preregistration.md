@@ -185,3 +185,25 @@ This first slice is promoted only if:
 3. The artifact reports scope flags.
 4. At least one non-raw condition differs in cost from the raw condition.
 5. Documentation states the limitations plainly.
+
+## Addendum: Real-Text SMS Spam Probe
+
+Date: 2026-07-01
+
+The first non-synthetic sanity check uses UCI SMS Spam Collection as a small
+public binary text-classification dataset. This addendum does not retroactively
+change the synthetic-domain preregistration above. It adds a separate artifact
+class with these rules:
+
+- The dataset archive must be downloaded from UCI, cached outside git, and
+  verified by SHA-256 before parsing.
+- The split must be train-pool/validation/heldout with stratification and
+  disjoint record IDs.
+- The primary quality metric is spam-class F1, not accuracy, because the task
+  is class-imbalanced.
+- Random sampling, full-pool class-balanced sampling, label-index balanced
+  sampling, and validation selectors must report their selection-cost model.
+- Validation selectors may use validation labels for policy selection only when
+  the condition scope discloses that use and charges proxy/scoring overhead.
+- Heldout examples may not be used for sampling-policy selection.
+- The artifact remains exploratory and must mark `paper_ready_claim=false`.
