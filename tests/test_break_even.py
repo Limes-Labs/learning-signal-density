@@ -4,6 +4,10 @@ from pathlib import Path
 
 from learning_signal_density.break_even import break_even_comparison
 from scripts.build_break_even_analysis import build_sms_break_even_analysis, render_markdown
+from scripts.build_newsgroups_break_even_analysis import (
+    build_newsgroups_break_even_analysis,
+    render_markdown as render_newsgroups_markdown,
+)
 
 
 class BreakEvenAnalysisTests(unittest.TestCase):
@@ -119,11 +123,61 @@ class BreakEvenAnalysisTests(unittest.TestCase):
         self.assertEqual(committed["comparisons"], expected["comparisons"])
         self.assertEqual(committed["amortization_model"], expected["amortization_model"])
 
+    def test_newsgroups_break_even_analysis_separates_quality_from_density(self) -> None:
+        result = build_newsgroups_break_even_analysis(Path("."))
+
+        self.assertEqual(result["title"], "Twenty Newsgroups Break-Even Selection-Cost Analysis")
+        self.assertEqual(result["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(result["reference_condition"], "random_sample")
+        self.assertEqual(result["quality_metric"], "accuracy_improvement_over_majority_mean")
+        self.assertEqual(result["quality_upper_bound"], 0.95)
+        self.assertEqual(result["claim_scope"]["real_dataset"], True)
+        self.assertEqual(result["claim_scope"]["metadata_stripped"], True)
+        self.assertEqual(result["claim_scope"]["heldout_used_for_selection"], False)
+
+        prototype_budget_40 = result["comparisons"]["40"]["prototype_retrieval_sample"]
+        self.assertGreater(prototype_budget_40["quality_multiplier"], 1.0)
+        self.assertLess(prototype_budget_40["density_ratio"], 1.0)
+        self.assertFalse(prototype_budget_40["candidate_density_wins"])
+        self.assertFalse(prototype_budget_40["perfect_quality_can_beat"])
+
+        class_balanced_budget_80 = result["comparisons"]["80"]["class_balanced_sample"]
+        self.assertEqual(class_balanced_budget_80["quality_multiplier"], 1.0)
+        self.assertLess(class_balanced_budget_80["event_compute_multiplier"], 1.0)
+        self.assertGreater(class_balanced_budget_80["density_ratio"], 1.0)
+        self.assertTrue(class_balanced_budget_80["candidate_density_wins"])
+
+        prototype_budget_160 = result["comparisons"]["160"]["prototype_retrieval_sample"]
+        self.assertGreater(prototype_budget_160["quality_multiplier"], 1.0)
+        self.assertLess(prototype_budget_160["density_ratio"], 1.0)
+        self.assertIsNone(prototype_budget_160["amortized_reuses_to_density_win"])
+        self.assertGreater(prototype_budget_160["compute_over_break_even"], 1.0)
+
+        self.assertEqual(result["summary"]["prototype_retrieval_sample"]["observed_quality_wins"], 2)
+        self.assertEqual(result["summary"]["prototype_retrieval_sample"]["density_wins"], 0)
+        self.assertEqual(result["summary"]["class_balanced_sample"]["density_wins"], 1)
+
+    def test_generated_newsgroups_break_even_artifact_matches_builder(self) -> None:
+        expected = build_newsgroups_break_even_analysis(Path("."))
+        committed = json.loads(Path("results/twenty_newsgroups_break_even_analysis.json").read_text())
+
+        self.assertEqual(committed["source_artifacts"], expected["source_artifacts"])
+        self.assertEqual(committed["reference_condition"], expected["reference_condition"])
+        self.assertEqual(committed["candidate_conditions"], expected["candidate_conditions"])
+        self.assertEqual(committed["comparisons"], expected["comparisons"])
+        self.assertEqual(committed["amortization_model"], expected["amortization_model"])
+
     def test_markdown_break_even_table_has_single_header(self) -> None:
         rendered = render_markdown(build_sms_break_even_analysis(Path(".")))
 
         self.assertEqual(rendered.count("Reuses to win"), 2)
         self.assertEqual(rendered.count("Compute over break-even | Reuses to win"), 2)
+
+    def test_newsgroups_markdown_break_even_table_has_single_header(self) -> None:
+        rendered = render_newsgroups_markdown(build_newsgroups_break_even_analysis(Path(".")))
+
+        self.assertEqual(rendered.count("Reuses to win"), 1)
+        self.assertEqual(rendered.count("Quality mult. | Event-compute mult."), 1)
 
 
 if __name__ == "__main__":

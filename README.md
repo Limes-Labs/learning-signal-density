@@ -31,9 +31,9 @@ The current pilot is intentionally modest:
   headers, quotes, and reply boilerplate.
 - UCI SMS Spam Collection remains as a small binary sanity check for selector
   break-even algebra. It is not the intended central NLP benchmark.
-- A break-even audit now turns that real-text result into a simple mathematical
+- Break-even audits now turn the real-text results into a simple mathematical
   test: at fixed external budget, a selector improves density only when its
-  quality multiplier exceeds its charged-compute multiplier.
+  quality multiplier exceeds its charged event-compute multiplier.
 - The same audit includes a selector-cost amortization check: if selection and
   validation-tuning costs are reusable, the artifact reports the minimum reuse
   count needed to beat random density, or records that no finite reuse can win.
@@ -192,6 +192,11 @@ using the same split and accounting discipline.
   accuracy, but random or class-balanced sampling can dominate on
   learning-signal density once retrieval and validation-selection costs are
   charged.
+- `results/twenty_newsgroups_break_even_analysis.*` - mathematical audit of the
+  Twenty Newsgroups pilot. It shows that prototype retrieval can win heldout
+  accuracy at some budgets while still missing the density break-even condition;
+  the only current Newsgroups density win is the 80-document class-balanced
+  sample.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation
   accounting.

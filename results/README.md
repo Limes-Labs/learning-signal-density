@@ -38,6 +38,18 @@ class-balanced sampling, length curriculum, prototype retrieval, and a
 validation selector after stripping newsgroup headers, quote lines, and reply
 boilerplate.
 
+Twenty Newsgroups break-even selector-cost audit:
+
+```bash
+python3 scripts/build_newsgroups_break_even_analysis.py \
+  --output-json results/twenty_newsgroups_break_even_analysis.json \
+  --output-md results/twenty_newsgroups_break_even_analysis.md
+```
+
+This audit introduces no new policy. It asks when each active-selection,
+curriculum, retrieval, or validation policy pays for its charged event-compute
+multiplier relative to random sampling.
+
 Real-text break-even selector-cost audit:
 
 ```bash

@@ -18,6 +18,7 @@ The generator currently reads:
 - `results/sms_spam_real_text_selection_cost_v200.json`
 - `results/sms_spam_break_even_analysis.json`
 - `results/twenty_newsgroups_active_selection.json`
+- `results/twenty_newsgroups_break_even_analysis.json`
 - `results/tiny_neural_feature_sweep_wide.json`
 - `results/tiny_neural_profile_sweep_f1024.json`
 - `results/tiny_neural_budget_sweep_32x8_f1024.json`
@@ -141,6 +142,11 @@ The Twenty Newsgroups artifact must use the UCI mini corpus, mark itself as
 real and non-synthetic, strip metadata/quotes before splitting, keep heldout
 closed for selection, and include random, class-balanced, curriculum,
 prototype-retrieval, and validation-selector conditions.
+The Twenty Newsgroups break-even artifact must analyze that committed active
+selection artifact, use random sampling as the reference, state the same
+break-even inequality, preserve the class-balanced 80-document density win, and
+preserve the finding that prototype retrieval can improve quality without
+beating random density.
 
 ## Release Checklist
 

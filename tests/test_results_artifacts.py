@@ -43,6 +43,33 @@ class CommittedResultArtifactTests(unittest.TestCase):
             budget_80["random_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
         )
 
+    def test_twenty_newsgroups_break_even_artifact_records_active_selection_math(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_break_even_analysis.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["reference_condition"], "random_sample")
+        self.assertEqual(artifact["quality_metric"], "accuracy_improvement_over_majority_mean")
+        self.assertEqual(artifact["quality_upper_bound"], 0.95)
+        self.assertEqual(artifact["claim_scope"]["real_dataset"], True)
+        self.assertEqual(artifact["claim_scope"]["metadata_stripped"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertIn("G_candidate / G_reference", artifact["theorem"]["general_inequality"])
+
+        budget_40 = artifact["comparisons"]["40"]
+        self.assertGreater(budget_40["prototype_retrieval_sample"]["quality_multiplier"], 1.0)
+        self.assertLess(budget_40["prototype_retrieval_sample"]["density_ratio"], 1.0)
+        self.assertFalse(budget_40["prototype_retrieval_sample"]["perfect_quality_can_beat"])
+
+        budget_80 = artifact["comparisons"]["80"]
+        self.assertTrue(budget_80["class_balanced_sample"]["candidate_density_wins"])
+        self.assertGreater(budget_80["class_balanced_sample"]["density_ratio"], 1.0)
+        self.assertLess(budget_80["class_balanced_sample"]["event_compute_multiplier"], 1.0)
+
+        budget_160 = artifact["comparisons"]["160"]
+        self.assertGreater(budget_160["prototype_retrieval_sample"]["quality_multiplier"], 1.0)
+        self.assertLess(budget_160["prototype_retrieval_sample"]["density_ratio"], 1.0)
+        self.assertIsNone(budget_160["prototype_retrieval_sample"]["amortized_reuses_to_density_win"])
+
     def test_sms_spam_real_text_artifacts_record_dataset_scope_and_cost_tradeoff(self) -> None:
         default = json.loads(Path("results/sms_spam_real_text_selection_cost.json").read_text())
         v200 = json.loads(Path("results/sms_spam_real_text_selection_cost_v200.json").read_text())

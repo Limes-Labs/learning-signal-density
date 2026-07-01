@@ -67,7 +67,10 @@ repo. It is multi-class topic classification rather than binary filtering, and
 it supports active-learning, curriculum, retrieval/prototype, and selector-cost
 questions. The experiment strips headers, quote lines, and reply boilerplate
 before splitting because metadata leakage is a known practical issue for this
-dataset family.
+dataset family. The follow-up break-even artifact treats the result as a
+mathematical cost audit, not a leaderboard: a retrieval or selector policy must
+beat random sampling on heldout-quality multiplier by more than it increases
+event-compute multiplier.
 
 - "Twenty Newsgroups", UCI Machine Learning Repository.
   <https://archive.ics.uci.edu/ml/datasets/Twenty+Newsgroups>

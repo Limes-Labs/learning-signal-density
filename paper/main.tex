@@ -62,13 +62,13 @@ As a first broader non-synthetic NLP probe, we run the same accounting style on
 UCI Twenty Newsgroups mini. Prototype retrieval improves heldout accuracy at
 some scarce-label budgets, but random or class-balanced sampling remains
 stronger on learning-signal density once retrieval scans and validation-selector
-costs are charged. UCI SMS Spam Collection remains only a smaller binary sanity
-check for the selector break-even algebra. We derive that break-even condition:
+costs are charged. We audit that result with the same break-even inequality:
 at fixed external budget, a selected policy improves density only when its
-heldout-quality multiplier exceeds its charged-compute multiplier. We extend
-the audit with an amortized-cost corollary that distinguishes selectors that
-could pay for themselves after enough independent reuse from selectors whose
-nonreusable cost is already too high.
+heldout-quality multiplier exceeds its charged event-compute multiplier. UCI SMS
+Spam Collection remains only a smaller binary sanity check for the same
+algebra. We extend the audit with an amortized-cost corollary that distinguishes
+selectors that could pay for themselves after enough independent reuse from
+selectors whose nonreusable cost is already too high.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -110,9 +110,10 @@ sample-budget, feature-width, and epoch/width ablations. Fourth, the paper
 tables below are generated from committed result JSON, so the manuscript cannot
 silently drift away from the artifacts. Fifth, it adds a real-text Twenty
 Newsgroups active-selection pilot for random sampling, class balancing,
-curriculum, prototype retrieval, and validation selection. Sixth, it keeps a
-smaller SMS Spam binary sanity check for selector-cost algebra. Seventh, it
-adds a selector break-even and amortization audit that turns selection overhead
+curriculum, prototype retrieval, and validation selection, together with a
+break-even audit that separates accuracy wins from density wins. Sixth, it keeps
+a smaller SMS Spam binary sanity check for selector-cost algebra. Seventh, it
+adds selector break-even and amortization audits that turn selection overhead
 into explicit inequalities rather than qualitative caveats.
 
 \paragraph{Non-claims.}
@@ -306,6 +307,7 @@ their selection and validation overhead.
 \section{Results}
 
 Table~\ref{tab:twenty-newsgroups-active-selection},
+Table~\ref{tab:twenty-newsgroups-break-even},
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
 Table~\ref{tab:sms-spam-break-even},
@@ -355,6 +357,20 @@ control: in this small pilot it pays proxy and validation costs but does not
 recover enough quality to beat the simple baselines. This is the paper's core
 real-NLP lesson so far: retrieval or active selection can improve accuracy, but
 under a costed learning-loop metric it must also beat the selection bill.
+
+Table~\ref{tab:twenty-newsgroups-break-even} turns that lesson into the
+same-budget inequality. At 40 documents, prototype retrieval has a quality
+multiplier of 1.192 over random, but its event-compute multiplier is 39.474, so
+its density ratio is only 0.030 and even perfect accuracy gain would not beat
+random under this charged model. At 160 documents, prototype retrieval again
+improves quality, with multiplier 1.046, but it still pays 9.391 times the
+event-compute bill and reaches density ratio 0.111. The only Newsgroups density
+win in the current grid is not the sophisticated selector; it is the
+80-document class-balanced sample, which ties random quality and lowers charged
+compute enough to reach density ratio 1.180. This is a useful mathematical
+constraint on future active-learning, retrieval, distillation, and filtering
+work: a better selector must either transfer much more quality or make the
+selection bill dramatically cheaper.
 
 The SMS Spam pilot is useful precisely because it does not produce an easy
 selector win. At 32 training messages with 800 validation examples, the
