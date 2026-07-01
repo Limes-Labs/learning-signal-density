@@ -19,6 +19,7 @@ The generator currently reads:
 - `results/sms_spam_break_even_analysis.json`
 - `results/twenty_newsgroups_active_selection.json`
 - `results/twenty_newsgroups_break_even_analysis.json`
+- `results/twenty_newsgroups_retrieval_cost_audit.json`
 - `results/tiny_neural_feature_sweep_wide.json`
 - `results/tiny_neural_profile_sweep_f1024.json`
 - `results/tiny_neural_budget_sweep_32x8_f1024.json`
@@ -147,6 +148,10 @@ selection artifact, use random sampling as the reference, state the same
 break-even inequality, preserve the class-balanced 80-document density win, and
 preserve the finding that prototype retrieval can improve quality without
 beating random density.
+The Twenty Newsgroups retrieval-cost audit must disclose that it is a post-hoc
+optimization attempt, sweep the committed length-penalty grid, keep heldout
+closed, and preserve the finding that length penalties improve some
+retrieval-family rows without producing a random-density win.
 
 ## Release Checklist
 

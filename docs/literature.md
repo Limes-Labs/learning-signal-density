@@ -70,7 +70,10 @@ before splitting because metadata leakage is a known practical issue for this
 dataset family. The follow-up break-even artifact treats the result as a
 mathematical cost audit, not a leaderboard: a retrieval or selector policy must
 beat random sampling on heldout-quality multiplier by more than it increases
-event-compute multiplier.
+event-compute multiplier. A second retrieval-cost audit sweeps a length penalty
+inside prototype retrieval; it is useful because it shows that cheaper selected
+documents help some retrieval rows, but do not remove the dominant full-scan
+cost.
 
 - "Twenty Newsgroups", UCI Machine Learning Repository.
   <https://archive.ics.uci.edu/ml/datasets/Twenty+Newsgroups>

@@ -50,6 +50,18 @@ This audit introduces no new policy. It asks when each active-selection,
 curriculum, retrieval, or validation policy pays for its charged event-compute
 multiplier relative to random sampling.
 
+Twenty Newsgroups retrieval-cost optimization audit:
+
+```bash
+python3 scripts/build_newsgroups_retrieval_cost_audit.py \
+  --output-json results/twenty_newsgroups_retrieval_cost_audit.json \
+  --output-md results/twenty_newsgroups_retrieval_cost_audit.md
+```
+
+This post-hoc audit sweeps a length penalty in the prototype-retrieval score.
+It tests whether cheaper selected documents are enough to close the density gap
+after the full prototype/index scan is charged.
+
 Real-text break-even selector-cost audit:
 
 ```bash

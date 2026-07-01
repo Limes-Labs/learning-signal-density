@@ -8,6 +8,7 @@ from learning_signal_density.newsgroups_experiment import (
     run_newsgroups_condition,
     run_newsgroups_seedset,
 )
+from scripts.build_newsgroups_retrieval_cost_audit import length_penalized_prototype_sample
 
 
 def _tiny_newsgroups_payload() -> bytes:
@@ -94,6 +95,19 @@ class NewsgroupsExperimentTests(unittest.TestCase):
             budget["random_sample"]["validation_tuning_cost_tokens_mean"],
         )
         self.assertIn("prototype_retrieval_sample", artifact["condition_scope"])
+
+    def test_length_penalized_prototype_sample_records_full_prototype_scan_cost(self) -> None:
+        records = parse_twenty_newsgroups_tar_gz(_tiny_newsgroups_payload(), corpus_root="mini_newsgroups")
+
+        candidate = length_penalized_prototype_sample(records, budget=6, alpha=0.5)
+
+        self.assertEqual(candidate.policy, "length_penalized_prototype_alpha_0.5")
+        self.assertEqual(len(candidate.records), 6)
+        self.assertEqual(
+            sorted({record.label for record in candidate.records}),
+            ["rec.autos", "sci.space", "talk.politics"],
+        )
+        self.assertEqual(candidate.selection_cost_tokens, sum(record.token_count for record in records) * 2)
 
 
 if __name__ == "__main__":

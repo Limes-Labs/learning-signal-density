@@ -197,6 +197,10 @@ using the same split and accounting discipline.
   accuracy at some budgets while still missing the density break-even condition;
   the only current Newsgroups density win is the 80-document class-balanced
   sample.
+- `results/twenty_newsgroups_retrieval_cost_audit.*` - post-hoc
+  length-penalized prototype-retrieval audit. It improves some retrieval-family
+  rows but preserves the negative conclusion that no tested retrieval alpha
+  beats random sampling on learning-signal density.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation
   accounting.

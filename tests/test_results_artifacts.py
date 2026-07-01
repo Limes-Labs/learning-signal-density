@@ -70,6 +70,40 @@ class CommittedResultArtifactTests(unittest.TestCase):
         self.assertLess(budget_160["prototype_retrieval_sample"]["density_ratio"], 1.0)
         self.assertIsNone(budget_160["prototype_retrieval_sample"]["amortized_reuses_to_density_win"])
 
+    def test_twenty_newsgroups_retrieval_cost_audit_records_negative_optimization_attempt(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_retrieval_cost_audit.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(artifact["alphas"], [0.0, 0.25, 0.5, 0.75, 1.0, 1.25])
+        self.assertEqual(artifact["claim_scope"]["real_dataset"], True)
+        self.assertEqual(artifact["claim_scope"]["metadata_stripped"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["post_hoc_optimization_attempt"], True)
+
+        budget_80 = artifact["budgets"]["80"]
+        self.assertEqual(budget_80["best_accuracy_alpha"], "0.25")
+        self.assertEqual(budget_80["best_density_alpha"], "0.25")
+        self.assertGreater(
+            budget_80["alpha_results"]["0.25"]["heldout_accuracy_mean"],
+            budget_80["alpha_results"]["0"]["heldout_accuracy_mean"],
+        )
+        self.assertLess(
+            budget_80["alpha_results"]["0.25"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_80["random_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+
+        budget_160 = artifact["budgets"]["160"]
+        self.assertEqual(budget_160["best_density_alpha"], "0.5")
+        self.assertGreater(
+            budget_160["alpha_results"]["0.5"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_160["alpha_results"]["0"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        for budget_row in artifact["budgets"].values():
+            for row in budget_row["alpha_results"].values():
+                self.assertFalse(row["break_even_vs_random"]["candidate_density_wins"])
+
     def test_sms_spam_real_text_artifacts_record_dataset_scope_and_cost_tradeoff(self) -> None:
         default = json.loads(Path("results/sms_spam_real_text_selection_cost.json").read_text())
         v200 = json.loads(Path("results/sms_spam_real_text_selection_cost_v200.json").read_text())
