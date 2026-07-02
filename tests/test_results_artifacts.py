@@ -220,6 +220,38 @@ class CommittedResultArtifactTests(unittest.TestCase):
                 self.assertEqual(row["external_events_mean"], float(budget))
                 self.assertFalse(row["break_even_vs_random"]["candidate_density_wins"])
 
+    def test_twenty_newsgroups_length_window_audit_records_mixed_confirmation(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_length_window_confirmation_audit.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(artifact["development_seeds"], [311, 313, 317])
+        self.assertEqual(artifact["confirmation_seeds"], [331, 337, 347, 349, 353])
+        self.assertEqual(artifact["claim_scope"]["scan_window_sampled_before_length_selection"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["validation_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["teacher_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["oracle_train_labels_used_for_selection"], False)
+        self.assertEqual(artifact["development_density_win_count"], 0)
+        self.assertEqual(artifact["confirmation_same_condition_density_win_count"], 1)
+
+        dev_80 = artifact["phases"]["development"]["budgets"]["80"]
+        confirm_80 = artifact["phases"]["confirmation"]["budgets"]["80"]
+        self.assertEqual(dev_80["best_density_condition"], "length_window_shortest_2x")
+        self.assertFalse(
+            dev_80["condition_results"]["length_window_shortest_2x"]["break_even_vs_random"][
+                "candidate_density_wins"
+            ]
+        )
+        self.assertEqual(confirm_80["density_win_conditions"], [])
+        self.assertLess(
+            confirm_80["condition_results"]["length_window_shortest_2x"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            confirm_80["random_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+
     def test_real_text_break_even_certificate_records_global_frontier(self) -> None:
         artifact = json.loads(Path("results/real_text_break_even_certificate.json").read_text())
 

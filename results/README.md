@@ -101,6 +101,19 @@ reduce active-acquisition cost enough to move the density frontier. The scan
 window is sampled before teacher scoring; true labels are acquired only after
 selection.
 
+Twenty Newsgroups sampled length-window stress audit:
+
+```bash
+python3 scripts/build_newsgroups_length_window_confirmation_audit.py \
+  --output-json results/twenty_newsgroups_length_window_confirmation_audit.json \
+  --output-md results/twenty_newsgroups_length_window_confirmation_audit.md
+```
+
+This audit tests cheap label-free selection from sampled train-only windows
+using token length as the selection signal. It separates development seeds from
+fresh confirmation seeds and reports the mixed result rather than treating
+phase-specific wins as a deployable policy.
+
 Real-text break-even frontier certificate:
 
 ```bash

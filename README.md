@@ -31,7 +31,9 @@ The current pilot is intentionally modest:
   headers, quotes, and reply boilerplate.
 - Follow-up Twenty Newsgroups audits now test length-penalized retrieval,
   pseudo-label self-training, active true-label acquisition, and budgeted-window
-  active acquisition under the same split and cost discipline.
+  active acquisition under the same split and cost discipline. A sampled
+  length-window stress audit checks whether cheap token-length selection is
+  stable across fresh seeds.
 - UCI SMS Spam Collection remains as a small binary sanity check for selector
   break-even algebra. It is not the intended central NLP benchmark.
 - Break-even audits now turn the real-text results into a simple mathematical
@@ -218,6 +220,10 @@ using the same split and accounting discipline.
   active acquisition audit. The teacher scores only a sampled train-pool window
   before labels are acquired; at 160 labels, two margin-uncertainty rows beat
   class-balanced density, but no tested row beats random density.
+- `results/twenty_newsgroups_length_window_confirmation_audit.*` - sampled
+  length-window stress audit. It tests cheap label-free token-length selectors
+  on development and disjoint confirmation seeds; the development grid has no
+  random-density win, and the 80-label near-frontier does not confirm.
 - `results/real_text_break_even_certificate.*` - cross-artifact mathematical
   certificate over the real-text audits. It records that 38 observed quality
   wins collapse to three density wins after event-compute is charged, with 13

@@ -77,13 +77,16 @@ it improves one high-budget active row but still does not clear the density
 frontier without reuse. A budgeted-window variant then scores only sampled
 train-pool windows before acquisition; this reduces the selector bill enough
 for two 160-label margin-uncertainty rows to beat class-balanced density, though
-no tested row beats random density. We extend the audit with an amortized-cost
-corollary that distinguishes selectors that could pay for themselves after
-enough independent reuse from selectors whose nonreusable cost is already too
-high. A final real-text certificate applies that inequality across the committed
-SMS Spam and Twenty Newsgroups artifacts: many rows improve heldout quality, but
-only three currently improve learning-signal density without an explicit reuse
-assumption.
+no tested row beats random density. A sampled length-window stress audit then
+checks whether a cheaper label-free token-length selector is stable across
+fresh seeds; it finds no development density win and a mixed confirmation
+pattern rather than a deployable policy. We extend the audit with an
+amortized-cost corollary that distinguishes selectors that could pay for
+themselves after enough independent reuse from selectors whose nonreusable cost
+is already too high. A final real-text certificate applies that inequality
+across the committed SMS Spam and Twenty Newsgroups artifacts: many rows improve
+heldout quality, but only three currently improve learning-signal density
+without an explicit reuse assumption.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -335,6 +338,7 @@ Table~\ref{tab:twenty-newsgroups-retrieval-cost-audit},
 Table~\ref{tab:twenty-newsgroups-self-training-audit},
 Table~\ref{tab:twenty-newsgroups-active-acquisition-audit},
 Table~\ref{tab:twenty-newsgroups-budgeted-acquisition-audit},
+Table~\ref{tab:twenty-newsgroups-length-window-audit},
 Table~\ref{tab:real-text-break-even-certificate},
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
@@ -457,6 +461,20 @@ random density 0.006005, but it does beat class-balanced density 0.004276. The
 1x margin window is also a class-balanced density win at 160 labels. This is a
 more useful positive result than the full-pool active audit: the acquisition
 signal is weak, but reducing the scan bill can move a real density frontier.
+
+Table~\ref{tab:twenty-newsgroups-length-window-audit} probes the cheaper
+extreme: remove the teacher entirely and select from a sampled train-only window
+using token length. The policy is label-free, validation-free, and heldout-free;
+its selection cost is the token count of the sampled window plus final training.
+This direction is tempting because it can reduce training tokens sharply, but
+the confirmation audit is mixed. On development seeds, no tested length-window
+row beats random density; the best 80-label development row has density
+0.010818 versus random 0.013418. On disjoint confirmation seeds, the same
+development-selected 80-label row remains just below random, 0.010625 versus
+0.010652. Some confirmation-phase best rows beat same-phase random at 40 or 160
+labels, but those are not development-selected wins. We therefore keep this as
+a stress-test result: cheap length windows are plausible, but not yet a stable
+policy claim.
 
 Table~\ref{tab:real-text-break-even-certificate} collects the real-text
 break-even rows into one certificate. Across 172 SMS Spam and Twenty Newsgroups

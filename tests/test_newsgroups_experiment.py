@@ -11,6 +11,7 @@ from learning_signal_density.newsgroups_experiment import (
 from scripts.build_newsgroups_retrieval_cost_audit import length_penalized_prototype_sample
 from scripts.build_newsgroups_active_acquisition_audit import _select_acquisition_rows
 from scripts.build_newsgroups_budgeted_acquisition_audit import _select_budgeted_rows
+from scripts.build_newsgroups_length_window_confirmation_audit import _select_length_window_records
 from scripts.build_newsgroups_self_training_audit import _select_pseudo_rows
 
 
@@ -151,6 +152,23 @@ class NewsgroupsExperimentTests(unittest.TestCase):
 
         self.assertEqual([row[0].record_id for row in selected], ["a", "b", "c", "d", "e"])
         self.assertEqual([row[1] for row in selected], ["pred-a", "pred-b", "pred-c", "pred-c", "pred-c"])
+
+    def test_length_window_diverse_signature_uses_text_signatures_not_labels(self) -> None:
+        rows = (
+            NewsRecord("a", "true-a", "alpha tiny"),
+            NewsRecord("b", "true-b", "alpha small words"),
+            NewsRecord("c", "true-a", "beta tiny"),
+            NewsRecord("d", "true-c", "gamma tiny"),
+        )
+
+        selected = _select_length_window_records(
+            rows,
+            train_budget=3,
+            config={"mode": "shortest_diverse_signature"},
+            seed=17,
+        )
+
+        self.assertEqual([record.record_id for record in selected], ["a", "c", "d"])
 
 
 if __name__ == "__main__":
