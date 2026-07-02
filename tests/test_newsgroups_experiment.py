@@ -9,6 +9,7 @@ from learning_signal_density.newsgroups_experiment import (
     run_newsgroups_seedset,
 )
 from scripts.build_newsgroups_retrieval_cost_audit import length_penalized_prototype_sample
+from scripts.build_newsgroups_active_acquisition_audit import _select_acquisition_rows
 from scripts.build_newsgroups_self_training_audit import _select_pseudo_rows
 
 
@@ -119,6 +120,19 @@ class NewsgroupsExperimentTests(unittest.TestCase):
         ]
 
         selected = _select_pseudo_rows(rows, pseudo_count=2, filter_mode="balanced_margin")
+
+        self.assertEqual([row[0].record_id for row in selected], ["b", "d"])
+        self.assertEqual([row[1] for row in selected], ["pred-a", "pred-b"])
+
+    def test_active_acquisition_balancing_uses_teacher_predictions_not_true_labels(self) -> None:
+        rows = [
+            (NewsRecord("a", "true-a", "tiny"), "pred-a", 0.4),
+            (NewsRecord("b", "true-b", "tiny"), "pred-a", 0.1),
+            (NewsRecord("c", "true-c", "tiny"), "pred-b", 0.3),
+            (NewsRecord("d", "true-d", "tiny"), "pred-b", 0.2),
+        ]
+
+        selected = _select_acquisition_rows(rows, acquire_count=2, mode="balanced_margin_uncertainty")
 
         self.assertEqual([row[0].record_id for row in selected], ["b", "d"])
         self.assertEqual([row[1] for row in selected], ["pred-a", "pred-b"])

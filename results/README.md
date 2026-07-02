@@ -75,6 +75,19 @@ analogue. Teacher predictions are used as pseudo-labels; oracle train labels are
 recorded only to diagnose pseudo-label agreement and are not used for filtering
 or student labels.
 
+Twenty Newsgroups active label-acquisition audit:
+
+```bash
+python3 scripts/build_newsgroups_active_acquisition_audit.py \
+  --output-json results/twenty_newsgroups_active_acquisition_audit.json \
+  --output-md results/twenty_newsgroups_active_acquisition_audit.md
+```
+
+This post-hoc audit tests active acquisition rather than pseudo-labeling. A
+class-balanced seed trains a teacher, the teacher selects records by margin
+signals without validation or heldout access, and true labels for acquired
+records are used only after selection.
+
 Real-text break-even frontier certificate:
 
 ```bash

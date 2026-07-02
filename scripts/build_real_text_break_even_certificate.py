@@ -23,6 +23,9 @@ TWENTY_NEWSGROUPS_RETRIEVAL_COST_AUDIT_ARTIFACT = Path(
 TWENTY_NEWSGROUPS_SELF_TRAINING_AUDIT_ARTIFACT = Path(
     "results/twenty_newsgroups_self_training_audit.json"
 )
+TWENTY_NEWSGROUPS_ACTIVE_ACQUISITION_AUDIT_ARTIFACT = Path(
+    "results/twenty_newsgroups_active_acquisition_audit.json"
+)
 SELF_TRAINING_REUSABLE_KEYS = (
     "selection_cost_tokens_mean",
     "teacher_training_cost_tokens_mean",
@@ -176,6 +179,29 @@ def _add_self_training_rows(rows: list[dict], active: dict, artifact: dict) -> N
                 )
 
 
+def _add_active_acquisition_rows(rows: list[dict], artifact: dict) -> None:
+    for budget in artifact["train_budgets"]:
+        budget_key = str(budget)
+        for condition, stats in artifact["budgets"][budget_key]["condition_results"].items():
+            for reference_name, break_even_key in (
+                ("random_sample", "break_even_vs_random"),
+                ("class_balanced_sample", "break_even_vs_class_balanced"),
+            ):
+                row = stats[break_even_key]
+                rows.append(
+                    _copy_row(
+                        family="twenty_newsgroups_active_acquisition",
+                        artifact_label="Twenty Newsgroups active acquisition",
+                        source_artifact=str(TWENTY_NEWSGROUPS_ACTIVE_ACQUISITION_AUDIT_ARTIFACT),
+                        budget=budget_key,
+                        reference=reference_name,
+                        candidate=condition,
+                        row=row,
+                        note="teacher-margin active label acquisition against true-label sampling",
+                    )
+                )
+
+
 def _summarize_family(rows: list[dict]) -> dict:
     return {
         "rows": len(rows),
@@ -212,12 +238,14 @@ def build_real_text_break_even_certificate(repo_root: Path) -> dict:
     newsgroups_break_even = load_json(repo_root / TWENTY_NEWSGROUPS_BREAK_EVEN_ARTIFACT)
     retrieval_cost = load_json(repo_root / TWENTY_NEWSGROUPS_RETRIEVAL_COST_AUDIT_ARTIFACT)
     self_training = load_json(repo_root / TWENTY_NEWSGROUPS_SELF_TRAINING_AUDIT_ARTIFACT)
+    active_acquisition = load_json(repo_root / TWENTY_NEWSGROUPS_ACTIVE_ACQUISITION_AUDIT_ARTIFACT)
     sms_break_even = load_json(repo_root / SMS_BREAK_EVEN_ARTIFACT)
 
     rows: list[dict] = []
     _add_newsgroups_break_even_rows(rows, newsgroups_break_even)
     _add_retrieval_cost_rows(rows, retrieval_cost)
     _add_self_training_rows(rows, active, self_training)
+    _add_active_acquisition_rows(rows, active_acquisition)
     _add_sms_break_even_rows(rows, sms_break_even)
 
     families = sorted({row["family"] for row in rows})
@@ -249,6 +277,7 @@ def build_real_text_break_even_certificate(repo_root: Path) -> dict:
             str(TWENTY_NEWSGROUPS_BREAK_EVEN_ARTIFACT),
             str(TWENTY_NEWSGROUPS_RETRIEVAL_COST_AUDIT_ARTIFACT),
             str(TWENTY_NEWSGROUPS_SELF_TRAINING_AUDIT_ARTIFACT),
+            str(TWENTY_NEWSGROUPS_ACTIVE_ACQUISITION_AUDIT_ARTIFACT),
             str(SMS_BREAK_EVEN_ARTIFACT),
         ],
         "theorem": {

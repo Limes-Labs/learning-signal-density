@@ -177,12 +177,12 @@ class BreakEvenAnalysisTests(unittest.TestCase):
         self.assertEqual(result["title"], "Real-Text Break-Even Frontier Certificate")
         self.assertEqual(result["claim_scope"]["mathematical_certificate"], True)
         self.assertEqual(result["claim_scope"]["introduces_new_policy"], False)
-        self.assertEqual(result["summary"]["rows"], 94)
-        self.assertEqual(result["summary"]["observed_quality_wins"], 32)
+        self.assertEqual(result["summary"]["rows"], 118)
+        self.assertEqual(result["summary"]["observed_quality_wins"], 33)
         self.assertEqual(result["summary"]["density_wins"], 1)
-        self.assertEqual(result["summary"]["quality_win_density_losses"], 32)
-        self.assertEqual(result["summary"]["finite_reuse_needed"], 9)
-        self.assertEqual(result["summary"]["bounded_quality_impossible_at_k1"], 52)
+        self.assertEqual(result["summary"]["quality_win_density_losses"], 33)
+        self.assertEqual(result["summary"]["finite_reuse_needed"], 10)
+        self.assertEqual(result["summary"]["bounded_quality_impossible_at_k1"], 53)
 
         strongest = result["summary"]["strongest_observed_density_win"]
         self.assertEqual(strongest["artifact_label"], "Twenty Newsgroups active")
@@ -197,12 +197,18 @@ class BreakEvenAnalysisTests(unittest.TestCase):
         self.assertLess(largest_quality_gap["density_ratio"], 0.2)
 
         cheapest_reuse = result["summary"]["cheapest_finite_reuse_frontier"]
-        self.assertEqual(cheapest_reuse["candidate_condition"], "label_index_balanced_sample")
-        self.assertEqual(cheapest_reuse["amortized_reuses_to_density_win"], 9)
+        self.assertEqual(
+            cheapest_reuse["candidate_condition"],
+            "class_balanced_seed_active_short_margin_uncertainty",
+        )
+        self.assertEqual(cheapest_reuse["amortized_reuses_to_density_win"], 4)
 
         self_training = result["summary"]["families"]["twenty_newsgroups_self_training"]
         self.assertEqual(self_training["observed_quality_wins"], 0)
         self.assertEqual(self_training["density_wins"], 0)
+        active_acquisition = result["summary"]["families"]["twenty_newsgroups_active_acquisition"]
+        self.assertEqual(active_acquisition["observed_quality_wins"], 1)
+        self.assertEqual(active_acquisition["density_wins"], 0)
 
     def test_generated_real_text_break_even_certificate_matches_builder(self) -> None:
         expected = build_real_text_break_even_certificate(Path("."))

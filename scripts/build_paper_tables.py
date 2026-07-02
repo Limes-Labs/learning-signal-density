@@ -93,6 +93,9 @@ TWENTY_NEWSGROUPS_RETRIEVAL_COST_AUDIT_ARTIFACT = Path(
 TWENTY_NEWSGROUPS_SELF_TRAINING_AUDIT_ARTIFACT = Path(
     "results/twenty_newsgroups_self_training_audit.json"
 )
+TWENTY_NEWSGROUPS_ACTIVE_ACQUISITION_AUDIT_ARTIFACT = Path(
+    "results/twenty_newsgroups_active_acquisition_audit.json"
+)
 REAL_TEXT_BREAK_EVEN_CERTIFICATE_ARTIFACT = Path("results/real_text_break_even_certificate.json")
 
 FRONTIER_CONDITIONS = [
@@ -963,12 +966,65 @@ def load_newsgroups_self_training_artifact(repo_root: Path) -> dict[str, Any]:
     return artifact
 
 
+def validate_newsgroups_active_acquisition_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
+    if artifact.get("source_artifacts") != [str(TWENTY_NEWSGROUPS_ARTIFACT)]:
+        raise ValueError(f"{artifact_path} must analyze the committed Twenty Newsgroups artifact")
+    dataset = artifact.get("dataset", {})
+    if dataset.get("name") != "Twenty Newsgroups" or dataset.get("record_count") != 1998:
+        raise ValueError(f"{artifact_path} must use the committed Twenty Newsgroups mini corpus")
+    if artifact.get("acquisition_modes") != [
+        "margin_uncertainty",
+        "balanced_margin_uncertainty",
+        "short_margin_uncertainty",
+        "confidence_curriculum",
+    ]:
+        raise ValueError(f"{artifact_path} must record the active acquisition mode grid")
+    scope = artifact.get("claim_scope", {})
+    if scope.get("real_dataset") is not True or scope.get("synthetic_domain") is not False:
+        raise ValueError(f"{artifact_path} must be marked as a real non-synthetic audit")
+    if scope.get("metadata_stripped") is not True:
+        raise ValueError(f"{artifact_path} must inherit metadata stripping")
+    if scope.get("heldout_used_for_selection") is not False:
+        raise ValueError(f"{artifact_path} must keep heldout closed for selection")
+    if scope.get("validation_used_for_selection") is not False:
+        raise ValueError(f"{artifact_path} must not use validation for active acquisition")
+    if scope.get("oracle_train_labels_used_for_acquisition") is not False:
+        raise ValueError(f"{artifact_path} must not use oracle labels for acquisition")
+    if scope.get("true_labels_acquired_after_selection") is not True:
+        raise ValueError(f"{artifact_path} must acquire true labels only after selection")
+    if scope.get("post_hoc_optimization_attempt") is not True:
+        raise ValueError(f"{artifact_path} must disclose the post-hoc optimization attempt")
+    if scope.get("paper_ready_claim") is not False:
+        raise ValueError(f"{artifact_path} must not mark the current result as paper-ready")
+    for budget in ("40", "80", "160"):
+        budget_row = artifact.get("budgets", {}).get(budget, {})
+        if "random_reference" not in budget_row or "class_balanced_reference" not in budget_row:
+            raise ValueError(f"{artifact_path} missing references at budget {budget}")
+        for condition, row in budget_row.get("condition_results", {}).items():
+            if row.get("break_even_vs_random", {}).get("candidate_density_wins") is not False:
+                raise ValueError(f"{artifact_path} must preserve the no random-density-win finding")
+            if row.get("break_even_vs_class_balanced", {}).get("candidate_density_wins") is not False:
+                raise ValueError(f"{artifact_path} must preserve the no class-density-win finding")
+    if artifact["budgets"]["160"].get("best_density_condition") != "class_balanced_seed_active_short_margin_uncertainty":
+        raise ValueError(f"{artifact_path} must preserve the best active-acquisition density row")
+    best_160 = artifact["budgets"]["160"]["condition_results"]["class_balanced_seed_active_short_margin_uncertainty"]
+    if best_160.get("break_even_vs_class_balanced", {}).get("amortized_reuses_to_density_win") != 4:
+        raise ValueError(f"{artifact_path} must preserve the four-use active-acquisition frontier")
+
+
+def load_newsgroups_active_acquisition_artifact(repo_root: Path) -> dict[str, Any]:
+    artifact = load_json(repo_root / TWENTY_NEWSGROUPS_ACTIVE_ACQUISITION_AUDIT_ARTIFACT)
+    validate_newsgroups_active_acquisition_scope(TWENTY_NEWSGROUPS_ACTIVE_ACQUISITION_AUDIT_ARTIFACT, artifact)
+    return artifact
+
+
 def validate_real_text_break_even_certificate_scope(artifact_path: Path, artifact: dict[str, Any]) -> None:
     if artifact.get("source_artifacts") != [
         str(TWENTY_NEWSGROUPS_ARTIFACT),
         str(TWENTY_NEWSGROUPS_BREAK_EVEN_ARTIFACT),
         str(TWENTY_NEWSGROUPS_RETRIEVAL_COST_AUDIT_ARTIFACT),
         str(TWENTY_NEWSGROUPS_SELF_TRAINING_AUDIT_ARTIFACT),
+        str(TWENTY_NEWSGROUPS_ACTIVE_ACQUISITION_AUDIT_ARTIFACT),
         str(SMS_BREAK_EVEN_ARTIFACT),
     ]:
         raise ValueError(f"{artifact_path} must certify the committed real-text break-even artifacts")
@@ -984,23 +1040,25 @@ def validate_real_text_break_even_certificate_scope(artifact_path: Path, artifac
     if "G_candidate / G_reference" not in artifact.get("theorem", {}).get("density_condition", ""):
         raise ValueError(f"{artifact_path} must state the density break-even inequality")
     summary = artifact.get("summary", {})
-    if summary.get("rows") != 94:
-        raise ValueError(f"{artifact_path} must certify the full 94-row real-text comparison set")
-    if summary.get("observed_quality_wins") != 32 or summary.get("density_wins") != 1:
+    if summary.get("rows") != 118:
+        raise ValueError(f"{artifact_path} must certify the full 118-row real-text comparison set")
+    if summary.get("observed_quality_wins") != 33 or summary.get("density_wins") != 1:
         raise ValueError(f"{artifact_path} must preserve the quality-win versus density-win gap")
-    if summary.get("finite_reuse_needed") != 9:
+    if summary.get("finite_reuse_needed") != 10:
         raise ValueError(f"{artifact_path} must preserve the finite-reuse frontier count")
     families = summary.get("families", {})
     if families.get("twenty_newsgroups_self_training", {}).get("density_wins") != 0:
         raise ValueError(f"{artifact_path} must preserve the self-training no-density-win result")
+    if families.get("twenty_newsgroups_active_acquisition", {}).get("density_wins") != 0:
+        raise ValueError(f"{artifact_path} must preserve the active-acquisition no-density-win result")
     strongest = summary.get("strongest_observed_density_win", {})
     if strongest.get("candidate_condition") != "class_balanced_sample" or strongest.get("budget") != "80":
         raise ValueError(f"{artifact_path} must preserve the 80-document class-balanced density frontier")
     cheapest_reuse = summary.get("cheapest_finite_reuse_frontier", {})
-    if cheapest_reuse.get("candidate_condition") != "label_index_balanced_sample":
-        raise ValueError(f"{artifact_path} must preserve the SMS label-index finite-reuse frontier")
-    if cheapest_reuse.get("amortized_reuses_to_density_win") != 9:
-        raise ValueError(f"{artifact_path} must preserve the nine-use amortization threshold")
+    if cheapest_reuse.get("candidate_condition") != "class_balanced_seed_active_short_margin_uncertainty":
+        raise ValueError(f"{artifact_path} must preserve the active-acquisition finite-reuse frontier")
+    if cheapest_reuse.get("amortized_reuses_to_density_win") != 4:
+        raise ValueError(f"{artifact_path} must preserve the four-use amortization threshold")
 
 
 def load_real_text_break_even_certificate_artifact(repo_root: Path) -> dict[str, Any]:
@@ -1194,6 +1252,7 @@ def build_macros(repo_root: Path) -> str:
     load_newsgroups_break_even_artifact(repo_root)
     load_newsgroups_retrieval_cost_artifact(repo_root)
     load_newsgroups_self_training_artifact(repo_root)
+    load_newsgroups_active_acquisition_artifact(repo_root)
     load_break_even_artifact(repo_root)
     load_real_text_break_even_certificate_artifact(repo_root)
     target_values = {artifact["target_signed_gain"] for _, _, artifact in budget_artifacts}
@@ -1211,7 +1270,7 @@ def build_macros(repo_root: Path) -> str:
 
     lines = [
         "% Generated by scripts/build_paper_tables.py; do not edit by hand.",
-        rf"\newcommand{{\LsdPaperArtifactCount}}{{{len(BUDGET_ARTIFACTS) + len(support) + len(real_text_artifacts) + 6}}}",
+        rf"\newcommand{{\LsdPaperArtifactCount}}{{{len(BUDGET_ARTIFACTS) + len(support) + len(real_text_artifacts) + 7}}}",
         rf"\newcommand{{\LsdPaperTargetGain}}{{{fmt_float(target)}}}",
         rf"\newcommand{{\LsdPaperFeatureFrontierSelfRanked}}{{{feature_frontier['best_signed_gain_feature_dimension']}}}",
         rf"\newcommand{{\LsdPaperEightByEightOpsRatio}}{{{fmt_float(ops_ratio)}}}",
@@ -2705,11 +2764,52 @@ def build_twenty_newsgroups_self_training_table(repo_root: Path) -> str:
     return "\n".join(lines)
 
 
+def build_twenty_newsgroups_active_acquisition_table(repo_root: Path) -> str:
+    artifact = load_newsgroups_active_acquisition_artifact(repo_root)
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\caption{Twenty Newsgroups active label-acquisition audit. A class-balanced seed trains a teacher, the teacher selects train-pool records by margin signals, and true labels are acquired only after selection. No tested acquisition mode beats random or class-balanced density without explicit reuse.}",
+        r"\label{tab:twenty-newsgroups-active-acquisition-audit}",
+        r"\scriptsize",
+        r"\setlength{\tabcolsep}{3pt}",
+        r"\begin{tabular}{@{}rlrrrrrr@{}}",
+        r"\toprule",
+        r"Budget & Best density mode & Acc & Teacher agree & LSD & Random LSD & Class LSD & Reuses vs class \\",
+        r"\midrule",
+    ]
+    for budget in artifact["train_budgets"]:
+        budget_row = artifact["budgets"][str(budget)]
+        best_condition = budget_row["best_density_condition"]
+        best = budget_row["condition_results"][best_condition]
+        random_ref = budget_row["random_reference"]
+        class_ref = budget_row["class_balanced_reference"]
+        label = best_condition.replace("class_balanced_seed_active_", "").replace("_", " ")
+        lines.append(
+            " & ".join(
+                [
+                    str(budget),
+                    latex_escape(label),
+                    fmt_float(best["heldout_accuracy_mean"]),
+                    fmt_float(best["acquired_teacher_agreement_mean"], digits=3),
+                    fmt_float(best["signed_learning_signal_density_per_1m_event_compute_mean"], digits=6),
+                    fmt_float(random_ref["signed_learning_signal_density_per_1m_event_compute_mean"], digits=6),
+                    fmt_float(class_ref["signed_learning_signal_density_per_1m_event_compute_mean"], digits=6),
+                    fmt_reuse_count(best["break_even_vs_class_balanced"]["amortized_reuses_to_density_win"]),
+                ]
+            )
+            + r" \\"
+        )
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+    return "\n".join(lines)
+
+
 def build_real_text_break_even_certificate_table(repo_root: Path) -> str:
     artifact = load_real_text_break_even_certificate_artifact(repo_root)
     summary = artifact["summary"]
     family_labels = {
         "sms_spam_selection": "SMS Spam selectors",
+        "twenty_newsgroups_active_acquisition": "Newsgroups active acquisition",
         "twenty_newsgroups_active_selection": "Newsgroups active",
         "twenty_newsgroups_retrieval_alpha": "Newsgroups retrieval alpha",
         "twenty_newsgroups_self_training": "Newsgroups self-training",
@@ -2891,6 +2991,7 @@ def render_tables(repo_root: Path) -> str:
             build_twenty_newsgroups_break_even_table(repo_root),
             build_twenty_newsgroups_retrieval_cost_table(repo_root),
             build_twenty_newsgroups_self_training_table(repo_root),
+            build_twenty_newsgroups_active_acquisition_table(repo_root),
             build_real_text_break_even_certificate_table(repo_root),
             build_real_text_selection_cost_table(repo_root),
             build_real_text_validation_size_table(repo_root),

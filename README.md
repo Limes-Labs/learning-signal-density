@@ -29,6 +29,9 @@ The current pilot is intentionally modest:
   Newsgroups mini: random sampling, class balancing, length curriculum,
   prototype retrieval, and a validation selector are compared after stripping
   headers, quotes, and reply boilerplate.
+- Follow-up Twenty Newsgroups audits now test length-penalized retrieval,
+  pseudo-label self-training, and active true-label acquisition under the same
+  split and cost discipline.
 - UCI SMS Spam Collection remains as a small binary sanity check for selector
   break-even algebra. It is not the intended central NLP benchmark.
 - Break-even audits now turn the real-text results into a simple mathematical
@@ -206,9 +209,14 @@ using the same split and accounting discipline.
   pseudo-label agreement is too low in the scarce-label regime and no tested
   margin filter beats random or class-balanced density once scoring and student
   training costs are charged.
+- `results/twenty_newsgroups_active_acquisition_audit.*` - active
+  label-acquisition audit. A class-balanced seed trains a teacher that selects
+  uncertain train-pool documents before true labels are acquired; the best
+  tested rows improve some active-acquisition variants but still do not beat
+  random or class-balanced density without explicit reuse.
 - `results/real_text_break_even_certificate.*` - cross-artifact mathematical
-  certificate over the real-text audits. It records that 32 observed quality
-  wins collapse to one density win after event-compute is charged, with nine
+  certificate over the real-text audits. It records that 33 observed quality
+  wins collapse to one density win after event-compute is charged, with ten
   rows needing explicit finite reuse to cross the break-even frontier.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation
