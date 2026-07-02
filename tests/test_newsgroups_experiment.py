@@ -10,6 +10,7 @@ from learning_signal_density.newsgroups_experiment import (
 )
 from scripts.build_newsgroups_retrieval_cost_audit import length_penalized_prototype_sample
 from scripts.build_newsgroups_active_acquisition_audit import _select_acquisition_rows
+from scripts.build_newsgroups_budgeted_acquisition_audit import _select_budgeted_rows
 from scripts.build_newsgroups_self_training_audit import _select_pseudo_rows
 
 
@@ -136,6 +137,20 @@ class NewsgroupsExperimentTests(unittest.TestCase):
 
         self.assertEqual([row[0].record_id for row in selected], ["b", "d"])
         self.assertEqual([row[1] for row in selected], ["pred-a", "pred-b"])
+
+    def test_budgeted_acquisition_backfill_preserves_full_label_budget_without_true_labels(self) -> None:
+        rows = [
+            (NewsRecord("a", "true-a", "tiny"), "pred-a", 0.1),
+            (NewsRecord("b", "true-b", "tiny"), "pred-b", 0.2),
+            (NewsRecord("c", "true-c", "tiny"), "pred-c", 0.3),
+            (NewsRecord("d", "true-d", "tiny"), "pred-c", 0.4),
+            (NewsRecord("e", "true-e", "tiny"), "pred-c", 0.5),
+        ]
+
+        selected = _select_budgeted_rows(rows, acquire_count=5, mode="balanced_margin_uncertainty")
+
+        self.assertEqual([row[0].record_id for row in selected], ["a", "b", "c", "d", "e"])
+        self.assertEqual([row[1] for row in selected], ["pred-a", "pred-b", "pred-c", "pred-c", "pred-c"])
 
 
 if __name__ == "__main__":

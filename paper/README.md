@@ -22,6 +22,7 @@ The generator currently reads:
 - `results/twenty_newsgroups_retrieval_cost_audit.json`
 - `results/twenty_newsgroups_self_training_audit.json`
 - `results/twenty_newsgroups_active_acquisition_audit.json`
+- `results/twenty_newsgroups_budgeted_acquisition_audit.json`
 - `results/real_text_break_even_certificate.json`
 - `results/tiny_neural_feature_sweep_wide.json`
 - `results/tiny_neural_profile_sweep_f1024.json`
@@ -164,10 +165,14 @@ class-balanced seed, select unlabeled train-pool records without validation or
 heldout access, acquire true labels only after selection, and preserve the
 finding that no tested acquisition mode beats random or class-balanced density
 without explicit reuse.
+The Twenty Newsgroups budgeted-window active-acquisition audit must sample the
+scan window before teacher scoring, use the full label budget, acquire true
+labels only after selection, preserve the no-random-density-win finding, and
+preserve the 160-label class-balanced density wins for margin uncertainty.
 The real-text break-even certificate must introduce no new policy, certify the
 committed SMS Spam and Twenty Newsgroups break-even artifacts, preserve the
-118-row comparison set, and keep the current separation between 33 observed
-quality wins, one observed density win, and ten finite-reuse frontiers.
+172-row comparison set, and keep the current separation between 38 observed
+quality wins, three observed density wins, and 13 finite-reuse frontiers.
 
 ## Release Checklist
 

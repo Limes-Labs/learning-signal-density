@@ -88,6 +88,19 @@ class-balanced seed trains a teacher, the teacher selects records by margin
 signals without validation or heldout access, and true labels for acquired
 records are used only after selection.
 
+Twenty Newsgroups budgeted-window active label-acquisition audit:
+
+```bash
+python3 scripts/build_newsgroups_budgeted_acquisition_audit.py \
+  --output-json results/twenty_newsgroups_budgeted_acquisition_audit.json \
+  --output-md results/twenty_newsgroups_budgeted_acquisition_audit.md
+```
+
+This post-hoc audit tests whether scoring only a sampled train-pool window can
+reduce active-acquisition cost enough to move the density frontier. The scan
+window is sampled before teacher scoring; true labels are acquired only after
+selection.
+
 Real-text break-even frontier certificate:
 
 ```bash

@@ -190,6 +190,36 @@ class CommittedResultArtifactTests(unittest.TestCase):
                 self.assertFalse(row["break_even_vs_random"]["candidate_density_wins"])
                 self.assertFalse(row["break_even_vs_class_balanced"]["candidate_density_wins"])
 
+    def test_twenty_newsgroups_budgeted_acquisition_audit_records_budgeted_scan_frontier(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_budgeted_acquisition_audit.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(
+            artifact["acquisition_modes"],
+            ["margin_uncertainty", "balanced_margin_uncertainty", "short_margin_uncertainty"],
+        )
+        self.assertEqual(artifact["scan_multipliers"], [1, 2, 4])
+        self.assertEqual(artifact["claim_scope"]["scan_window_sampled_without_text_scoring"], True)
+        self.assertEqual(artifact["claim_scope"]["true_labels_acquired_after_selection"], True)
+        self.assertEqual(artifact["claim_scope"]["oracle_train_labels_used_for_acquisition"], False)
+        self.assertEqual(artifact["claim_scope"]["validation_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+
+        budget_160 = artifact["budgets"]["160"]
+        self.assertEqual(budget_160["best_density_condition"], "budgeted_active_margin_uncertainty_2x")
+        best_160 = budget_160["condition_results"][budget_160["best_density_condition"]]
+        self.assertEqual(best_160["external_events_mean"], 160.0)
+        self.assertEqual(best_160["scan_window_size_mean"], 240.0)
+        self.assertTrue(best_160["break_even_vs_class_balanced"]["candidate_density_wins"])
+        self.assertFalse(best_160["break_even_vs_random"]["candidate_density_wins"])
+
+        for budget, budget_row in artifact["budgets"].items():
+            for row in budget_row["condition_results"].values():
+                self.assertEqual(row["external_events_mean"], float(budget))
+                self.assertFalse(row["break_even_vs_random"]["candidate_density_wins"])
+
     def test_real_text_break_even_certificate_records_global_frontier(self) -> None:
         artifact = json.loads(Path("results/real_text_break_even_certificate.json").read_text())
 
@@ -200,11 +230,11 @@ class CommittedResultArtifactTests(unittest.TestCase):
         self.assertIn("G_candidate / G_reference", artifact["theorem"]["density_condition"])
 
         summary = artifact["summary"]
-        self.assertEqual(summary["rows"], 118)
-        self.assertEqual(summary["observed_quality_wins"], 33)
-        self.assertEqual(summary["density_wins"], 1)
-        self.assertEqual(summary["quality_win_density_losses"], 33)
-        self.assertEqual(summary["finite_reuse_needed"], 10)
+        self.assertEqual(summary["rows"], 172)
+        self.assertEqual(summary["observed_quality_wins"], 38)
+        self.assertEqual(summary["density_wins"], 3)
+        self.assertEqual(summary["quality_win_density_losses"], 36)
+        self.assertEqual(summary["finite_reuse_needed"], 13)
         self.assertEqual(summary["bounded_quality_impossible_at_k1"], 53)
 
         strongest = summary["strongest_observed_density_win"]
@@ -215,10 +245,11 @@ class CommittedResultArtifactTests(unittest.TestCase):
 
         self.assertEqual(
             summary["cheapest_finite_reuse_frontier"]["amortized_reuses_to_density_win"],
-            4,
+            2,
         )
         self.assertEqual(summary["families"]["twenty_newsgroups_self_training"]["density_wins"], 0)
         self.assertEqual(summary["families"]["twenty_newsgroups_active_acquisition"]["density_wins"], 0)
+        self.assertEqual(summary["families"]["twenty_newsgroups_budgeted_active_acquisition"]["density_wins"], 2)
 
     def test_sms_spam_real_text_artifacts_record_dataset_scope_and_cost_tradeoff(self) -> None:
         default = json.loads(Path("results/sms_spam_real_text_selection_cost.json").read_text())

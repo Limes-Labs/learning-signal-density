@@ -30,8 +30,8 @@ The current pilot is intentionally modest:
   prototype retrieval, and a validation selector are compared after stripping
   headers, quotes, and reply boilerplate.
 - Follow-up Twenty Newsgroups audits now test length-penalized retrieval,
-  pseudo-label self-training, and active true-label acquisition under the same
-  split and cost discipline.
+  pseudo-label self-training, active true-label acquisition, and budgeted-window
+  active acquisition under the same split and cost discipline.
 - UCI SMS Spam Collection remains as a small binary sanity check for selector
   break-even algebra. It is not the intended central NLP benchmark.
 - Break-even audits now turn the real-text results into a simple mathematical
@@ -198,8 +198,8 @@ using the same split and accounting discipline.
 - `results/twenty_newsgroups_break_even_analysis.*` - mathematical audit of the
   Twenty Newsgroups pilot. It shows that prototype retrieval can win heldout
   accuracy at some budgets while still missing the density break-even condition;
-  the only current Newsgroups density win is the 80-document class-balanced
-  sample.
+  in the base active-selection grid, the only density win is the 80-document
+  class-balanced sample.
 - `results/twenty_newsgroups_retrieval_cost_audit.*` - post-hoc
   length-penalized prototype-retrieval audit. It improves some retrieval-family
   rows but preserves the negative conclusion that no tested retrieval alpha
@@ -214,9 +214,13 @@ using the same split and accounting discipline.
   uncertain train-pool documents before true labels are acquired; the best
   tested rows improve some active-acquisition variants but still do not beat
   random or class-balanced density without explicit reuse.
+- `results/twenty_newsgroups_budgeted_acquisition_audit.*` - budgeted-window
+  active acquisition audit. The teacher scores only a sampled train-pool window
+  before labels are acquired; at 160 labels, two margin-uncertainty rows beat
+  class-balanced density, but no tested row beats random density.
 - `results/real_text_break_even_certificate.*` - cross-artifact mathematical
-  certificate over the real-text audits. It records that 33 observed quality
-  wins collapse to one density win after event-compute is charged, with ten
+  certificate over the real-text audits. It records that 38 observed quality
+  wins collapse to three density wins after event-compute is charged, with 13
   rows needing explicit finite reuse to cross the break-even frontier.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation

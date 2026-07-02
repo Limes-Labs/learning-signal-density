@@ -74,12 +74,15 @@ labels are too noisy in this scarce-label regime and do not pay for their
 scoring and student-training cost. A true-label active-acquisition audit then
 tests whether a teacher can choose better documents before labels are acquired;
 it improves one high-budget active row but still does not clear the density
-frontier without reuse. We extend the audit with an amortized-cost
+frontier without reuse. A budgeted-window variant then scores only sampled
+train-pool windows before acquisition; this reduces the selector bill enough
+for two 160-label margin-uncertainty rows to beat class-balanced density, though
+no tested row beats random density. We extend the audit with an amortized-cost
 corollary that distinguishes selectors that could pay for themselves after
 enough independent reuse from selectors whose nonreusable cost is already too
 high. A final real-text certificate applies that inequality across the committed
 SMS Spam and Twenty Newsgroups artifacts: many rows improve heldout quality, but
-only one currently improves learning-signal density without an explicit reuse
+only three currently improve learning-signal density without an explicit reuse
 assumption.
 \end{abstract}
 
@@ -331,6 +334,7 @@ Table~\ref{tab:twenty-newsgroups-break-even},
 Table~\ref{tab:twenty-newsgroups-retrieval-cost-audit},
 Table~\ref{tab:twenty-newsgroups-self-training-audit},
 Table~\ref{tab:twenty-newsgroups-active-acquisition-audit},
+Table~\ref{tab:twenty-newsgroups-budgeted-acquisition-audit},
 Table~\ref{tab:real-text-break-even-certificate},
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
@@ -388,8 +392,8 @@ multiplier of 1.192 over random, but its event-compute multiplier is 39.474, so
 its density ratio is only 0.030 and even perfect accuracy gain would not beat
 random under this charged model. At 160 documents, prototype retrieval again
 improves quality, with multiplier 1.046, but it still pays 9.391 times the
-event-compute bill and reaches density ratio 0.111. The only Newsgroups density
-win in the current grid is not the sophisticated selector; it is the
+event-compute bill and reaches density ratio 0.111. The only density win in the
+base active-selection grid is not the sophisticated selector; it is the
 80-document class-balanced sample, which ties random quality and lowers charged
 compute enough to reach density ratio 1.180. This is a useful mathematical
 constraint on future active-learning, retrieval, distillation, and filtering
@@ -439,18 +443,34 @@ break-even audit says this 160-document active row would need 4 independent
 downstream uses of the reusable selection work before it beats class-balanced
 density at the observed gain.
 
+Table~\ref{tab:twenty-newsgroups-budgeted-acquisition-audit} tests the same
+true-label acquisition mechanism under a stricter selector-cost intervention:
+the teacher scores only a sampled window of the unlabeled train pool. The
+experiment keeps the same isolation rules, uses the full label budget, and
+acquires true labels only after selection. At 40 labels, the best budgeted row
+scores only 20 candidates and reaches density 0.027690, still below random
+0.060065 and class-balanced 0.036293. At 80 labels, short margin uncertainty
+with a 2x scan window reaches accuracy 0.099 and density 0.011165, again below
+random and class-balanced. At 160 labels, margin uncertainty with a 2x scan
+window reaches accuracy 0.133 and density 0.004467; it still does not beat
+random density 0.006005, but it does beat class-balanced density 0.004276. The
+1x margin window is also a class-balanced density win at 160 labels. This is a
+more useful positive result than the full-pool active audit: the acquisition
+signal is weak, but reducing the scan bill can move a real density frontier.
+
 Table~\ref{tab:real-text-break-even-certificate} collects the real-text
-break-even rows into one certificate. Across 118 SMS Spam and Twenty Newsgroups
-comparisons, 33 rows improve heldout quality relative to their reference, but
-only one row improves learning-signal density without a reuse assumption: the
-80-document Newsgroups class-balanced sample, with density ratio 1.180. Another
-ten rows can cross the frontier only if explicitly reusable selector work is
-amortized across enough independent downstream uses. The cheapest such frontier
-is the 160-document Newsgroups active-acquisition row, which needs 4 uses
+break-even rows into one certificate. Across 172 SMS Spam and Twenty Newsgroups
+comparisons, 38 rows improve heldout quality relative to their reference, but
+only three rows improve learning-signal density without a reuse assumption: the
+80-document Newsgroups class-balanced sample and the two 160-document budgeted
+margin-acquisition rows against class-balanced sampling. Another 13 rows can
+cross the frontier only if explicitly reusable selector work is amortized across
+enough independent downstream uses. The cheapest such frontier is the
+160-document Newsgroups budgeted balanced-margin row, which needs 2 uses
 against class-balanced sampling; the largest quality win without a density win
-is the 32-message SMS validation label-index
-selector, with quality multiplier 1.426 but density ratio 0.107. The
-self-training family contributes 24 rows and no quality or density wins. This
+is the 32-message SMS validation label-index selector, with quality multiplier
+1.426 but density ratio 0.107. The self-training family contributes 24 rows and
+no quality or density wins. This
 certificate is a compact mathematical summary of the paper's practical warning:
 better heldout scores are common, but density improvements are rare unless the
 selection bill is small, reusable, or both.
