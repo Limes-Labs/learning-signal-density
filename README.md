@@ -233,6 +233,10 @@ using the same split and accounting discipline.
   no positive frontier clears the robust-win rule on untouched seeds; the
   80-document class-balanced row remains a fragile mean win, while the
   prototype-160 and budgeted margin-2x losses against random remain robust.
+- `results/twenty_newsgroups_class_balanced_confirmation_audit.*` - targeted
+  20-seed confirmation for the strongest remaining positive Newsgroups
+  candidate. The 80-document class-balanced row keeps a small mean density edge
+  over random, but wins only 10/20 paired seeds and fails the confirmation rule.
 - `results/real_text_break_even_certificate.*` - cross-artifact mathematical
   certificate over the real-text audits. It records that 38 observed quality
   wins collapse to three density wins after event-compute is charged, with 13

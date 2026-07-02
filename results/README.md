@@ -140,6 +140,19 @@ seeds 439, 443, 449, 457, and 461. It preserves the anti-cheat split discipline
 and uses exact seed bootstrap plus sign-test diagnostics to show that no
 positive frontier clears the conservative robust-win rule on this seed set.
 
+Twenty Newsgroups class-balanced confirmation audit:
+
+```bash
+python3 scripts/build_newsgroups_class_balanced_confirmation_audit.py \
+  --output-json results/twenty_newsgroups_class_balanced_confirmation_audit.json \
+  --output-md results/twenty_newsgroups_class_balanced_confirmation_audit.md
+```
+
+This targeted confirmation reruns only the 80-label class-balanced vs random
+comparison on a 20-seed untouched block. It introduces no new policy and
+records that the small positive mean density edge does not pass the bootstrap
+or sign-test confirmation rule.
+
 Real-text break-even frontier certificate:
 
 ```bash

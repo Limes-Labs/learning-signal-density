@@ -26,6 +26,7 @@ The generator currently reads:
 - `results/twenty_newsgroups_length_window_confirmation_audit.json`
 - `results/twenty_newsgroups_frontier_robustness_audit.json`
 - `results/twenty_newsgroups_frontier_fresh_seed_audit.json`
+- `results/twenty_newsgroups_class_balanced_confirmation_audit.json`
 - `results/real_text_break_even_certificate.json`
 - `results/tiny_neural_feature_sweep_wide.json`
 - `results/tiny_neural_profile_sweep_f1024.json`
@@ -184,6 +185,9 @@ The Twenty Newsgroups fresh-seed frontier audit must rerun only the frontier
 comparisons on untouched seeds 439, 443, 449, 457, and 461, preserve zero robust
 density wins, two robust density losses, and one fragile mean density win under
 the exact seed-bootstrap rule.
+The Twenty Newsgroups class-balanced confirmation audit must rerun only the
+80-label class-balanced vs random comparison on the 20-seed confirmation block,
+preserve the 10/20 paired result, and keep the robust density win false.
 The real-text break-even certificate must introduce no new policy, certify the
 committed SMS Spam and Twenty Newsgroups break-even artifacts, preserve the
 172-row comparison set, and keep the current separation between 38 observed

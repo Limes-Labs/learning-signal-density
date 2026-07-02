@@ -1,0 +1,328 @@
+{
+  "candidate_condition": "class_balanced_sample",
+  "claim_scope": {
+    "heldout_used_for_selection": false,
+    "introduces_new_policy": false,
+    "metadata_stripped": true,
+    "paper_ready_claim": false,
+    "predeclared_seed_block": true,
+    "real_dataset": true,
+    "synthetic_domain": false,
+    "targeted_confirmation": true,
+    "validation_used_for_selection": false
+  },
+  "confirmation_seeds": [
+    2003,
+    2011,
+    2017,
+    2027,
+    2029,
+    2039,
+    2053,
+    2063,
+    2069,
+    2081,
+    2083,
+    2087,
+    2089,
+    2099,
+    2111,
+    2113,
+    2129,
+    2131,
+    2137,
+    2141
+  ],
+  "dataset": {
+    "label_count": 20,
+    "label_counts": {
+      "alt.atheism": 100,
+      "comp.graphics": 100,
+      "comp.os.ms-windows.misc": 100,
+      "comp.sys.ibm.pc.hardware": 100,
+      "comp.sys.mac.hardware": 100,
+      "comp.windows.x": 100,
+      "misc.forsale": 100,
+      "rec.autos": 99,
+      "rec.motorcycles": 100,
+      "rec.sport.baseball": 100,
+      "rec.sport.hockey": 100,
+      "sci.crypt": 100,
+      "sci.electronics": 100,
+      "sci.med": 100,
+      "sci.space": 100,
+      "soc.religion.christian": 100,
+      "talk.politics.guns": 100,
+      "talk.politics.mideast": 99,
+      "talk.politics.misc": 100,
+      "talk.religion.misc": 100
+    },
+    "license": "CC BY 4.0",
+    "name": "Twenty Newsgroups",
+    "record_count": 1998,
+    "sha256": "cfbb360d6c1e55c06d33a4c5da0789a93b78db74833a70be8ff2e133cc4e6a6e",
+    "tar_member": "mini_newsgroups.tar.gz",
+    "task": "20-way topic classification",
+    "uci_id": 113,
+    "url": "https://archive.ics.uci.edu/static/public/113/twenty+newsgroups.zip"
+  },
+  "generated_at": "2026-07-02T10:12:07Z",
+  "paired_rows": [
+    {
+      "candidate_density_wins": true,
+      "candidate_lsd": 0.011067,
+      "candidate_quality": 0.0375,
+      "density_delta": 0.003912,
+      "density_ratio": 1.546751,
+      "quality_delta": 0.0125,
+      "reference_lsd": 0.007155,
+      "reference_quality": 0.025,
+      "seed": 2003
+    },
+    {
+      "candidate_density_wins": true,
+      "candidate_lsd": 0.019913,
+      "candidate_quality": 0.11,
+      "density_delta": 0.006991,
+      "density_ratio": 1.541015,
+      "quality_delta": 0.0675,
+      "reference_lsd": 0.012922,
+      "reference_quality": 0.0425,
+      "seed": 2011
+    },
+    {
+      "candidate_density_wins": false,
+      "candidate_lsd": 0.010537,
+      "candidate_quality": 0.0425,
+      "density_delta": -0.002612,
+      "density_ratio": 0.801354,
+      "quality_delta": 0.0,
+      "reference_lsd": 0.013149,
+      "reference_quality": 0.0425,
+      "seed": 2017
+    },
+    {
+      "candidate_density_wins": false,
+      "candidate_lsd": 0.011211,
+      "candidate_quality": 0.035,
+      "density_delta": -0.003473,
+      "density_ratio": 0.763484,
+      "quality_delta": -0.01,
+      "reference_lsd": 0.014684,
+      "reference_quality": 0.045,
+      "seed": 2027
+    },
+    {
+      "candidate_density_wins": false,
+      "candidate_lsd": 0.008668,
+      "candidate_quality": 0.0425,
+      "density_delta": -0.002394,
+      "density_ratio": 0.783583,
+      "quality_delta": -0.02,
+      "reference_lsd": 0.011062,
+      "reference_quality": 0.0625,
+      "seed": 2029
+    },
+    {
+      "candidate_density_wins": true,
+      "candidate_lsd": 0.017784,
+      "candidate_quality": 0.0525,
+      "density_delta": 0.006071,
+      "density_ratio": 1.518313,
+      "quality_delta": 0.01,
+      "reference_lsd": 0.011713,
+      "reference_quality": 0.0425,
+      "seed": 2039
+    },
+    {
+      "candidate_density_wins": true,
+      "candidate_lsd": 0.009303,
+      "candidate_quality": 0.055,
+      "density_delta": 0.006208,
+      "density_ratio": 3.005816,
+      "quality_delta": 0.045,
+      "reference_lsd": 0.003095,
+      "reference_quality": 0.01,
+      "seed": 2053
+    },
+    {
+      "candidate_density_wins": false,
+      "candidate_lsd": 0.014903,
+      "candidate_quality": 0.0475,
+      "density_delta": -0.00198,
+      "density_ratio": 0.882722,
+      "quality_delta": -0.005,
+      "reference_lsd": 0.016883,
+      "reference_quality": 0.0525,
+      "seed": 2063
+    },
+    {
+      "candidate_density_wins": false,
+      "candidate_lsd": 0.003372,
+      "candidate_quality": 0.0175,
+      "density_delta": -0.002546,
+      "density_ratio": 0.569787,
+      "quality_delta": -0.0025,
+      "reference_lsd": 0.005918,
+      "reference_quality": 0.02,
+      "seed": 2069
+    },
+    {
+      "candidate_density_wins": true,
+      "candidate_lsd": 0.007596,
+      "candidate_quality": 0.0225,
+      "density_delta": 0.006114,
+      "density_ratio": 5.125506,
+      "quality_delta": 0.0175,
+      "reference_lsd": 0.001482,
+      "reference_quality": 0.005,
+      "seed": 2081
+    },
+    {
+      "candidate_density_wins": false,
+      "candidate_lsd": 0.016319,
+      "candidate_quality": 0.0575,
+      "density_delta": -0.000281,
+      "density_ratio": 0.983072,
+      "quality_delta": -0.0375,
+      "reference_lsd": 0.0166,
+      "reference_quality": 0.095,
+      "seed": 2083
+    },
+    {
+      "candidate_density_wins": true,
+      "candidate_lsd": 0.017186,
+      "candidate_quality": 0.0675,
+      "density_delta": 0.008647,
+      "density_ratio": 2.012648,
+      "quality_delta": 0.0425,
+      "reference_lsd": 0.008539,
+      "reference_quality": 0.025,
+      "seed": 2087
+    },
+    {
+      "candidate_density_wins": false,
+      "candidate_lsd": 0.007178,
+      "candidate_quality": 0.035,
+      "density_delta": -0.004943,
+      "density_ratio": 0.592195,
+      "quality_delta": -0.01,
+      "reference_lsd": 0.012121,
+      "reference_quality": 0.045,
+      "seed": 2089
+    },
+    {
+      "candidate_density_wins": false,
+      "candidate_lsd": 0.005385,
+      "candidate_quality": 0.0325,
+      "density_delta": -0.015753,
+      "density_ratio": 0.254754,
+      "quality_delta": -0.04,
+      "reference_lsd": 0.021138,
+      "reference_quality": 0.0725,
+      "seed": 2099
+    },
+    {
+      "candidate_density_wins": false,
+      "candidate_lsd": 0.013332,
+      "candidate_quality": 0.0625,
+      "density_delta": -0.003255,
+      "density_ratio": 0.803762,
+      "quality_delta": 0.01,
+      "reference_lsd": 0.016587,
+      "reference_quality": 0.0525,
+      "seed": 2111
+    },
+    {
+      "candidate_density_wins": true,
+      "candidate_lsd": 0.012502,
+      "candidate_quality": 0.06,
+      "density_delta": 0.003061,
+      "density_ratio": 1.324224,
+      "quality_delta": 0.0275,
+      "reference_lsd": 0.009441,
+      "reference_quality": 0.0325,
+      "seed": 2113
+    },
+    {
+      "candidate_density_wins": true,
+      "candidate_lsd": 0.00856,
+      "candidate_quality": 0.045,
+      "density_delta": 0.000338,
+      "density_ratio": 1.041109,
+      "quality_delta": 0.015,
+      "reference_lsd": 0.008222,
+      "reference_quality": 0.03,
+      "seed": 2129
+    },
+    {
+      "candidate_density_wins": false,
+      "candidate_lsd": 0.006358,
+      "candidate_quality": 0.035,
+      "density_delta": -0.007868,
+      "density_ratio": 0.446928,
+      "quality_delta": -0.0175,
+      "reference_lsd": 0.014226,
+      "reference_quality": 0.0525,
+      "seed": 2131
+    },
+    {
+      "candidate_density_wins": true,
+      "candidate_lsd": 0.015766,
+      "candidate_quality": 0.0625,
+      "density_delta": 0.011315,
+      "density_ratio": 3.542125,
+      "quality_delta": 0.0475,
+      "reference_lsd": 0.004451,
+      "reference_quality": 0.015,
+      "seed": 2137
+    },
+    {
+      "candidate_density_wins": true,
+      "candidate_lsd": 0.022046,
+      "candidate_quality": 0.0675,
+      "density_delta": 0.00752,
+      "density_ratio": 1.517692,
+      "quality_delta": 0.025,
+      "reference_lsd": 0.014526,
+      "reference_quality": 0.0425,
+      "seed": 2141
+    }
+  ],
+  "reference_condition": "random_sample",
+  "robustness_rule": {
+    "robust_density_win": "mean density delta is positive, paired bootstrap 95% interval for mean density delta is strictly positive, and one-sided exact sign-test p <= 0.05"
+  },
+  "summary": {
+    "bootstrap": {
+      "bootstrap_resamples": 20000,
+      "bootstrap_seed": 20260702,
+      "density_delta_ci95": [
+        -0.002197,
+        0.003466
+      ],
+      "density_ratio_ci95": [
+        0.826525,
+        1.35699
+      ],
+      "quality_delta_ci95": [
+        -0.003375,
+        0.021125
+      ]
+    },
+    "mean_candidate_lsd": 0.011949,
+    "mean_candidate_quality": 0.049375,
+    "mean_density_delta": 0.000754,
+    "mean_density_ratio": 1.067312,
+    "mean_quality_delta": 0.008875,
+    "mean_reference_lsd": 0.011196,
+    "mean_reference_quality": 0.0405,
+    "paired_loss_count": 10,
+    "paired_win_count": 10,
+    "robust_density_win": false,
+    "seed_count": 20,
+    "sign_test_one_sided_win_p": 0.588099
+  },
+  "title": "Twenty Newsgroups Class-Balanced Confirmation Audit",
+  "train_budget": 80
+}

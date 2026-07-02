@@ -92,7 +92,9 @@ that the current mean wins should be treated as hypotheses, while several
 retrieval-density losses are already robust under the same test. A fresh-seed
 replication audit reruns the same frontier comparisons on five untouched seeds:
 no positive frontier clears the conservative robust-win rule, while two
-negative density results remain robust.
+negative density results remain robust. A targeted 20-seed confirmation of the
+remaining class-balanced 80-label candidate keeps only a small mean density
+edge and rejects promotion under both the bootstrap and sign-test criteria.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -348,6 +350,7 @@ Table~\ref{tab:twenty-newsgroups-length-window-audit},
 Table~\ref{tab:real-text-break-even-certificate},
 Table~\ref{tab:twenty-newsgroups-frontier-robustness},
 Table~\ref{tab:twenty-newsgroups-frontier-fresh-seed},
+Table~\ref{tab:twenty-newsgroups-class-balanced-confirmation},
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
 Table~\ref{tab:sms-spam-break-even},
@@ -529,6 +532,17 @@ ratio 0.713 against class-balanced. Prototype retrieval at 160 documents and
 budgeted margin-2x against random remain robust density losses. The current
 paper therefore has no replicated positive real-text density frontier under
 this conservative fresh-seed rule.
+
+Table~\ref{tab:twenty-newsgroups-class-balanced-confirmation} then tests the
+only remaining positive candidate with more power: the 80-document
+class-balanced sampler against random on 20 untouched seeds. The mean density
+ratio is still slightly above one, 1.067, but the candidate wins only 10 of 20
+paired seeds. The paired-bootstrap interval crosses zero, [-0.002197,
+0.003466], and the one-sided exact sign-test gives \(p=0.588099\). This result
+is important precisely because it is not flattering: after a larger targeted
+confirmation, the paper should not claim a robust positive real-text density
+frontier. The useful contribution is the accounting and falsification protocol,
+not a new winning selector.
 
 The SMS Spam pilot is useful precisely because it does not produce an easy
 selector win. At 32 training messages with 800 validation examples, the

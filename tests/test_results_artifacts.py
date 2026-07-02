@@ -321,6 +321,26 @@ class CommittedResultArtifactTests(unittest.TestCase):
         self.assertEqual(prototype_160["paired_win_count"], 0)
         self.assertTrue(prototype_160["robust_density_loss"])
 
+    def test_twenty_newsgroups_class_balanced_confirmation_audit_rejects_promotion(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_class_balanced_confirmation_audit.json").read_text())
+
+        self.assertEqual(artifact["candidate_condition"], "class_balanced_sample")
+        self.assertEqual(artifact["reference_condition"], "random_sample")
+        self.assertEqual(artifact["train_budget"], 80)
+        self.assertEqual(len(artifact["confirmation_seeds"]), 20)
+        self.assertEqual(artifact["claim_scope"]["targeted_confirmation"], True)
+        self.assertEqual(artifact["claim_scope"]["introduces_new_policy"], False)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+
+        summary = artifact["summary"]
+        self.assertEqual(summary["seed_count"], 20)
+        self.assertEqual(summary["paired_win_count"], 10)
+        self.assertEqual(summary["paired_loss_count"], 10)
+        self.assertGreater(summary["mean_density_ratio"], 1.0)
+        self.assertFalse(summary["robust_density_win"])
+        self.assertEqual(summary["sign_test_one_sided_win_p"], 0.588099)
+        self.assertEqual(summary["bootstrap"]["density_delta_ci95"], [-0.002197, 0.003466])
+
     def test_real_text_break_even_certificate_records_global_frontier(self) -> None:
         artifact = json.loads(Path("results/real_text_break_even_certificate.json").read_text())
 
