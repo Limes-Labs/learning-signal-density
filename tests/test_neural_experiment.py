@@ -209,6 +209,591 @@ class NeuralExperimentArtifactTests(unittest.TestCase):
         self.assertEqual(scope["oracle_generated_labels"], False)
         self.assertEqual(stats["portfolio_candidate_count_mean"], 0)
 
+    def test_train_support_density_selector_uses_train_only_support_density(self) -> None:
+        raw_case = run_neural_condition(
+            seed=1009,
+            condition="train_support_density_selector",
+            material_count=120,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_baseline = run_neural_condition(
+            seed=1009,
+            condition="raw_text",
+            material_count=120,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        support_case = run_neural_condition(
+            seed=1031,
+            condition="train_support_density_selector",
+            material_count=120,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        support_baseline = run_neural_condition(
+            seed=1031,
+            condition="support_ramped_compact_induction",
+            material_count=120,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(raw_case["portfolio_selected_condition"], "raw_text")
+        self.assertEqual(support_case["portfolio_selected_condition"], "support_ramped_compact_induction")
+        self.assertEqual(raw_case["portfolio_candidate_count"], 3)
+        self.assertEqual(
+            raw_case["portfolio_candidate_conditions"],
+            [
+                "raw_text",
+                "compact_train_size_gated_induction",
+                "support_ramped_compact_induction",
+            ],
+        )
+        self.assertGreater(raw_case["portfolio_selection_cost_units"], 0)
+        self.assertGreater(raw_case["charged_compute_units"], raw_baseline["charged_compute_units"])
+        self.assertGreater(support_case["charged_compute_units"], support_baseline["charged_compute_units"])
+        self.assertIn("train_support_density", raw_case["portfolio_selection_metric"])
+        self.assertNotIn("validation", raw_case["portfolio_selection_metric"])
+        self.assertNotIn("heldout", raw_case["portfolio_selection_metric"])
+
+    def test_train_support_density_selector_scope_is_declared_in_neural_artifact(self) -> None:
+        result = run_neural_seedset(
+            seeds=[1009],
+            conditions=["train_support_density_selector"],
+            material_count=120,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            fresh_seed_confirmation=True,
+        )
+
+        scope = result["condition_scope"]["train_support_density_selector"]
+        stats = result["conditions"]["train_support_density_selector"]
+
+        self.assertEqual(result["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["support_density_selector"], True)
+        self.assertEqual(scope["support_density_min_kept_per_compute"], 0.00145)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(stats["portfolio_candidate_count_mean"], 3)
+        self.assertIn("portfolio_selected_condition_counts", stats)
+
+    def test_support_probe_window_selector_reuses_selected_support_construction(self) -> None:
+        support_case = run_neural_condition(
+            seed=1031,
+            condition="support_probe_window_selector",
+            material_count=104,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        support_baseline = run_neural_condition(
+            seed=1031,
+            condition="support_ramped_compact_induction",
+            material_count=104,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_case = run_neural_condition(
+            seed=1031,
+            condition="support_probe_window_selector",
+            material_count=128,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_baseline = run_neural_condition(
+            seed=1031,
+            condition="raw_text",
+            material_count=128,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(support_case["portfolio_selected_condition"], "support_ramped_compact_induction")
+        self.assertEqual(support_case["portfolio_candidate_count"], 1)
+        self.assertEqual(support_case["portfolio_candidate_conditions"], ["support_ramped_compact_induction"])
+        self.assertGreater(support_case["portfolio_selection_cost_units"], 0)
+        self.assertEqual(support_case["charged_compute_units"], support_baseline["charged_compute_units"])
+        self.assertIn("train_support_probe_window", support_case["portfolio_selection_metric"])
+        self.assertNotIn("validation", support_case["portfolio_selection_metric"])
+        self.assertNotIn("heldout", support_case["portfolio_selection_metric"])
+
+        self.assertEqual(raw_case["portfolio_selected_condition"], "raw_text")
+        self.assertEqual(raw_case["portfolio_candidate_count"], 0)
+        self.assertEqual(raw_case["portfolio_selection_cost_units"], 0)
+        self.assertEqual(raw_case["charged_compute_units"], raw_baseline["charged_compute_units"])
+
+    def test_support_probe_window_selector_scope_is_declared_in_neural_artifact(self) -> None:
+        result = run_neural_seedset(
+            seeds=[1031],
+            conditions=["support_probe_window_selector"],
+            material_count=104,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            fresh_seed_confirmation=True,
+        )
+
+        scope = result["condition_scope"]["support_probe_window_selector"]
+        stats = result["conditions"]["support_probe_window_selector"]
+
+        self.assertEqual(result["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["support_probe_window_selector"], True)
+        self.assertEqual(scope["support_probe_min_train_events"], 360)
+        self.assertEqual(scope["support_probe_max_train_events"], 432)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(stats["portfolio_candidate_count_mean"], 1)
+        self.assertIn("portfolio_selected_condition_counts", stats)
+
+    def test_validation_support_precision_selector_charges_validation_calibration(self) -> None:
+        compact_case = run_neural_condition(
+            seed=1031,
+            condition="validation_support_precision_selector",
+            material_count=80,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        compact_baseline = run_neural_condition(
+            seed=1031,
+            condition="compact_train_size_gated_induction",
+            material_count=80,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        override_case = run_neural_condition(
+            seed=1031,
+            condition="validation_support_precision_selector",
+            material_count=96,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        support_baseline = run_neural_condition(
+            seed=1031,
+            condition="support_ramped_compact_induction",
+            material_count=96,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_case = run_neural_condition(
+            seed=1031,
+            condition="validation_support_precision_selector",
+            material_count=128,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_baseline = run_neural_condition(
+            seed=1031,
+            condition="raw_text",
+            material_count=128,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(compact_case["portfolio_selected_condition"], "compact_train_size_gated_induction")
+        self.assertEqual(compact_case["portfolio_candidate_count"], 0)
+        self.assertEqual(compact_case["portfolio_selection_cost_units"], 0)
+        self.assertEqual(compact_case["charged_compute_units"], compact_baseline["charged_compute_units"])
+
+        self.assertEqual(override_case["portfolio_selected_condition"], "support_ramped_compact_induction")
+        self.assertEqual(override_case["portfolio_candidate_count"], 1)
+        self.assertEqual(
+            override_case["portfolio_candidate_conditions"],
+            ["support_ramped_compact_induction"],
+        )
+        self.assertGreater(override_case["portfolio_validation_score"], 0.825758)
+        self.assertGreater(override_case["portfolio_selection_cost_units"], 0)
+        self.assertGreater(override_case["charged_compute_units"], support_baseline["charged_compute_units"])
+        self.assertIn("validation_support_precision", override_case["portfolio_selection_metric"])
+        self.assertNotIn("heldout", override_case["portfolio_selection_metric"])
+
+        self.assertEqual(raw_case["portfolio_selected_condition"], "raw_text")
+        self.assertEqual(raw_case["portfolio_candidate_count"], 1)
+        self.assertGreater(raw_case["portfolio_selection_cost_units"], 0)
+        self.assertGreater(raw_case["charged_compute_units"], raw_baseline["charged_compute_units"])
+
+    def test_validation_support_precision_selector_scope_is_declared_in_neural_artifact(self) -> None:
+        result = run_neural_seedset(
+            seeds=[1031],
+            conditions=["validation_support_precision_selector"],
+            material_count=96,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            fresh_seed_confirmation=True,
+        )
+
+        scope = result["condition_scope"]["validation_support_precision_selector"]
+        stats = result["conditions"]["validation_support_precision_selector"]
+
+        self.assertEqual(result["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(scope["train_only_selection"], False)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_used_for_transform_selection"], True)
+        self.assertEqual(scope["validation_support_precision_selector"], True)
+        self.assertEqual(scope["validation_support_precision_threshold"], 0.825758)
+        self.assertEqual(scope["validation_support_compact_max_train_events"], 320)
+        self.assertEqual(scope["validation_support_transition_min_train_events"], 400)
+        self.assertEqual(scope["validation_support_transition_max_train_events"], 432)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(stats["portfolio_candidate_count_mean"], 1)
+        self.assertEqual(
+            stats["portfolio_selected_condition_counts"],
+            {"support_ramped_compact_induction": 1},
+        )
+
+    def test_validation_support_precision_gate_selector_drops_fixed_support_window(self) -> None:
+        compact_case = run_neural_condition(
+            seed=1031,
+            condition="validation_support_precision_gate_selector",
+            material_count=80,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        compact_baseline = run_neural_condition(
+            seed=1031,
+            condition="compact_train_size_gated_induction",
+            material_count=80,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        support_case = run_neural_condition(
+            seed=1031,
+            condition="validation_support_precision_gate_selector",
+            material_count=96,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        support_baseline = run_neural_condition(
+            seed=1031,
+            condition="support_ramped_compact_induction",
+            material_count=96,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_case = run_neural_condition(
+            seed=1031,
+            condition="validation_support_precision_gate_selector",
+            material_count=128,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_baseline = run_neural_condition(
+            seed=1031,
+            condition="raw_text",
+            material_count=128,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(compact_case["portfolio_selected_condition"], "compact_train_size_gated_induction")
+        self.assertEqual(compact_case["portfolio_candidate_count"], 0)
+        self.assertEqual(compact_case["portfolio_selection_cost_units"], 0)
+        self.assertEqual(compact_case["charged_compute_units"], compact_baseline["charged_compute_units"])
+
+        self.assertEqual(support_case["portfolio_selected_condition"], "support_ramped_compact_induction")
+        self.assertEqual(support_case["portfolio_candidate_count"], 1)
+        self.assertEqual(
+            support_case["portfolio_candidate_conditions"],
+            ["support_ramped_compact_induction"],
+        )
+        self.assertGreater(support_case["portfolio_validation_score"], 0.825758)
+        self.assertGreater(support_case["portfolio_selection_cost_units"], 0)
+        self.assertGreater(support_case["charged_compute_units"], support_baseline["charged_compute_units"])
+        self.assertIn("validation_support_precision_gate", support_case["portfolio_selection_metric"])
+
+        self.assertEqual(raw_case["portfolio_selected_condition"], "raw_text")
+        self.assertEqual(raw_case["portfolio_candidate_count"], 1)
+        self.assertGreater(raw_case["portfolio_selection_cost_units"], 0)
+        self.assertGreater(raw_case["charged_compute_units"], raw_baseline["charged_compute_units"])
+        self.assertNotIn("transition_prior", raw_case["portfolio_selection_metric"])
+
+    def test_validation_support_precision_gate_selector_scope_is_declared_in_neural_artifact(self) -> None:
+        result = run_neural_seedset(
+            seeds=[1031],
+            conditions=["validation_support_precision_gate_selector"],
+            material_count=96,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            fresh_seed_confirmation=True,
+        )
+
+        scope = result["condition_scope"]["validation_support_precision_gate_selector"]
+        stats = result["conditions"]["validation_support_precision_gate_selector"]
+
+        self.assertEqual(result["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(scope["train_only_selection"], False)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_used_for_transform_selection"], True)
+        self.assertEqual(scope["validation_support_precision_gate_selector"], True)
+        self.assertEqual(scope["validation_support_precision_threshold"], 0.825758)
+        self.assertEqual(scope["validation_support_compact_max_train_events"], 320)
+        self.assertEqual(scope["validation_support_uses_fixed_transition_prior"], False)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(stats["portfolio_candidate_count_mean"], 1)
+        self.assertEqual(
+            stats["portfolio_selected_condition_counts"],
+            {"support_ramped_compact_induction": 1},
+        )
+
+    def test_validation_support_utility_selector_balances_precision_coverage_and_cost(self) -> None:
+        support_case = run_neural_condition(
+            seed=1031,
+            condition="validation_support_utility_selector",
+            material_count=96,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        support_baseline = run_neural_condition(
+            seed=1031,
+            condition="support_ramped_compact_induction",
+            material_count=96,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_case = run_neural_condition(
+            seed=1031,
+            condition="validation_support_utility_selector",
+            material_count=112,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_baseline = run_neural_condition(
+            seed=1031,
+            condition="raw_text",
+            material_count=112,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(support_case["portfolio_selected_condition"], "support_ramped_compact_induction")
+        self.assertEqual(support_case["portfolio_candidate_count"], 1)
+        self.assertEqual(
+            support_case["portfolio_candidate_conditions"],
+            ["support_ramped_compact_induction"],
+        )
+        self.assertGreater(support_case["portfolio_validation_score"], 0.0)
+        self.assertGreater(support_case["portfolio_selection_cost_units"], 0)
+        self.assertGreater(support_case["charged_compute_units"], support_baseline["charged_compute_units"])
+        self.assertIn("validation_support_expected_utility", support_case["portfolio_selection_metric"])
+        self.assertNotIn("heldout", support_case["portfolio_selection_metric"])
+
+        summary = support_case["portfolio_candidate_summaries"][0]
+        self.assertEqual(summary["condition"], "support_ramped_compact_induction")
+        self.assertGreater(summary["validation_precision"], 0.825758)
+        self.assertGreater(summary["validation_pair_coverage"], 0.5)
+        self.assertLess(summary["validation_triple_l1_distance"], 0.8)
+        self.assertGreater(summary["support_utility_score"], 0.0)
+        self.assertGreater(summary["candidate_compute_units"], 0)
+        self.assertGreater(summary["final_compute_units"], 0)
+
+        self.assertEqual(raw_case["portfolio_selected_condition"], "raw_text")
+        self.assertEqual(raw_case["portfolio_candidate_count"], 1)
+        self.assertGreater(raw_case["portfolio_selection_cost_units"], 0)
+        self.assertLess(raw_case["portfolio_selection_cost_units"], 5000)
+        self.assertGreater(raw_case["charged_compute_units"], raw_baseline["charged_compute_units"])
+        self.assertLess(raw_case["portfolio_candidate_summaries"][0]["support_utility_score"], 0.0)
+        self.assertIsNone(raw_case["portfolio_candidate_summaries"][0]["validation_pair_coverage"])
+
+    def test_validation_support_utility_selector_scope_is_declared_in_neural_artifact(self) -> None:
+        result = run_neural_seedset(
+            seeds=[1031],
+            conditions=["validation_support_utility_selector"],
+            material_count=96,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            fresh_seed_confirmation=True,
+        )
+
+        scope = result["condition_scope"]["validation_support_utility_selector"]
+        stats = result["conditions"]["validation_support_utility_selector"]
+
+        self.assertEqual(result["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(scope["train_only_selection"], False)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_used_for_transform_selection"], True)
+        self.assertEqual(scope["validation_labels_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_motif_distribution_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_support_utility_selector"], True)
+        self.assertEqual(scope["validation_support_utility_min_score"], 0.0)
+        self.assertEqual(scope["validation_support_utility_pair_coverage_weight"], 0.25)
+        self.assertEqual(scope["validation_support_utility_triple_l1_weight"], 0.20)
+        self.assertEqual(scope["validation_support_utility_compute_penalty"], 0.000001)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(stats["portfolio_candidate_count_mean"], 1)
+        self.assertEqual(
+            stats["portfolio_selected_condition_counts"],
+            {"support_ramped_compact_induction": 1},
+        )
+
+    def test_validation_support_gain_gate_selector_estimates_gain_and_charges_proxy(self) -> None:
+        support_case = run_neural_condition(
+            seed=1031,
+            condition="validation_support_gain_gate_selector",
+            material_count=104,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        support_baseline = run_neural_condition(
+            seed=1031,
+            condition="support_ramped_compact_induction",
+            material_count=104,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_case = run_neural_condition(
+            seed=1031,
+            condition="validation_support_gain_gate_selector",
+            material_count=112,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+        raw_baseline = run_neural_condition(
+            seed=1031,
+            condition="raw_text",
+            material_count=112,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            learning_rate=0.03,
+        )
+
+        self.assertEqual(support_case["portfolio_selected_condition"], "support_ramped_compact_induction")
+        self.assertEqual(
+            support_case["portfolio_candidate_conditions"],
+            ["raw_text", "support_ramped_compact_induction"],
+        )
+        self.assertEqual(support_case["portfolio_candidate_count"], 2)
+        self.assertEqual(support_case["portfolio_proxy_epochs"], 2)
+        self.assertGreater(support_case["portfolio_validation_score"], 0.0)
+        self.assertGreater(support_case["portfolio_selection_cost_units"], 0)
+        self.assertGreater(support_case["charged_compute_units"], support_baseline["charged_compute_units"])
+        self.assertIn("validation_support_gain_gate", support_case["portfolio_selection_metric"])
+        self.assertNotIn("heldout", support_case["portfolio_selection_metric"])
+
+        support_summary = next(
+            summary
+            for summary in support_case["portfolio_candidate_summaries"]
+            if summary["condition"] == "support_ramped_compact_induction"
+        )
+        self.assertGreater(support_summary["validation_gain_delta_vs_raw"], 0.0)
+        self.assertGreater(support_summary["validation_gain_gate_score"], 0.0)
+        self.assertGreater(support_summary["candidate_compute_units"], 0)
+        self.assertGreater(support_summary["final_compute_units"], 0)
+
+        self.assertEqual(raw_case["portfolio_selected_condition"], "raw_text")
+        self.assertEqual(raw_case["portfolio_candidate_count"], 1)
+        self.assertGreater(raw_case["portfolio_selection_cost_units"], 0)
+        self.assertLess(raw_case["portfolio_selection_cost_units"], 5000)
+        self.assertGreater(raw_case["charged_compute_units"], raw_baseline["charged_compute_units"])
+        raw_support_summary = raw_case["portfolio_candidate_summaries"][0]
+        self.assertEqual(raw_support_summary["condition"], "support_ramped_compact_induction")
+        self.assertLess(raw_support_summary["validation_precision"], 0.825758)
+        self.assertIsNone(raw_support_summary["validation_gain_delta_vs_raw"])
+        self.assertLess(raw_support_summary["validation_gain_gate_score"], 0.0)
+
+    def test_validation_support_gain_gate_selector_scope_is_declared_in_neural_artifact(self) -> None:
+        result = run_neural_seedset(
+            seeds=[1031],
+            conditions=["validation_support_gain_gate_selector"],
+            material_count=104,
+            epochs=16,
+            hidden_units=4,
+            feature_dimension=64,
+            fresh_seed_confirmation=True,
+        )
+
+        scope = result["condition_scope"]["validation_support_gain_gate_selector"]
+        stats = result["conditions"]["validation_support_gain_gate_selector"]
+
+        self.assertEqual(result["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(scope["train_only_selection"], False)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_used_for_transform_selection"], True)
+        self.assertEqual(scope["validation_labels_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_support_gain_gate_selector"], True)
+        self.assertEqual(scope["validation_support_gain_precision_prefilter"], True)
+        self.assertEqual(scope["validation_support_gain_proxy_epochs"], 2)
+        self.assertEqual(scope["validation_support_gain_min_score"], 0.0)
+        self.assertEqual(scope["validation_support_gain_compute_penalty"], 0.0000005)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+        self.assertEqual(stats["portfolio_candidate_count_mean"], 2)
+        self.assertEqual(
+            stats["portfolio_selected_condition_counts"],
+            {"support_ramped_compact_induction": 1},
+        )
+
     def test_validation_portfolio_selector_charges_candidate_training_without_heldout_selection(self) -> None:
         selector = run_neural_condition(
             seed=17,

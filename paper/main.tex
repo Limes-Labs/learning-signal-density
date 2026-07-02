@@ -14,7 +14,7 @@
 
 \title{Learning Signal Density: External-Sample and Internal-Compute Efficiency in Learning Loops}
 \author{Francesco Giannicola \\ Limes Labs}
-\date{June 2026}
+\date{July 2026}
 
 \newcommand{\LSD}{\mathrm{LSD}}
 \newcommand{\E}{\mathbb{E}}
@@ -51,7 +51,50 @@ interaction probe improves the 64-material sample-aware row but does not beat
 the compact density frontier, separating candidate-order coverage from
 representation cost. A high-budget density cap then shows the frontier can
 switch back to raw text once external evidence is abundant, trading absolute
-gain for better learning-signal density.
+gain for better learning-signal density. Support-ramped, fixed-window,
+train-support-density, reuse-aware support-probe, validation-calibrated
+support-precision, no-window gate, and transfer-stress follow-ups expose the
+remaining selector problem: local transition windows can improve boundary rows,
+and cheap validation calibration can improve one high-budget frontier, but late
+false positives, seed-block transfer, transition-prior dependence, and
+inspection cost still prevent a solved adaptive policy.
+As a first broader non-synthetic NLP probe, we run the same accounting style on
+UCI Twenty Newsgroups mini. Prototype retrieval improves heldout accuracy at
+some scarce-label budgets, but random or class-balanced sampling remains
+stronger on learning-signal density once retrieval scans and validation-selector
+costs are charged. We audit that result with the same break-even inequality:
+at fixed external budget, a selected policy improves density only when its
+heldout-quality multiplier exceeds its charged event-compute multiplier. UCI SMS
+Spam Collection remains only a smaller binary sanity check for the same
+algebra. A length-penalized retrieval audit then tests whether the retrieval
+failure is mainly selected-document length or index/scan cost; it improves some
+retrieval rows but still does not beat random density. A self-training audit
+then tests pseudo-label filtering as a small distillation analogue; the teacher
+labels are too noisy in this scarce-label regime and do not pay for their
+scoring and student-training cost. A true-label active-acquisition audit then
+tests whether a teacher can choose better documents before labels are acquired;
+it improves one high-budget active row but still does not clear the density
+frontier without reuse. A budgeted-window variant then scores only sampled
+train-pool windows before acquisition; this reduces the selector bill enough
+for two 160-label margin-uncertainty rows to beat class-balanced density, though
+no tested row beats random density. A sampled length-window stress audit then
+checks whether a cheaper label-free token-length selector is stable across
+fresh seeds; it finds no development density win and a mixed confirmation
+pattern rather than a deployable policy. We extend the audit with an
+amortized-cost corollary that distinguishes selectors that could pay for
+themselves after enough independent reuse from selectors whose nonreusable cost
+is already too high. A final real-text certificate applies that inequality
+across the committed SMS Spam and Twenty Newsgroups artifacts: many rows improve
+heldout quality, but only three currently improve learning-signal density
+without an explicit reuse assumption. A paired-seed robustness audit then
+checks those positive frontiers with exact seed bootstrap intervals and finds
+that the current mean wins should be treated as hypotheses, while several
+retrieval-density losses are already robust under the same test. A fresh-seed
+replication audit reruns the same frontier comparisons on five untouched seeds:
+no positive frontier clears the conservative robust-win rule, while two
+negative density results remain robust. A targeted 20-seed confirmation of the
+remaining class-balanced 80-label candidate keeps only a small mean density
+edge and rejects promotion under both the bootstrap and sign-test criteria.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -67,10 +110,13 @@ learning system selects observations, rewrites them, asks questions, generates
 counterfactuals, replays fragments, receives feedback, and spends internal
 compute before any parameter update becomes useful.
 Nearby mechanisms include token/data selection
-\cite{lin2024rho1,li2024datacomp,xia2024less}, process feedback
-\cite{lightman2023verify}, and replay \cite{schaul2015prioritized}. This draft
-does not treat those literatures as interchangeable; it asks how to charge and
-compare them inside one loop-level measurement protocol.
+\cite{lin2024rho1,li2024datacomp,xia2024less}, active data selection
+\cite{mackay1992active,settles2009activelearning}, process feedback
+\cite{lightman2023verify}, replay \cite{schaul2015prioritized}, and the older
+decision-analysis idea that information has value only relative to decision
+payoff and acquisition cost \cite{howard1966information}. This draft does not
+treat those literatures as interchangeable; it asks how to charge and compare
+them inside one loop-level measurement protocol.
 
 The research question is therefore not ``are language models or brains more
 sample efficient?'' The sharper question is:
@@ -81,14 +127,28 @@ because the hidden rulebook, train/validation/heldout split, and generated-label
 provenance can be controlled exactly.
 
 \paragraph{Contributions in the current repository.}
-The repository currently provides four pieces of evidence. First, it defines a
+The repository currently provides ten pieces of evidence. First, it defines a
 costed artifact schema for external events, internal examples, internal tokens,
 charged transform cost, neural step count, estimated neural operations, and
 claim scope. Second, it implements train-only and oracle transformation
 policies under fixed heldout isolation. Third, it records fresh-seed tiny-MLP
 sample-budget, feature-width, and epoch/width ablations. Fourth, the paper
 tables below are generated from committed result JSON, so the manuscript cannot
-silently drift away from the artifacts.
+silently drift away from the artifacts. Fifth, it adds a real-text Twenty
+Newsgroups active-selection pilot for random sampling, class balancing,
+curriculum, prototype retrieval, and validation selection, together with a
+break-even audit that separates accuracy wins from density wins and a
+length-penalized retrieval audit that tests whether cheaper selected documents
+are enough. Sixth, it adds a self-training pseudo-label audit that tests a
+distillation/filtering failure mode on the same real-text split. Seventh, it
+adds an active label-acquisition audit that distinguishes teacher-chosen true
+labels from teacher pseudo-labels. Eighth, it keeps a smaller SMS Spam binary
+sanity check for selector-cost algebra. Ninth, it adds selector break-even and
+amortization audits that turn selection overhead
+into explicit inequalities rather than qualitative caveats. Tenth, it adds a
+cross-artifact real-text certificate that classifies observed quality wins,
+density wins, finite-reuse frontiers, and non-amortized impossibility cases
+under the same inequality.
 
 \paragraph{Non-claims.}
 This is not a transformer-scale result, not a language-model leaderboard, and
@@ -124,6 +184,53 @@ and
 \]
 The reported signed version uses improvement over the majority baseline as
 $\Delta Q$. Negative values remain negative instead of being clipped away.
+
+\paragraph{Selector break-even lemma.}
+For two policies $a$ and $b$ with signed gains $G_a,G_b>0$, external-event
+counts $N_a,N_b$, and charged internal compute $C_a,C_b$, policy $a$ has higher
+learning-signal density than policy $b$ if and only if
+\[
+\frac{G_a}{G_b} >
+\frac{N_a C_a}{N_b C_b}.
+\]
+In the common fixed-budget case $N_a=N_b$, this reduces to
+\[
+\frac{G_a}{G_b} >
+\frac{C_a}{C_b}.
+\]
+This elementary inequality is the mathematical guardrail for the experiments:
+an active or selected policy can improve heldout quality and still be a density
+loss if its quality multiplier is smaller than its charged compute multiplier.
+The point aligns with practical active-learning concerns: selecting labels can
+reduce labeled examples in theory, but real systems may fail to reduce total
+annotation, engineering, or computation cost \cite{settles2011theories}.
+It also mirrors earlier total-cost and reuse cautions in active learning:
+selected material can be brittle when later reused with different models
+\cite{baldridge2004active}.
+
+\paragraph{Amortized selector-cost corollary.}
+Some selector costs are paid once and reused. Let a candidate's charged compute
+decompose into nonreusable cost $F_a$ and reusable selector cost $R_a$. If the
+selector is reused across $K$ independent downstream uses with the same observed
+gain, its effective compute is
+\[
+C_a(K)=F_a+\frac{R_a}{K}.
+\]
+For fixed external budget against reference policy $b$, policy $a$ wins exactly
+when
+\[
+F_a+\frac{R_a}{K}
+<
+\frac{C_bG_a}{G_b}.
+\]
+Thus there are three regimes: it wins at $K=1$; it can win only after
+\[
+K>
+\frac{R_a}{C_bG_a/G_b-F_a};
+\]
+or no finite reuse can make it win because $F_a\ge C_bG_a/G_b$. The last case is
+important: amortization cannot rescue a selector whose nonreusable training
+cost already exceeds the observed-gain affordability bound.
 
 \section{Anti-Cheat Rules}
 
@@ -176,6 +283,15 @@ one final tiny MLP.
 The latest coverage-prior control then adds a 96-train-event raw-text floor,
 prunes the coverage scan to a lean candidate set, and adds a small charged
 compute penalty to the validation-motif coverage score.
+The latest support-utility control applies the same expected-value framing to
+the high-budget support boundary: a cheap validation-precision prefilter runs
+before any support-candidate coverage scan, then a validation precision,
+validation motif-coverage, and compute-penalized utility score decides whether
+support-ramped compact induction is worth its cost.
+The direct gain-gate follow-up then tests the missing term explicitly: after
+the same cheap support-precision prefilter, it trains two-epoch linear proxies
+for raw text and support-ramped compact only when support is eligible, then
+charges the proxy evidence before the final heldout evaluation.
 The latest train-only follow-up then lowers the sample-aware mid-budget
 synthetic ratio from 0.75 to 0.50 to test whether fewer generated labels repair
 the same failure without validation selection.
@@ -196,9 +312,49 @@ to 4 after the abundant-data tier.
 A final high-budget control then asks whether tightening the induced-label
 confidence floor after 432 train events is enough to repair the remaining
 tradeoff.
+A fixed-window high-budget control then asks whether simple train-event
+breakpoints are enough: compact below 320 train events, raw from 320 to 400,
+support-ramped compact from 400 to 432, and raw again after 432.
+
+The primary real-text NLP pilot uses UCI Twenty Newsgroups
+\cite{twentynewsgroupsuci,rennie20newsgroups}, a public multi-class topic
+classification corpus. We use the UCI mini corpus for a dependency-light
+artifact, strip headers, quote lines, and reply boilerplate before splitting,
+then compare uniform random sampling, class-balanced sampling, a simple
+length-curriculum policy, a label-conditioned prototype-retrieval policy, and a
+validation selector that chooses among those candidates before heldout is
+opened. This is the first experiment in the paper aligned with active learning,
+retrieval, and curriculum learning; it is still a pilot, not a leaderboard.
+
+The smaller real-text sanity check uses UCI SMS Spam Collection
+\cite{almeida2011smsdataset}, a public binary SMS classification dataset with
+5,574 labeled messages. The learner is the same dependency-light linear text
+learner used by the synthetic pilot, and the primary metric is spam-class F1
+rather than accuracy because the dataset is class-imbalanced. We compare
+uniform random sampling, full-pool class-balanced sampling, a cheaper
+label-index balanced variant, and validation selectors that choose between
+random and balanced candidates before heldout is opened. The point is not to
+claim state-of-the-art SMS filtering. The point is to check whether the cost
+accounting rejects selector policies whose absolute F1 gains are smaller than
+their selection and validation overhead.
 
 \section{Results}
 
+Table~\ref{tab:twenty-newsgroups-active-selection},
+Table~\ref{tab:twenty-newsgroups-break-even},
+Table~\ref{tab:twenty-newsgroups-retrieval-cost-audit},
+Table~\ref{tab:twenty-newsgroups-self-training-audit},
+Table~\ref{tab:twenty-newsgroups-active-acquisition-audit},
+Table~\ref{tab:twenty-newsgroups-budgeted-acquisition-audit},
+Table~\ref{tab:twenty-newsgroups-length-window-audit},
+Table~\ref{tab:real-text-break-even-certificate},
+Table~\ref{tab:twenty-newsgroups-frontier-robustness},
+Table~\ref{tab:twenty-newsgroups-frontier-fresh-seed},
+Table~\ref{tab:twenty-newsgroups-class-balanced-confirmation},
+Table~\ref{tab:sms-spam-real-text-selection-cost},
+Table~\ref{tab:sms-spam-validation-size},
+Table~\ref{tab:sms-spam-break-even},
+Table~\ref{tab:sms-spam-amortized-reuse},
 Table~\ref{tab:f1024-profile-frontier},
 Table~\ref{tab:validation-selected-reliability-probe},
 Table~\ref{tab:post-hoc-policy-envelope},
@@ -214,12 +370,211 @@ Table~\ref{tab:compact-train-size-gated},
 Table~\ref{tab:diversity-interaction},
 Table~\ref{tab:density-capped-compact},
 Table~\ref{tab:support-ramped-compact},
-Table~\ref{tab:late-confidence-ramped-compact}, and
+Table~\ref{tab:late-confidence-ramped-compact},
+Table~\ref{tab:density-window-compact},
+Table~\ref{tab:train-support-density-selector},
+Table~\ref{tab:support-probe-window-selector},
+Table~\ref{tab:validation-support-precision-selector},
+Table~\ref{tab:validation-support-precision-gate},
+Table~\ref{tab:validation-support-utility-selector},
+Table~\ref{tab:validation-support-gain-gate},
+Table~\ref{tab:support-selector-transfer},
+Table~\ref{tab:support-selector-error-audit},
+Table~\ref{tab:support-mechanism-audit}, and
 Table~\ref{tab:low-budget-failure-probe} are generated from the checked-in JSON
 artifacts by the paper-table generator at
 \texttt{scripts/build\_\allowbreak paper\_\allowbreak tables.py}.
 
 \input{generated/results_tables.tex}
+
+The Twenty Newsgroups pilot is the result that better matches active learning,
+retrieval, and curriculum learning. At 40 training documents, prototype
+retrieval improves heldout accuracy over random sampling, 0.102 versus 0.093,
+but its signed density is much lower, 0.001772 versus 0.060065, because the
+prototype scan is charged. At 80 documents, class-balanced sampling ties random
+accuracy at 0.102 while using less charged compute, so it has higher density
+(0.016884 versus 0.013418). At 160 documents, prototype retrieval again has the
+best heldout accuracy, 0.145, but random sampling has much higher density
+(0.006005 versus 0.000675). The validation selector is a useful negative
+control: in this small pilot it pays proxy and validation costs but does not
+recover enough quality to beat the simple baselines. This is the paper's core
+real-NLP lesson so far: retrieval or active selection can improve accuracy, but
+under a costed learning-loop metric it must also beat the selection bill.
+
+Table~\ref{tab:twenty-newsgroups-break-even} turns that lesson into the
+same-budget inequality. At 40 documents, prototype retrieval has a quality
+multiplier of 1.192 over random, but its event-compute multiplier is 39.474, so
+its density ratio is only 0.030 and even perfect accuracy gain would not beat
+random under this charged model. At 160 documents, prototype retrieval again
+improves quality, with multiplier 1.046, but it still pays 9.391 times the
+event-compute bill and reaches density ratio 0.111. The only density win in the
+base active-selection grid is not the sophisticated selector; it is the
+80-document class-balanced sample, which ties random quality and lowers charged
+compute enough to reach density ratio 1.180. This is a useful mathematical
+constraint on future active-learning, retrieval, distillation, and filtering
+work: a better selector must either transfer much more quality or make the
+selection bill dramatically cheaper.
+
+Table~\ref{tab:twenty-newsgroups-retrieval-cost-audit} tests the first of those
+two possibilities inside the retrieval family. The audit sweeps
+\(\alpha \in \{0, 0.25, 0.5, 0.75, 1, 1.25\}\) in the score
+\(\cos(x,\mu_y)/|x|^\alpha\), where \(\mu_y\) is the class prototype and
+\(|x|\) is the selected document's token count. The result is a useful
+negative optimization attempt. At 80 documents, \(\alpha=0.25\) raises
+retrieval accuracy to 0.113 and density to 0.001505, improving over the
+unpenalized prototype row, but still far below random density 0.013418. At 160
+documents, \(\alpha=0.5\) gives the best retrieval-family density, 0.000811
+versus 0.000675 for unpenalized prototype retrieval, but random is still
+0.006005. So selected-document length matters, but it is not the main bottleneck
+under this accounting; the full prototype/index scan remains too expensive.
+
+Table~\ref{tab:twenty-newsgroups-self-training-audit} tests a second path:
+pseudo-label filtering as a small, auditable analogue of distillation or
+synthetic-data filtering. A class-balanced teacher labels the train-only pool,
+we keep the highest-margin pseudo-labels globally or by predicted class, and a
+student trains on labeled plus pseudo-labeled examples. The result is a clean
+negative control. The best 40-document self-training row has pseudo-label
+agreement 0.154 and density 0.001270, far below class-balanced density 0.036293
+and random density 0.060065. At 80 documents, the best self-training row has
+agreement 0.175 and density 0.000875, again far below class-balanced 0.016884.
+At 160 documents, agreement rises only to 0.226 and density remains 0.000583.
+This says the current bottleneck is not merely filtering threshold choice; the
+teacher signal itself is too weak for pseudo-label expansion to be useful under
+charged scoring and student-training cost.
+
+Table~\ref{tab:twenty-newsgroups-active-acquisition-audit} separates that
+failure from true-label acquisition. A class-balanced seed trains a teacher,
+the teacher chooses records from the train-only pool by margin signals, and the
+student receives true labels only after those records are selected. This helps
+relative to pseudo-label self-training but still does not pay for the active
+loop. At 40 documents, balanced margin uncertainty is the best active row, with
+density 0.002935 versus random 0.060065 and class-balanced 0.036293. At 80
+documents, short margin uncertainty reaches density 0.001835, still below
+random 0.013418 and class-balanced 0.016884. At 160 documents, short margin
+uncertainty reaches accuracy 0.127 and density 0.001604; this is better than
+the active-acquisition alternatives and above the retrieval-family density
+rows, but still below random 0.006005 and class-balanced 0.004276. The
+break-even audit says this 160-document active row would need 4 independent
+downstream uses of the reusable selection work before it beats class-balanced
+density at the observed gain.
+
+Table~\ref{tab:twenty-newsgroups-budgeted-acquisition-audit} tests the same
+true-label acquisition mechanism under a stricter selector-cost intervention:
+the teacher scores only a sampled window of the unlabeled train pool. The
+experiment keeps the same isolation rules, uses the full label budget, and
+acquires true labels only after selection. At 40 labels, the best budgeted row
+scores only 20 candidates and reaches density 0.027690, still below random
+0.060065 and class-balanced 0.036293. At 80 labels, short margin uncertainty
+with a 2x scan window reaches accuracy 0.099 and density 0.011165, again below
+random and class-balanced. At 160 labels, margin uncertainty with a 2x scan
+window reaches accuracy 0.133 and density 0.004467; it still does not beat
+random density 0.006005, but it does beat class-balanced density 0.004276. The
+1x margin window is also a class-balanced density win at 160 labels. This is a
+more useful positive result than the full-pool active audit: the acquisition
+signal is weak, but reducing the scan bill can move a real density frontier.
+
+Table~\ref{tab:twenty-newsgroups-length-window-audit} probes the cheaper
+extreme: remove the teacher entirely and select from a sampled train-only window
+using token length. The policy is label-free, validation-free, and heldout-free;
+its selection cost is the token count of the sampled window plus final training.
+This direction is tempting because it can reduce training tokens sharply, but
+the confirmation audit is mixed. On development seeds, no tested length-window
+row beats random density; the best 80-label development row has density
+0.010818 versus random 0.013418. On disjoint confirmation seeds, the same
+development-selected 80-label row remains just below random, 0.010625 versus
+0.010652. Some confirmation-phase best rows beat same-phase random at 40 or 160
+labels, but those are not development-selected wins. We therefore keep this as
+a stress-test result: cheap length windows are plausible, but not yet a stable
+policy claim.
+
+Table~\ref{tab:real-text-break-even-certificate} collects the real-text
+break-even rows into one certificate. Across 172 SMS Spam and Twenty Newsgroups
+comparisons, 38 rows improve heldout quality relative to their reference, but
+only three rows improve learning-signal density without a reuse assumption: the
+80-document Newsgroups class-balanced sample and the two 160-document budgeted
+margin-acquisition rows against class-balanced sampling. Another 13 rows can
+cross the frontier only if explicitly reusable selector work is amortized across
+enough independent downstream uses. The cheapest such frontier is the
+160-document Newsgroups budgeted balanced-margin row, which needs 2 uses
+against class-balanced sampling; the largest quality win without a density win
+is the 32-message SMS validation label-index selector, with quality multiplier
+1.426 but density ratio 0.107. The self-training family contributes 24 rows and
+no quality or density wins. This
+certificate is a compact mathematical summary of the paper's practical warning:
+better heldout scores are common, but density improvements are rare unless the
+selection bill is small, reusable, or both.
+
+Table~\ref{tab:twenty-newsgroups-frontier-robustness} adds a seed-level
+uncertainty check to that certificate. For each current Newsgroups frontier
+claim, it pairs candidate and reference rows by seed and applies an exact
+bootstrap over the paired seeds. This is intentionally conservative because the
+current Newsgroups artifacts have only three development seeds. The result is a
+useful demotion of claim strength: the three mean density wins have bootstrap
+intervals that cross zero and are therefore fragile, not robust frontiers. The
+80-document class-balanced win has mean density ratio 1.258 but wins only two of
+three paired seeds, with density-delta interval [-0.001440, 0.008371]. The
+160-document budgeted margin-2x row against class-balanced has mean ratio 1.045
+but interval [-0.000269, 0.000652]. In contrast, prototype retrieval's density
+losses against random at 40 and 160 documents are robust under this audit, and
+the budgeted margin-2x row remains a robust loss against random. This is the
+right current reading: quality and density frontiers are promising enough to
+study further, but not yet stable enough for a strong policy claim.
+
+Table~\ref{tab:twenty-newsgroups-frontier-fresh-seed} follows that demotion
+with a stricter replication check on untouched fresh seeds 439, 443, 449, 457,
+and 461. It reruns only the frontier comparisons, not a new search grid. This
+is a useful falsification pressure: the 80-document class-balanced row still
+has a positive mean density ratio, 1.326, but wins only four of five paired
+seeds and has density-delta interval [-0.000911, 0.007691], with one-sided
+exact sign-test \(p=0.187500\). The budgeted active-acquisition rows do not
+replicate as density wins; the 160-document budgeted margin-2x row has mean
+ratio 0.713 against class-balanced. Prototype retrieval at 160 documents and
+budgeted margin-2x against random remain robust density losses. The current
+paper therefore has no replicated positive real-text density frontier under
+this conservative fresh-seed rule.
+
+Table~\ref{tab:twenty-newsgroups-class-balanced-confirmation} then tests the
+only remaining positive candidate with more power: the 80-document
+class-balanced sampler against random on 20 untouched seeds. The mean density
+ratio is still slightly above one, 1.067, but the candidate wins only 10 of 20
+paired seeds. The paired-bootstrap interval crosses zero, [-0.002197,
+0.003466], and the one-sided exact sign-test gives \(p=0.588099\). This result
+is important precisely because it is not flattering: after a larger targeted
+confirmation, the paper should not claim a robust positive real-text density
+frontier. The useful contribution is the accounting and falsification protocol,
+not a new winning selector.
+
+The SMS Spam pilot is useful precisely because it does not produce an easy
+selector win. At 32 training messages with 800 validation examples, the
+label-index balanced sample improves heldout spam F1 over random sampling
+(0.550 versus 0.408), and the validation label-index selector improves F1
+further to 0.582. But random sampling still has much higher signed learning
+signal density, 4.991051 versus 2.585588 for label-index balance and 0.526972
+for the selector, because the extra class-index and validation-proxy costs are
+charged. Table~\ref{tab:sms-spam-break-even} shows the algebraic reason. The
+32-message label-index policy has a quality multiplier of 1.348, but an
+event-compute multiplier of 2.565; it would need a break-even F1 gain of 1.046,
+which is outside the metric bound. Even at perfect spam F1 gain, its maximum
+possible density ratio would be 0.956. The validation label-index selector is
+clearer: its quality multiplier is 1.426, but its event-compute multiplier is
+13.297, so it would need a break-even gain of 5.423 and its perfect-quality
+density ratio would be only 0.184. Shrinking the validation set from 800 to 200
+lowers selector cost and raises the 32-budget selector density to 1.019898, but
+it still does not beat random sampling in the matched artifact. This is the kind
+of negative control the paper needs: absolute quality gains are not enough
+unless the selector can pay for itself.
+
+Table~\ref{tab:sms-spam-amortized-reuse} asks the more generous question: what
+if selector construction and validation-tuning costs are reusable? This changes
+the interpretation without erasing the negative result. The 32-message v800
+label-index policy would need 9 independent downstream uses to beat random
+density at its observed F1 gain, and the 32-message validation label-index
+selector would need 47. By contrast, the 32-message v200 validation selector
+cannot win even after infinite reuse, because its nonreusable cost is already
+larger than the cost justified by its observed gain. This gives the paper a
+usable decision rule: selection overhead is acceptable only when either the
+observed gain is large enough immediately, or the reuse count is explicit and
+large enough to amortize the selector.
 
 The current frontier has two useful signals and one important failure. First,
 the 16x8 profile halves neural training operations relative to 32x8 for the
@@ -418,6 +773,116 @@ late-confidence policy's best signed gain, 0.171098, remains below plain
 compact induction's 0.196875. A confidence floor alone is therefore not the
 missing selector.
 
+Table~\ref{tab:density-window-compact} tests whether a fixed transition window
+can encode the high-budget selector. On fresh seeds 929, 937, 941, 947, and
+953, the density-window policy matches compact at 64 and 80 materials, raw at
+96, 104, and 120, support-ramped compact at 112, and raw again at 128. This is
+locally useful: at 112 materials it improves signed LSD over density-capped
+raw fallback, 0.004269 versus 0.004001, and at 120 materials it keeps raw's
+0.005648 signed LSD instead of the support-ramped 0.004899. It also fails in a
+way that matters: at 128 materials it falls back to raw at 0.003726 signed
+LSD, while support-ramped compact reaches 0.004290. Fixed train-event windows
+are therefore a good control, but not a deployable selector.
+
+Table~\ref{tab:train-support-density-selector} then tests a slightly more
+adaptive train-only selector. It chooses among raw text, compact train-size
+gated induction, and support-ramped compact induction using support kept per
+charged compute, and it charges candidate inspection before the final fit. On
+fresh seeds 1033, 1039, 1049, 1051, and 1061, the selector chooses
+support-ramped compact at 104 and 112 materials, raw text for every
+128-material run, and a raw/support mix at 120. Those choices are sensible, but
+the measurement is not free: at 104 materials the selector matches
+support-ramped gain while lowering signed LSD from 0.003994 to 0.003262; at 120
+materials it reaches 0.003844 signed LSD while raw and density-window reach
+0.005515; at 128 materials it reaches 0.004142 while raw reaches 0.005809. The
+result is a selector-cost failure that points to cheaper proxies or
+value-of-information gates, not a new frontier policy.
+
+Table~\ref{tab:support-probe-window-selector} tests that value-of-information
+idea directly. The policy uses compact induction below 320 train events, raw
+text outside the 360--432 support-probe window, and inside that window inspects
+only support-ramped compact induction; if support is selected, the inspected
+candidate construction is reused. On fresh seeds 1063, 1069, 1087, 1091, and
+1093, this removes the 104-material overhead: the selector reaches the
+support-ramped row at 0.004655 signed LSD instead of the full
+train-support-density selector's 0.003805. The result is still not solved. At
+112 materials, it chooses support while raw/density-capped reaches 0.007103
+signed LSD versus 0.005161; at 120 materials, the no-probe raw fallback reaches
+0.003588 while support-ramped compact reaches 0.004240. Accounting reuse helps,
+but the train-only policy signal is still too coarse.
+
+Table~\ref{tab:validation-support-precision-selector} adds a cheap validation
+calibration to the same raw/support boundary. The selector keeps compact below
+320 train events, keeps the fixed 400--432 support transition, and otherwise
+uses validation labels only to estimate eligible induced-prediction precision
+before choosing support-ramped compact or raw text. On fresh seeds 1259, 1277,
+1279, 1283, and 1289, it improves the 96-material signed LSD from the
+support-probe/raw row's 0.002075 to 0.004198 and the 104-material row from
+0.004331 to 0.004455. Averaged across 64--128 materials, it reaches 0.006138
+signed LSD versus 0.005941 for the support-probe window. The result remains
+mixed rather than final: at 120 materials raw/support-probe reaches 0.006246
+while the validation selector reaches 0.005723, and at 128 raw reaches 0.005206
+while the selector reaches 0.004866.
+
+Table~\ref{tab:validation-support-precision-gate} asks whether the fixed
+400--432 support transition is still needed once validation precision is
+available. The no-window gate applies the same precision threshold everywhere
+above the compact floor. On fresh seeds 1381, 1399, 1409, 1423, and 1427, this
+slightly beats the support-probe average, 0.006104 versus 0.006074 signed LSD,
+but it falls below the fixed-transition validation selector at 0.006223. The
+clearest miss is 112 materials: the no-window gate reaches 0.005031 signed LSD,
+while the fixed-transition selector and support-ramped compact reach 0.005864.
+The fixed transition prior is therefore carrying real information in this
+frontier, even though it is not a final adaptive solution.
+
+Table~\ref{tab:validation-support-utility-selector} tests the first explicit
+expected-utility repair after the mechanism audit. The selector uses a cheap
+validation-precision prefilter before paying for support-candidate coverage;
+if the prefilter passes, it combines validation precision, validation motif
+coverage, and a compute penalty into a support utility score. On fresh seeds
+1601, 1607, 1609, 1613, and 1619, the prefilter reduces raw-abstention cost and
+the selector beats raw text on average, 0.005473 versus 0.004728 signed LSD.
+It is still not a promoted selector. The no-window precision gate reaches
+0.005746 average signed LSD, and the density-capped simple fallback reaches
+0.005721. The utility score helps accounting but does not yet predict expected
+heldout gain well enough.
+
+Table~\ref{tab:validation-support-gain-gate} tests the direct expected-gain
+variant suggested by that failure. The selector first runs the cheap validation
+support-precision prefilter; only when support is eligible does it train
+two-epoch linear proxies for raw text and support-ramped compact, charging the
+proxy work before the final tiny MLP. On fresh seeds 1667, 1669, 1693, 1697,
+and 1699, this lowers some wasted scans but still fails as a promotion
+candidate. It beats raw text on average, 0.004684 versus 0.003941 signed LSD,
+but loses to the utility selector at 0.004929, the no-window precision gate at
+0.005303, the density-capped fallback at 0.005421, and support-ramped compact
+at 0.005469. Direct validation-gain evidence is therefore not enough unless it
+can be obtained more cheaply or made to transfer more reliably to heldout.
+
+Table~\ref{tab:support-selector-transfer} reruns the support-selector family on
+fresh seeds 1459, 1471, 1481, 1483, and 1487 after the fixed-transition selector
+and no-window gate have both been developed. The no-window gate transfers better
+than the fixed-transition validation selector on average, 0.005936 versus
+0.005601 signed LSD, and it partially repairs the 112-material fixed-prior miss
+by reaching 0.006517 instead of 0.004175. The result is still a negative transfer
+stress for selector promotion: the simple train-only density-capped raw fallback
+has the strongest all-budget average at 0.006115, with especially visible
+advantages at 112, 120, and 128 materials. Thus, neither fixed transition priors
+nor validation precision alone are stable enough to replace an explicit
+expected-utility model.
+
+Table~\ref{tab:support-mechanism-audit} probes why this transfer block fails.
+It is a post-hoc mechanism diagnostic, not a policy: after the neural sweep is
+complete, it reconstructs the candidate pipelines and compares generated labels
+with the hidden rulebook and heldout motif distribution. The support ramp does
+reduce generated volume, but it records zero transition-budget precision
+improvements over compact induction, loses motif coverage at all four
+transition budgets, and beats the density-capped fallback on signed LSD at only
+104 materials. That falsifies the simple explanation that higher induced-label
+support is enough to improve reliability. In this block, support is mainly a
+cost-control knob; the missing selector signal is expected utility over gain,
+coverage, reliability, and inspection cost.
+
 \section{Discussion}
 
 The mathematical shape suggested by the current evidence is a four-way
@@ -481,6 +946,63 @@ alone.
 The late-confidence control further narrows the design: stricter generated
 labels can improve one support-ramped point, but confidence tightening alone
 does not produce a deployable frontier policy.
+The density-window compact control narrows it again: simple train-event
+breakpoints can recover the 112-material transition and avoid unnecessary
+support-ramped cost at 120, but they miss the 128-material support-ramped
+opportunity. A useful selector likely needs a sample-aware utility signal over
+expected gain, representation cost, and generated-label reliability.
+The train-support-density selector makes that requirement sharper: even a
+train-only signal that chooses plausible high-budget representations can lose
+once candidate inspection is charged. The next useful policy should decide not
+only which representation is best, but whether the expected value of inspecting
+that representation exceeds the cost of the inspection itself.
+The support-probe window control answers part of that question by reusing
+selected candidate construction, but it leaves a policy-quality failure: fixed
+train-event windows still choose the wrong side of the raw/support tradeoff on
+some fresh seed rows. A stronger selector needs train-only evidence about
+expected heldout gain, not only support density and event-count windows.
+The validation support-precision selector shows that a cheap validation signal
+can improve the boundary rows and the average high-budget density frontier, but
+it also creates late false positives once support-ramped compact is no longer
+consistently denser than raw text. The next selector should combine reliability
+calibration with an explicit expected-cost term rather than treating high
+precision as sufficient evidence to synthesize.
+The no-window gate narrows that lesson: validation precision alone does not
+replace the transition prior. It can avoid some late support choices, but it also
+gives up useful support at the 112-material transition. A deployable selector
+needs a utility model that combines validation reliability, train-event regime,
+and representation cost instead of depending on any one of those signals alone.
+The support-selector transfer stress then turns that lesson into a promotion
+gate. A fixed transition can help one seed block and harm the next; a validation
+gate can improve over that fixed prior and still lose to a no-scan density cap.
+The post-hoc error audit in Table~\ref{tab:support-selector-error-audit}
+quantifies that failure mode across the support-selector chain: the
+least-regret transfer selector is still positive-regret against the best simple
+comparator (\(0.000496\) signed LSD), and it beats that comparator on only
+\(1/7\) budgets. The one local negative-regret result appears on the development
+gate artifact, not on the transfer block, so it should be treated as a design
+clue rather than a promotion signal.
+The mechanism audit in Table~\ref{tab:support-mechanism-audit} adds the
+important causal hint: the support ramp is not improving the generated-label
+reliability or motif coverage that the selector needs. It mostly reduces the
+synthetic set. The next experiment should therefore estimate when that reduced
+set is worth its opportunity cost, rather than simply raising the support
+threshold again.
+The validation support-utility follow-up in
+Table~\ref{tab:validation-support-utility-selector} is the first direct test of
+that idea, and it remains negative for promotion. Precision, validation motif
+coverage, and a small compute penalty can reduce wasted support scans, but they
+still do not estimate the expected heldout gain of support-ramped compact well
+enough to beat the simpler precision gate or density-capped fallback.
+The gain-gate follow-up in Table~\ref{tab:validation-support-gain-gate} makes
+the failure more specific: even a direct raw-versus-support validation-gain
+proxy loses once proxy training is charged. The next selector should therefore
+not simply spend more validation compute; it should either reduce evidence cost
+substantially or change the support representation so that validation gains
+transfer more reliably.
+The next selector should be evaluated as an expected-value-of-information
+problem: inspect or validate only when the anticipated gain over the raw or
+density-capped fallback exceeds the charged cost of obtaining that evidence.
 
 The oracle counterfactual condition remains valuable because it estimates the
 headroom available if generated examples were reliable. It should not be

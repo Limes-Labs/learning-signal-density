@@ -184,6 +184,12 @@ class PipelineAccountingTests(unittest.TestCase):
         alternate_signature = self._example_signature(alternate)
         self.assertEqual(normal_signature, alternate_signature, "support_ramped_compact_induction")
 
+        normal = build_pipeline_examples("density_window_compact_induction", split.train, world.rules)
+        alternate = build_pipeline_examples("density_window_compact_induction", split.train, alternate_rules)
+        normal_signature = self._example_signature(normal)
+        alternate_signature = self._example_signature(alternate)
+        self.assertEqual(normal_signature, alternate_signature, "density_window_compact_induction")
+
         normal = build_pipeline_examples("late_confidence_ramped_compact_induction", split.train, world.rules)
         alternate = build_pipeline_examples("late_confidence_ramped_compact_induction", split.train, alternate_rules)
         normal_signature = self._example_signature(normal)
@@ -568,6 +574,82 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertEqual(self._example_signature(abundant_density_capped), self._example_signature(abundant_raw))
         self.assertLess(abundant_density_capped.internal_token_count, abundant_compact.internal_token_count)
         self.assertEqual(abundant_density_capped.ranked_synthetic_budget_ratio, 0.0)
+
+    def test_density_window_compact_induction_uses_compact_and_support_only_in_density_windows(self) -> None:
+        small_world = build_world(seed=79, material_count=32)
+        small_split = split_observations(small_world.observations)
+        small_raw = build_pipeline_examples("raw_text", small_split.train, small_world.rules)
+        small_density_window = build_pipeline_examples(
+            "density_window_compact_induction",
+            small_split.train,
+            small_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(small_density_window), self._example_signature(small_raw))
+        self.assertEqual(small_density_window.ranked_synthetic_budget_ratio, 0.0)
+
+        compact_world = build_world(seed=79, material_count=80)
+        compact_split = split_observations(compact_world.observations)
+        compact_baseline = build_pipeline_examples(
+            "compact_train_size_gated_induction",
+            compact_split.train,
+            compact_world.rules,
+        )
+        compact_density_window = build_pipeline_examples(
+            "density_window_compact_induction",
+            compact_split.train,
+            compact_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(compact_density_window), self._example_signature(compact_baseline))
+        self.assertIn(
+            "compact_sample_aware_self_ranked_induced",
+            {example.source_kind for example in compact_density_window.examples},
+        )
+
+        raw_window_world = build_world(seed=79, material_count=104)
+        raw_window_split = split_observations(raw_window_world.observations)
+        raw_window = build_pipeline_examples("raw_text", raw_window_split.train, raw_window_world.rules)
+        density_window_raw = build_pipeline_examples(
+            "density_window_compact_induction",
+            raw_window_split.train,
+            raw_window_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(density_window_raw), self._example_signature(raw_window))
+        self.assertEqual(density_window_raw.ranked_synthetic_budget_ratio, 0.0)
+
+        transition_world = build_world(seed=79, material_count=112)
+        transition_split = split_observations(transition_world.observations)
+        transition_support = build_pipeline_examples(
+            "support_ramped_compact_induction",
+            transition_split.train,
+            transition_world.rules,
+        )
+        transition_density_window = build_pipeline_examples(
+            "density_window_compact_induction",
+            transition_split.train,
+            transition_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(transition_density_window), self._example_signature(transition_support))
+        self.assertEqual(transition_density_window.ranked_induction_min_support, 4)
+        self.assertIn(
+            "support_ramped_compact_sample_aware_self_ranked_induced",
+            {example.source_kind for example in transition_density_window.examples},
+        )
+
+        abundant_world = build_world(seed=79, material_count=120)
+        abundant_split = split_observations(abundant_world.observations)
+        abundant_raw = build_pipeline_examples("raw_text", abundant_split.train, abundant_world.rules)
+        abundant_density_window = build_pipeline_examples(
+            "density_window_compact_induction",
+            abundant_split.train,
+            abundant_world.rules,
+        )
+
+        self.assertEqual(self._example_signature(abundant_density_window), self._example_signature(abundant_raw))
+        self.assertEqual(abundant_density_window.ranked_synthetic_budget_ratio, 0.0)
 
     def test_support_ramped_compact_induction_raises_support_at_abundant_samples(self) -> None:
         pre_ramp_world = build_world(seed=73, material_count=96)

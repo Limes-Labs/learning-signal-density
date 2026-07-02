@@ -4,6 +4,448 @@ from pathlib import Path
 
 
 class CommittedResultArtifactTests(unittest.TestCase):
+    def test_twenty_newsgroups_artifact_records_real_nlp_selection_tradeoffs(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_active_selection.json").read_text())
+
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(artifact["dataset"]["label_count"], 20)
+        self.assertEqual(artifact["dataset"]["license"], "CC BY 4.0")
+        self.assertEqual(
+            artifact["dataset"]["sha256"],
+            "cfbb360d6c1e55c06d33a4c5da0789a93b78db74833a70be8ff2e133cc4e6a6e",
+        )
+        self.assertEqual(artifact["claim_scope"]["real_dataset"], True)
+        self.assertEqual(artifact["claim_scope"]["synthetic_domain"], False)
+        self.assertEqual(artifact["claim_scope"]["metadata_stripped"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertIn("prototype_retrieval_sample", artifact["condition_scope"])
+        self.assertIn("length_curriculum_sample", artifact["condition_scope"])
+        self.assertIn("validation_selector", artifact["condition_scope"])
+
+        budget_40 = artifact["budgets"]["40"]["conditions"]
+        self.assertGreater(
+            budget_40["prototype_retrieval_sample"]["heldout_accuracy_mean"],
+            budget_40["random_sample"]["heldout_accuracy_mean"],
+        )
+        self.assertGreater(
+            budget_40["random_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_40["prototype_retrieval_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        self.assertGreater(
+            budget_40["validation_selector"]["charged_compute_units_mean"],
+            budget_40["prototype_retrieval_sample"]["charged_compute_units_mean"],
+        )
+
+        budget_80 = artifact["budgets"]["80"]["conditions"]
+        self.assertGreater(
+            budget_80["class_balanced_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_80["random_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+
+    def test_twenty_newsgroups_break_even_artifact_records_active_selection_math(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_break_even_analysis.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["reference_condition"], "random_sample")
+        self.assertEqual(artifact["quality_metric"], "accuracy_improvement_over_majority_mean")
+        self.assertEqual(artifact["quality_upper_bound"], 0.95)
+        self.assertEqual(artifact["claim_scope"]["real_dataset"], True)
+        self.assertEqual(artifact["claim_scope"]["metadata_stripped"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertIn("G_candidate / G_reference", artifact["theorem"]["general_inequality"])
+
+        budget_40 = artifact["comparisons"]["40"]
+        self.assertGreater(budget_40["prototype_retrieval_sample"]["quality_multiplier"], 1.0)
+        self.assertLess(budget_40["prototype_retrieval_sample"]["density_ratio"], 1.0)
+        self.assertFalse(budget_40["prototype_retrieval_sample"]["perfect_quality_can_beat"])
+
+        budget_80 = artifact["comparisons"]["80"]
+        self.assertTrue(budget_80["class_balanced_sample"]["candidate_density_wins"])
+        self.assertGreater(budget_80["class_balanced_sample"]["density_ratio"], 1.0)
+        self.assertLess(budget_80["class_balanced_sample"]["event_compute_multiplier"], 1.0)
+
+        budget_160 = artifact["comparisons"]["160"]
+        self.assertGreater(budget_160["prototype_retrieval_sample"]["quality_multiplier"], 1.0)
+        self.assertLess(budget_160["prototype_retrieval_sample"]["density_ratio"], 1.0)
+        self.assertIsNone(budget_160["prototype_retrieval_sample"]["amortized_reuses_to_density_win"])
+
+    def test_twenty_newsgroups_retrieval_cost_audit_records_negative_optimization_attempt(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_retrieval_cost_audit.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(artifact["alphas"], [0.0, 0.25, 0.5, 0.75, 1.0, 1.25])
+        self.assertEqual(artifact["claim_scope"]["real_dataset"], True)
+        self.assertEqual(artifact["claim_scope"]["metadata_stripped"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["post_hoc_optimization_attempt"], True)
+
+        budget_80 = artifact["budgets"]["80"]
+        self.assertEqual(budget_80["best_accuracy_alpha"], "0.25")
+        self.assertEqual(budget_80["best_density_alpha"], "0.25")
+        self.assertGreater(
+            budget_80["alpha_results"]["0.25"]["heldout_accuracy_mean"],
+            budget_80["alpha_results"]["0"]["heldout_accuracy_mean"],
+        )
+        self.assertLess(
+            budget_80["alpha_results"]["0.25"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_80["random_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+
+        budget_160 = artifact["budgets"]["160"]
+        self.assertEqual(budget_160["best_density_alpha"], "0.5")
+        self.assertGreater(
+            budget_160["alpha_results"]["0.5"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_160["alpha_results"]["0"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        for budget_row in artifact["budgets"].values():
+            for row in budget_row["alpha_results"].values():
+                self.assertFalse(row["break_even_vs_random"]["candidate_density_wins"])
+
+    def test_twenty_newsgroups_self_training_audit_records_noisy_pseudo_labels(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_self_training_audit.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(artifact["pseudo_multipliers"], [1, 2])
+        self.assertEqual(artifact["filter_modes"], ["global_margin", "balanced_margin"])
+        self.assertEqual(artifact["claim_scope"]["pseudo_labels_use_teacher_predictions"], True)
+        self.assertEqual(artifact["claim_scope"]["oracle_train_labels_used_for_pseudo_label_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+
+        budget_40 = artifact["budgets"]["40"]
+        self.assertEqual(budget_40["best_self_training_condition"], "class_balanced_self_training_balanced_margin_2x")
+        self.assertLess(
+            budget_40["condition_results"][budget_40["best_self_training_condition"]]["pseudo_label_agreement_mean"],
+            0.2,
+        )
+        budget_80 = artifact["budgets"]["80"]
+        self.assertEqual(budget_80["best_self_training_condition"], "class_balanced_self_training_balanced_margin_1x")
+        self.assertLess(
+            budget_80["condition_results"][budget_80["best_self_training_condition"]][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            budget_80["class_balanced_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        budget_160 = artifact["budgets"]["160"]
+        self.assertLess(
+            budget_160["condition_results"][budget_160["best_self_training_condition"]]["pseudo_label_agreement_mean"],
+            0.25,
+        )
+        for budget_row in artifact["budgets"].values():
+            for row in budget_row["condition_results"].values():
+                self.assertLess(
+                    row["signed_learning_signal_density_per_1m_event_compute_mean"],
+                    budget_row["random_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+                )
+
+    def test_twenty_newsgroups_active_acquisition_audit_records_active_label_costs(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_active_acquisition_audit.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(
+            artifact["acquisition_modes"],
+            [
+                "margin_uncertainty",
+                "balanced_margin_uncertainty",
+                "short_margin_uncertainty",
+                "confidence_curriculum",
+            ],
+        )
+        self.assertEqual(artifact["claim_scope"]["true_labels_acquired_after_selection"], True)
+        self.assertEqual(artifact["claim_scope"]["oracle_train_labels_used_for_acquisition"], False)
+        self.assertEqual(artifact["claim_scope"]["validation_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+
+        budget_40 = artifact["budgets"]["40"]
+        self.assertEqual(
+            budget_40["best_density_condition"],
+            "class_balanced_seed_active_balanced_margin_uncertainty",
+        )
+        self.assertLess(
+            budget_40["condition_results"][budget_40["best_density_condition"]][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            budget_40["random_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+
+        budget_160 = artifact["budgets"]["160"]
+        self.assertEqual(
+            budget_160["best_density_condition"],
+            "class_balanced_seed_active_short_margin_uncertainty",
+        )
+        best_160 = budget_160["condition_results"][budget_160["best_density_condition"]]
+        self.assertEqual(best_160["break_even_vs_class_balanced"]["amortized_reuses_to_density_win"], 4)
+        self.assertLess(
+            best_160["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_160["random_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        for budget_row in artifact["budgets"].values():
+            for row in budget_row["condition_results"].values():
+                self.assertFalse(row["break_even_vs_random"]["candidate_density_wins"])
+                self.assertFalse(row["break_even_vs_class_balanced"]["candidate_density_wins"])
+
+    def test_twenty_newsgroups_budgeted_acquisition_audit_records_budgeted_scan_frontier(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_budgeted_acquisition_audit.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(
+            artifact["acquisition_modes"],
+            ["margin_uncertainty", "balanced_margin_uncertainty", "short_margin_uncertainty"],
+        )
+        self.assertEqual(artifact["scan_multipliers"], [1, 2, 4])
+        self.assertEqual(artifact["claim_scope"]["scan_window_sampled_without_text_scoring"], True)
+        self.assertEqual(artifact["claim_scope"]["true_labels_acquired_after_selection"], True)
+        self.assertEqual(artifact["claim_scope"]["oracle_train_labels_used_for_acquisition"], False)
+        self.assertEqual(artifact["claim_scope"]["validation_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+
+        budget_160 = artifact["budgets"]["160"]
+        self.assertEqual(budget_160["best_density_condition"], "budgeted_active_margin_uncertainty_2x")
+        best_160 = budget_160["condition_results"][budget_160["best_density_condition"]]
+        self.assertEqual(best_160["external_events_mean"], 160.0)
+        self.assertEqual(best_160["scan_window_size_mean"], 240.0)
+        self.assertTrue(best_160["break_even_vs_class_balanced"]["candidate_density_wins"])
+        self.assertFalse(best_160["break_even_vs_random"]["candidate_density_wins"])
+
+        for budget, budget_row in artifact["budgets"].items():
+            for row in budget_row["condition_results"].values():
+                self.assertEqual(row["external_events_mean"], float(budget))
+                self.assertFalse(row["break_even_vs_random"]["candidate_density_wins"])
+
+    def test_twenty_newsgroups_length_window_audit_records_mixed_confirmation(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_length_window_confirmation_audit.json").read_text())
+
+        self.assertEqual(artifact["source_artifacts"], ["results/twenty_newsgroups_active_selection.json"])
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["dataset"]["record_count"], 1998)
+        self.assertEqual(artifact["development_seeds"], [311, 313, 317])
+        self.assertEqual(artifact["confirmation_seeds"], [331, 337, 347, 349, 353])
+        self.assertEqual(artifact["claim_scope"]["scan_window_sampled_before_length_selection"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["validation_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["teacher_used_for_selection"], False)
+        self.assertEqual(artifact["claim_scope"]["oracle_train_labels_used_for_selection"], False)
+        self.assertEqual(artifact["development_density_win_count"], 0)
+        self.assertEqual(artifact["confirmation_same_condition_density_win_count"], 1)
+
+        dev_80 = artifact["phases"]["development"]["budgets"]["80"]
+        confirm_80 = artifact["phases"]["confirmation"]["budgets"]["80"]
+        self.assertEqual(dev_80["best_density_condition"], "length_window_shortest_2x")
+        self.assertFalse(
+            dev_80["condition_results"]["length_window_shortest_2x"]["break_even_vs_random"][
+                "candidate_density_wins"
+            ]
+        )
+        self.assertEqual(confirm_80["density_win_conditions"], [])
+        self.assertLess(
+            confirm_80["condition_results"]["length_window_shortest_2x"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            confirm_80["random_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+
+    def test_twenty_newsgroups_frontier_robustness_audit_demotes_fragile_mean_wins(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_frontier_robustness_audit.json").read_text())
+
+        self.assertEqual(
+            artifact["source_artifacts"],
+            [
+                "results/twenty_newsgroups_active_selection.json",
+                "results/twenty_newsgroups_budgeted_acquisition_audit.json",
+            ],
+        )
+        self.assertEqual(artifact["claim_scope"]["paired_seed_audit"], True)
+        self.assertEqual(artifact["claim_scope"]["exact_seed_bootstrap"], True)
+        self.assertEqual(artifact["claim_scope"]["introduces_new_policy"], False)
+
+        summary = artifact["summary"]
+        self.assertEqual(summary["comparisons"], 6)
+        self.assertEqual(summary["mean_density_wins"], 3)
+        self.assertEqual(summary["robust_density_wins"], 0)
+        self.assertEqual(summary["robust_density_losses"], 3)
+
+        by_name = {row["comparison"]: row for row in artifact["comparisons"]}
+        class_80 = by_name["class_balanced_80_vs_random"]
+        self.assertEqual(class_80["paired_win_count"], 2)
+        self.assertGreater(class_80["mean_density_ratio"], 1.0)
+        self.assertLess(class_80["bootstrap"]["density_delta_ci95"][0], 0.0)
+        self.assertFalse(class_80["robust_density_win"])
+
+        budgeted_2x = by_name["budgeted_margin_2x_160_vs_class_balanced"]
+        self.assertGreater(budgeted_2x["mean_density_ratio"], 1.0)
+        self.assertFalse(budgeted_2x["robust_density_win"])
+
+        prototype_160 = by_name["prototype_160_vs_random"]
+        self.assertTrue(prototype_160["robust_density_loss"])
+        self.assertEqual(prototype_160["paired_win_count"], 0)
+
+    def test_twenty_newsgroups_frontier_fresh_seed_audit_finds_no_robust_positive_win(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_frontier_fresh_seed_audit.json").read_text())
+
+        self.assertEqual(artifact["fresh_seeds"], [439, 443, 449, 457, 461])
+        self.assertEqual(artifact["claim_scope"]["fresh_seed_replication"], True)
+        self.assertEqual(artifact["claim_scope"]["preregistered_seed_list"], True)
+        self.assertEqual(artifact["claim_scope"]["exact_seed_bootstrap"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+
+        summary = artifact["summary"]
+        self.assertEqual(summary["comparisons"], 6)
+        self.assertEqual(summary["fresh_seed_count"], 5)
+        self.assertEqual(summary["mean_density_wins"], 1)
+        self.assertEqual(summary["robust_density_wins"], 0)
+        self.assertEqual(summary["robust_density_losses"], 2)
+        self.assertEqual(summary["fragile_mean_density_wins"], 1)
+
+        by_name = {row["comparison"]: row for row in artifact["comparisons"]}
+        class_80 = by_name["class_balanced_80_vs_random"]
+        self.assertEqual(class_80["paired_win_count"], 4)
+        self.assertFalse(class_80["robust_density_win"])
+        self.assertEqual(class_80["sign_test_one_sided_win_p"], 0.1875)
+        self.assertLess(class_80["bootstrap"]["density_delta_ci95"][0], 0.0)
+
+        budgeted_2x = by_name["budgeted_margin_2x_160_vs_class_balanced"]
+        self.assertLess(budgeted_2x["mean_density_ratio"], 1.0)
+        self.assertEqual(budgeted_2x["paired_win_count"], 1)
+        self.assertFalse(budgeted_2x["robust_density_win"])
+        self.assertLess(budgeted_2x["bootstrap"]["density_delta_ci95"][0], 0.0)
+
+        prototype_160 = by_name["prototype_160_vs_random"]
+        self.assertEqual(prototype_160["paired_win_count"], 0)
+        self.assertTrue(prototype_160["robust_density_loss"])
+
+    def test_twenty_newsgroups_class_balanced_confirmation_audit_rejects_promotion(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_class_balanced_confirmation_audit.json").read_text())
+
+        self.assertEqual(artifact["candidate_condition"], "class_balanced_sample")
+        self.assertEqual(artifact["reference_condition"], "random_sample")
+        self.assertEqual(artifact["train_budget"], 80)
+        self.assertEqual(len(artifact["confirmation_seeds"]), 20)
+        self.assertEqual(artifact["claim_scope"]["targeted_confirmation"], True)
+        self.assertEqual(artifact["claim_scope"]["introduces_new_policy"], False)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+
+        summary = artifact["summary"]
+        self.assertEqual(summary["seed_count"], 20)
+        self.assertEqual(summary["paired_win_count"], 10)
+        self.assertEqual(summary["paired_loss_count"], 10)
+        self.assertGreater(summary["mean_density_ratio"], 1.0)
+        self.assertFalse(summary["robust_density_win"])
+        self.assertEqual(summary["sign_test_one_sided_win_p"], 0.588099)
+        self.assertEqual(summary["bootstrap"]["density_delta_ci95"], [-0.002197, 0.003466])
+
+    def test_real_text_break_even_certificate_records_global_frontier(self) -> None:
+        artifact = json.loads(Path("results/real_text_break_even_certificate.json").read_text())
+
+        self.assertEqual(artifact["title"], "Real-Text Break-Even Frontier Certificate")
+        self.assertEqual(artifact["claim_scope"]["mathematical_certificate"], True)
+        self.assertEqual(artifact["claim_scope"]["introduces_new_policy"], False)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertIn("G_candidate / G_reference", artifact["theorem"]["density_condition"])
+
+        summary = artifact["summary"]
+        self.assertEqual(summary["rows"], 172)
+        self.assertEqual(summary["observed_quality_wins"], 38)
+        self.assertEqual(summary["density_wins"], 3)
+        self.assertEqual(summary["quality_win_density_losses"], 36)
+        self.assertEqual(summary["finite_reuse_needed"], 13)
+        self.assertEqual(summary["bounded_quality_impossible_at_k1"], 53)
+
+        strongest = summary["strongest_observed_density_win"]
+        self.assertEqual(strongest["artifact_label"], "Twenty Newsgroups active")
+        self.assertEqual(strongest["budget"], "80")
+        self.assertEqual(strongest["candidate_condition"], "class_balanced_sample")
+        self.assertEqual(strongest["density_ratio"], 1.180025)
+
+        self.assertEqual(
+            summary["cheapest_finite_reuse_frontier"]["amortized_reuses_to_density_win"],
+            2,
+        )
+        self.assertEqual(summary["families"]["twenty_newsgroups_self_training"]["density_wins"], 0)
+        self.assertEqual(summary["families"]["twenty_newsgroups_active_acquisition"]["density_wins"], 0)
+        self.assertEqual(summary["families"]["twenty_newsgroups_budgeted_active_acquisition"]["density_wins"], 2)
+
+    def test_sms_spam_real_text_artifacts_record_dataset_scope_and_cost_tradeoff(self) -> None:
+        default = json.loads(Path("results/sms_spam_real_text_selection_cost.json").read_text())
+        v200 = json.loads(Path("results/sms_spam_real_text_selection_cost_v200.json").read_text())
+
+        for artifact in (default, v200):
+            self.assertEqual(artifact["dataset"]["name"], "UCI SMS Spam Collection")
+            self.assertEqual(artifact["dataset"]["record_count"], 5574)
+            self.assertEqual(artifact["dataset"]["license"], "CC BY 4.0")
+            self.assertEqual(
+                artifact["dataset"]["sha256"],
+                "1587ea43e58e82b14ff1f5425c88e17f8496bfcdb67a583dbff9eefaf9963ce3",
+            )
+            self.assertEqual(artifact["claim_scope"]["synthetic_domain"], False)
+            self.assertEqual(artifact["claim_scope"]["real_dataset"], True)
+            self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+            self.assertEqual(artifact["claim_scope"]["paper_ready_claim"], False)
+            self.assertIn("label_index_balanced_sample", artifact["condition_scope"])
+            self.assertIn("validation_label_index_selector", artifact["condition_scope"])
+
+        budget_32 = default["budgets"]["32"]["conditions"]
+        self.assertGreater(
+            budget_32["label_index_balanced_sample"]["heldout_spam_f1_mean"],
+            budget_32["random_sample"]["heldout_spam_f1_mean"],
+        )
+        self.assertGreater(
+            budget_32["random_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_32["label_index_balanced_sample"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        self.assertGreater(
+            budget_32["validation_label_index_selector"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+            budget_32["validation_sample_selector"]["signed_learning_signal_density_per_1m_event_compute_mean"],
+        )
+        self.assertLess(
+            v200["budgets"]["32"]["conditions"]["validation_label_index_selector"]["charged_compute_units_mean"],
+            default["budgets"]["32"]["conditions"]["validation_label_index_selector"]["charged_compute_units_mean"],
+        )
+
+    def test_sms_spam_break_even_artifact_records_selector_cost_inequality(self) -> None:
+        artifact = json.loads(Path("results/sms_spam_break_even_analysis.json").read_text())
+
+        self.assertEqual(artifact["reference_condition"], "random_sample")
+        self.assertEqual(
+            artifact["theorem"]["general_inequality"],
+            "G_candidate / G_reference > (N_candidate C_candidate) / (N_reference C_reference)",
+        )
+        self.assertEqual(artifact["claim_scope"]["post_hoc_diagnostic"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(artifact["quality_upper_bound"], 1.0)
+        self.assertEqual(
+            artifact["amortization_model"]["reusable_compute_keys"],
+            ["selection_cost_tokens_mean", "validation_tuning_cost_tokens_mean"],
+        )
+
+        v800_budget_32 = artifact["comparisons"]["SMS Spam v800"]["32"]
+        self.assertGreater(v800_budget_32["label_index_balanced_sample"]["break_even_quality"], 1.0)
+        self.assertFalse(v800_budget_32["label_index_balanced_sample"]["perfect_quality_can_beat"])
+        self.assertLess(v800_budget_32["label_index_balanced_sample"]["max_possible_density_ratio"], 1.0)
+        self.assertEqual(v800_budget_32["label_index_balanced_sample"]["amortized_reuses_to_density_win"], 9)
+        self.assertGreater(v800_budget_32["label_index_balanced_sample"]["fully_amortized_density_ratio"], 1.0)
+        self.assertGreater(v800_budget_32["validation_label_index_selector"]["break_even_quality"], 1.0)
+        self.assertFalse(v800_budget_32["validation_label_index_selector"]["perfect_quality_can_beat"])
+        self.assertLess(v800_budget_32["validation_label_index_selector"]["max_possible_density_ratio"], 0.2)
+        self.assertEqual(v800_budget_32["validation_label_index_selector"]["amortized_reuses_to_density_win"], 47)
+        self.assertEqual(v800_budget_32["validation_label_index_selector"]["candidate_density_wins"], False)
+
+        v200_budget_32 = artifact["comparisons"]["SMS Spam v200"]["32"]["validation_label_index_selector"]
+        self.assertIsNone(v200_budget_32["amortized_reuses_to_density_win"])
+        self.assertLess(v200_budget_32["fully_amortized_density_ratio"], 1.0)
+
+        for by_budget in artifact["comparisons"].values():
+            for by_condition in by_budget.values():
+                for row in by_condition.values():
+                    self.assertLess(row["density_ratio"], 1.0)
+
     def test_confirmation_sweep_uses_disjoint_seeds_and_records_sample_aware_result(self) -> None:
         discovery = json.loads(Path("results/sample_budget_sweep.json").read_text())
         confirmation = json.loads(Path("results/confirmation_budget_sweep.json").read_text())
@@ -1399,6 +1841,757 @@ class CommittedResultArtifactTests(unittest.TestCase):
             late_confidence["thresholds"]["late_confidence_ramped_compact_induction"]["best_signed_gain"],
             late_confidence["thresholds"]["compact_train_size_gated_induction"]["best_signed_gain"],
         )
+
+    def test_f1024_density_window_compact_artifact_records_local_window_tradeoff(self) -> None:
+        density_window = json.loads(
+            Path("results/tiny_neural_budget_sweep_density_window_compact_f1024.json").read_text()
+        )
+
+        self.assertEqual(density_window["seeds"], [929, 937, 941, 947, 953])
+        self.assertEqual(density_window["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(density_window["feature_dimension"], 1024)
+        self.assertEqual(density_window["profile_label"], "f1024_16x8_density_window_compact")
+        self.assertEqual(
+            density_window["confirmation_of"],
+            "results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json",
+        )
+        self.assertEqual(
+            density_window["comparison_of"],
+            "results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json",
+        )
+        self.assertEqual(density_window["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(density_window["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("density_window_compact_induction", density_window["conditions"])
+
+        scope = density_window["condition_scope"]["density_window_compact_induction"]
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["compact_original_encoding_at_large_samples"], True)
+        self.assertEqual(scope["compact_density_window_max_events"], 320)
+        self.assertEqual(scope["transition_support_window_min_events"], 400)
+        self.assertEqual(scope["transition_support_window_max_events"], 432)
+        self.assertEqual(scope["abundant_data_raw_fallback"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        for material_count in ("64", "80"):
+            self.assertEqual(
+                density_window["budgets"][material_count]["density_window_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                density_window["budgets"][material_count]["compact_train_size_gated_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+
+        for material_count in ("96", "104", "120"):
+            self.assertEqual(
+                density_window["budgets"][material_count]["density_window_compact_induction"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+                density_window["budgets"][material_count]["raw_text"][
+                    "accuracy_improvement_over_majority_mean"
+                ],
+            )
+
+        self.assertEqual(
+            density_window["budgets"]["112"]["density_window_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            0.135821,
+        )
+        self.assertGreater(
+            density_window["budgets"]["112"]["density_window_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            density_window["budgets"]["112"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertGreater(
+            density_window["budgets"]["120"]["density_window_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            density_window["budgets"]["120"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            density_window["budgets"]["128"]["density_window_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            density_window["budgets"]["128"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
+    def test_f1024_train_support_density_artifact_records_charged_selector_overhead(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_train_support_density_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1033, 1039, 1049, 1051, 1061])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_train_support_density")
+        self.assertEqual(
+            selector["confirmation_of"],
+            "results/tiny_neural_budget_sweep_density_window_compact_f1024.json",
+        )
+        self.assertEqual(
+            selector["comparison_of"],
+            "results/tiny_neural_budget_sweep_density_window_compact_f1024.json",
+        )
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("train_support_density_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["train_support_density_selector"]
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["support_density_selector"], True)
+        self.assertEqual(scope["support_density_min_kept_per_compute"], 0.00145)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            selector["budgets"]["64"]["train_support_density_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"compact_train_size_gated_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["train_support_density_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"support_ramped_compact_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["120"]["train_support_density_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 4, "support_ramped_compact_induction": 1},
+        )
+        self.assertEqual(
+            selector["budgets"]["128"]["train_support_density_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["train_support_density_selector"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+            selector["budgets"]["104"]["support_ramped_compact_induction"][
+                "accuracy_improvement_over_majority_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["104"]["train_support_density_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["104"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["120"]["train_support_density_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["120"]["density_window_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["128"]["train_support_density_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["128"]["raw_text"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
+    def test_f1024_support_probe_window_artifact_records_reuse_accounting_and_misses(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_support_probe_window_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1063, 1069, 1087, 1091, 1093])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_support_probe_window")
+        self.assertEqual(
+            selector["confirmation_of"],
+            "results/tiny_neural_budget_sweep_train_support_density_f1024.json",
+        )
+        self.assertEqual(
+            selector["comparison_of"],
+            "results/tiny_neural_budget_sweep_train_support_density_f1024.json",
+        )
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("support_probe_window_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["support_probe_window_selector"]
+        self.assertEqual(scope["train_only_selection"], True)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], False)
+        self.assertEqual(scope["validation_used_for_transform_selection"], False)
+        self.assertEqual(scope["support_probe_window_selector"], True)
+        self.assertEqual(scope["support_probe_min_train_events"], 360)
+        self.assertEqual(scope["support_probe_max_train_events"], 432)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            selector["budgets"]["64"]["support_probe_window_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"compact_train_size_gated_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["96"]["support_probe_window_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["support_probe_window_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"support_ramped_compact_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["120"]["support_probe_window_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["support_probe_window_selector"][
+                "charged_compute_units_mean"
+            ],
+            selector["budgets"]["104"]["support_ramped_compact_induction"][
+                "charged_compute_units_mean"
+            ],
+        )
+        self.assertGreater(
+            selector["budgets"]["104"]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["104"]["train_support_density_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["112"]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["112"]["raw_text"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["120"]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["120"]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
+    def test_f1024_validation_support_precision_artifact_records_boundary_gain_and_misses(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_support_precision_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1259, 1277, 1279, 1283, 1289])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_validation_support_precision")
+        self.assertEqual(
+            selector["confirmation_of"],
+            "results/tiny_neural_budget_sweep_support_probe_window_f1024.json",
+        )
+        self.assertEqual(
+            selector["comparison_of"],
+            "results/tiny_neural_budget_sweep_support_probe_window_f1024.json",
+        )
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_support_precision_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["validation_support_precision_selector"]
+        self.assertEqual(scope["train_only_selection"], False)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_used_for_transform_selection"], True)
+        self.assertEqual(scope["validation_support_precision_selector"], True)
+        self.assertEqual(scope["validation_support_precision_threshold"], 0.825758)
+        self.assertEqual(scope["validation_support_compact_max_train_events"], 320)
+        self.assertEqual(scope["validation_support_transition_min_train_events"], 400)
+        self.assertEqual(scope["validation_support_transition_max_train_events"], 432)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            selector["budgets"]["64"]["validation_support_precision_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"compact_train_size_gated_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["96"]["validation_support_precision_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 1, "support_ramped_compact_induction": 4},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["validation_support_precision_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 1, "support_ramped_compact_induction": 4},
+        )
+        self.assertEqual(
+            selector["budgets"]["112"]["validation_support_precision_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"support_ramped_compact_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["120"]["validation_support_precision_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 3, "support_ramped_compact_induction": 2},
+        )
+        self.assertEqual(
+            selector["budgets"]["128"]["validation_support_precision_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 4, "support_ramped_compact_induction": 1},
+        )
+
+        self.assertGreater(
+            selector["budgets"]["96"]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["96"]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertGreater(
+            selector["budgets"]["104"]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["104"]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["120"]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["120"]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["128"]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["128"]["raw_text"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
+        selector_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        support_probe_average = sum(
+            selector["budgets"][str(material)]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        self.assertGreater(selector_average, support_probe_average)
+
+    def test_f1024_validation_support_precision_gate_artifact_records_no_window_control(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1381, 1399, 1409, 1423, 1427])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_validation_support_precision_gate")
+        self.assertEqual(
+            selector["confirmation_of"],
+            "results/tiny_neural_budget_sweep_validation_support_precision_f1024.json",
+        )
+        self.assertEqual(
+            selector["comparison_of"],
+            "results/tiny_neural_budget_sweep_validation_support_precision_f1024.json",
+        )
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_support_precision_gate_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["validation_support_precision_gate_selector"]
+        self.assertEqual(scope["train_only_selection"], False)
+        self.assertEqual(scope["train_only_induction"], True)
+        self.assertEqual(scope["validation_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_used_for_transform_selection"], True)
+        self.assertEqual(scope["validation_support_precision_gate_selector"], True)
+        self.assertEqual(scope["validation_support_precision_selector"], False)
+        self.assertEqual(scope["validation_support_precision_threshold"], 0.825758)
+        self.assertEqual(scope["validation_support_compact_max_train_events"], 320)
+        self.assertEqual(scope["validation_support_uses_fixed_transition_prior"], False)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            selector["budgets"]["64"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"compact_train_size_gated_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["96"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 2, "support_ramped_compact_induction": 3},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 3, "support_ramped_compact_induction": 2},
+        )
+        self.assertEqual(
+            selector["budgets"]["112"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 2, "support_ramped_compact_induction": 3},
+        )
+        self.assertEqual(
+            selector["budgets"]["120"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 3, "support_ramped_compact_induction": 2},
+        )
+        self.assertEqual(
+            selector["budgets"]["128"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+
+        self.assertLess(
+            selector["budgets"]["112"]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["112"]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["128"]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["128"]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
+        gate_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        current_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        support_probe_average = sum(
+            selector["budgets"][str(material)]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        self.assertLess(gate_average, current_average)
+        self.assertGreater(gate_average, support_probe_average)
+
+    def test_f1024_support_selector_transfer_artifact_records_unseen_seed_stress(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1459, 1471, 1481, 1483, 1487])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_support_selector_transfer")
+        self.assertEqual(
+            selector["confirmation_of"],
+            "results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json",
+        )
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_support_precision_selector", selector["conditions"])
+        self.assertIn("validation_support_precision_gate_selector", selector["conditions"])
+        self.assertEqual(
+            selector["budgets"]["96"]["validation_support_precision_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 2, "support_ramped_compact_induction": 3},
+        )
+        self.assertEqual(
+            selector["budgets"]["112"]["validation_support_precision_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"support_ramped_compact_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["112"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 3, "support_ramped_compact_induction": 2},
+        )
+        self.assertEqual(
+            selector["budgets"]["128"]["validation_support_precision_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+
+        density_capped_average = sum(
+            selector["budgets"][str(material)]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        gate_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        fixed_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+
+        self.assertGreater(density_capped_average, gate_average)
+        self.assertGreater(gate_average, fixed_average)
+        self.assertGreater(
+            selector["budgets"]["112"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["112"]["validation_support_precision_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["120"]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["120"]["support_probe_window_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
+    def test_f1024_validation_support_utility_artifact_records_fresh_seed_negative_result(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_support_utility_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1601, 1607, 1609, 1613, 1619])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_validation_support_utility")
+        self.assertEqual(selector["confirmation_of"], "results/support_mechanism_audit_f1024.json")
+        self.assertEqual(
+            selector["comparison_of"],
+            "results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json",
+        )
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_support_utility_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["validation_support_utility_selector"]
+        self.assertEqual(scope["validation_support_utility_selector"], True)
+        self.assertEqual(scope["validation_labels_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_motif_distribution_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_support_utility_min_score"], 0.0)
+        self.assertEqual(scope["validation_support_utility_pair_coverage_weight"], 0.25)
+        self.assertEqual(scope["validation_support_utility_triple_l1_weight"], 0.20)
+        self.assertEqual(scope["validation_support_utility_compute_penalty"], 0.000001)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            selector["budgets"]["64"]["validation_support_utility_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"compact_train_size_gated_induction": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["96"]["validation_support_utility_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 4, "support_ramped_compact_induction": 1},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["validation_support_utility_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+        self.assertEqual(
+            selector["budgets"]["128"]["validation_support_utility_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+
+        utility_average = sum(
+            selector["budgets"][str(material)]["validation_support_utility_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        gate_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        density_average = sum(
+            selector["budgets"][str(material)]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        raw_average = sum(
+            selector["budgets"][str(material)]["raw_text"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+
+        self.assertEqual(round(utility_average, 6), 0.005473)
+        self.assertGreater(utility_average, raw_average)
+        self.assertLess(utility_average, gate_average)
+        self.assertLess(utility_average, density_average)
+        self.assertGreater(
+            selector["budgets"]["96"]["validation_support_utility_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["96"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+        self.assertLess(
+            selector["budgets"]["112"]["validation_support_utility_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+            selector["budgets"]["112"]["density_capped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ],
+        )
+
+    def test_f1024_validation_support_gain_gate_artifact_records_prefiltered_negative_result(self) -> None:
+        selector = json.loads(
+            Path("results/tiny_neural_budget_sweep_validation_support_gain_gate_f1024.json").read_text()
+        )
+
+        self.assertEqual(selector["seeds"], [1667, 1669, 1693, 1697, 1699])
+        self.assertEqual(selector["material_counts"], [64, 80, 96, 104, 112, 120, 128])
+        self.assertEqual(selector["feature_dimension"], 1024)
+        self.assertEqual(selector["profile_label"], "f1024_16x8_validation_support_gain_gate")
+        self.assertEqual(
+            selector["confirmation_of"],
+            "results/tiny_neural_budget_sweep_validation_support_utility_f1024.json",
+        )
+        self.assertEqual(selector["comparison_of"], "results/support_selector_error_audit_f1024.json")
+        self.assertEqual(selector["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertEqual(selector["claim_scope"]["fresh_seed_confirmation"], True)
+        self.assertIn("validation_support_gain_gate_selector", selector["conditions"])
+
+        scope = selector["condition_scope"]["validation_support_gain_gate_selector"]
+        self.assertEqual(scope["validation_support_gain_gate_selector"], True)
+        self.assertEqual(scope["validation_support_gain_precision_prefilter"], True)
+        self.assertEqual(scope["validation_labels_used_for_policy_selection"], True)
+        self.assertEqual(scope["validation_support_gain_proxy_epochs"], 2)
+        self.assertEqual(scope["validation_support_gain_min_score"], 0.0)
+        self.assertEqual(scope["validation_support_gain_compute_penalty"], 0.0000005)
+        self.assertEqual(scope["validation_support_precision_threshold"], 0.825758)
+        self.assertEqual(scope["reuse_selected_candidate_construction"], True)
+        self.assertEqual(scope["oracle_generated_labels"], False)
+
+        self.assertEqual(
+            selector["budgets"]["96"]["validation_support_gain_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 4, "support_ramped_compact_induction": 1},
+        )
+        self.assertEqual(
+            selector["budgets"]["104"]["validation_support_gain_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 3, "support_ramped_compact_induction": 2},
+        )
+        self.assertEqual(
+            selector["budgets"]["128"]["validation_support_gain_gate_selector"][
+                "portfolio_selected_condition_counts"
+            ],
+            {"raw_text": 5},
+        )
+
+        gain_gate_average = sum(
+            selector["budgets"][str(material)]["validation_support_gain_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        utility_average = sum(
+            selector["budgets"][str(material)]["validation_support_utility_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        precision_gate_average = sum(
+            selector["budgets"][str(material)]["validation_support_precision_gate_selector"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        support_average = sum(
+            selector["budgets"][str(material)]["support_ramped_compact_induction"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+        raw_average = sum(
+            selector["budgets"][str(material)]["raw_text"][
+                "signed_learning_signal_density_per_1m_event_compute_mean"
+            ]
+            for material in selector["material_counts"]
+        ) / len(selector["material_counts"])
+
+        self.assertEqual(round(gain_gate_average, 6), 0.004684)
+        self.assertGreater(gain_gate_average, raw_average)
+        self.assertLess(gain_gate_average, utility_average)
+        self.assertLess(gain_gate_average, precision_gate_average)
+        self.assertLess(gain_gate_average, support_average)
 
 
 if __name__ == "__main__":

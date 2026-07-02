@@ -3,6 +3,183 @@
 This directory stores checked-in result artifacts that can be regenerated from
 the repository.
 
+Real-text SMS Spam selection-cost pilot:
+
+```bash
+python3 -m learning_signal_density.real_text_experiment \
+  --output-json results/sms_spam_real_text_selection_cost.json \
+  --output-md results/sms_spam_real_text_selection_cost.md
+```
+
+The script downloads UCI SMS Spam Collection to `data/external/`, verifies the
+archive SHA-256, and leaves the raw dataset out of git. It compares random
+sampling, full-text class-balanced sampling, label-index class-balanced
+sampling, and validation selectors under heldout isolation.
+
+Real-text validation-size ablation:
+
+```bash
+python3 -m learning_signal_density.real_text_experiment \
+  --validation-size 200 \
+  --output-json results/sms_spam_real_text_selection_cost_v200.json \
+  --output-md results/sms_spam_real_text_selection_cost_v200.md
+```
+
+Twenty Newsgroups active-selection pilot:
+
+```bash
+python3 -m learning_signal_density.newsgroups_experiment \
+  --output-json results/twenty_newsgroups_active_selection.json \
+  --output-md results/twenty_newsgroups_active_selection.md
+```
+
+This is the first broader NLP dataset probe. It compares random sampling,
+class-balanced sampling, length curriculum, prototype retrieval, and a
+validation selector after stripping newsgroup headers, quote lines, and reply
+boilerplate.
+
+Twenty Newsgroups break-even selector-cost audit:
+
+```bash
+python3 scripts/build_newsgroups_break_even_analysis.py \
+  --output-json results/twenty_newsgroups_break_even_analysis.json \
+  --output-md results/twenty_newsgroups_break_even_analysis.md
+```
+
+This audit introduces no new policy. It asks when each active-selection,
+curriculum, retrieval, or validation policy pays for its charged event-compute
+multiplier relative to random sampling.
+
+Twenty Newsgroups retrieval-cost optimization audit:
+
+```bash
+python3 scripts/build_newsgroups_retrieval_cost_audit.py \
+  --output-json results/twenty_newsgroups_retrieval_cost_audit.json \
+  --output-md results/twenty_newsgroups_retrieval_cost_audit.md
+```
+
+This post-hoc audit sweeps a length penalty in the prototype-retrieval score.
+It tests whether cheaper selected documents are enough to close the density gap
+after the full prototype/index scan is charged.
+
+Twenty Newsgroups self-training pseudo-label audit:
+
+```bash
+python3 scripts/build_newsgroups_self_training_audit.py \
+  --output-json results/twenty_newsgroups_self_training_audit.json \
+  --output-md results/twenty_newsgroups_self_training_audit.md
+```
+
+This post-hoc audit tests pseudo-label filtering as a small distillation
+analogue. Teacher predictions are used as pseudo-labels; oracle train labels are
+recorded only to diagnose pseudo-label agreement and are not used for filtering
+or student labels.
+
+Twenty Newsgroups active label-acquisition audit:
+
+```bash
+python3 scripts/build_newsgroups_active_acquisition_audit.py \
+  --output-json results/twenty_newsgroups_active_acquisition_audit.json \
+  --output-md results/twenty_newsgroups_active_acquisition_audit.md
+```
+
+This post-hoc audit tests active acquisition rather than pseudo-labeling. A
+class-balanced seed trains a teacher, the teacher selects records by margin
+signals without validation or heldout access, and true labels for acquired
+records are used only after selection.
+
+Twenty Newsgroups budgeted-window active label-acquisition audit:
+
+```bash
+python3 scripts/build_newsgroups_budgeted_acquisition_audit.py \
+  --output-json results/twenty_newsgroups_budgeted_acquisition_audit.json \
+  --output-md results/twenty_newsgroups_budgeted_acquisition_audit.md
+```
+
+This post-hoc audit tests whether scoring only a sampled train-pool window can
+reduce active-acquisition cost enough to move the density frontier. The scan
+window is sampled before teacher scoring; true labels are acquired only after
+selection.
+
+Twenty Newsgroups sampled length-window stress audit:
+
+```bash
+python3 scripts/build_newsgroups_length_window_confirmation_audit.py \
+  --output-json results/twenty_newsgroups_length_window_confirmation_audit.json \
+  --output-md results/twenty_newsgroups_length_window_confirmation_audit.md
+```
+
+This audit tests cheap label-free selection from sampled train-only windows
+using token length as the selection signal. It separates development seeds from
+fresh confirmation seeds and reports the mixed result rather than treating
+phase-specific wins as a deployable policy.
+
+Twenty Newsgroups paired-seed frontier robustness audit:
+
+```bash
+python3 scripts/build_newsgroups_frontier_robustness_audit.py \
+  --output-json results/twenty_newsgroups_frontier_robustness_audit.json \
+  --output-md results/twenty_newsgroups_frontier_robustness_audit.md
+```
+
+This post-hoc diagnostic introduces no new policy. It compares current
+Newsgroups frontier candidates against their references on paired seeds and
+uses exact seed bootstrap intervals to separate fragile mean wins from robust
+density losses.
+
+Twenty Newsgroups fresh-seed frontier audit:
+
+```bash
+python3 scripts/build_newsgroups_frontier_fresh_seed_audit.py \
+  --output-json results/twenty_newsgroups_frontier_fresh_seed_audit.json \
+  --output-md results/twenty_newsgroups_frontier_fresh_seed_audit.md
+```
+
+This replication audit reruns only the frontier comparisons on untouched fresh
+seeds 439, 443, 449, 457, and 461. It preserves the anti-cheat split discipline
+and uses exact seed bootstrap plus sign-test diagnostics to show that no
+positive frontier clears the conservative robust-win rule on this seed set.
+
+Twenty Newsgroups class-balanced confirmation audit:
+
+```bash
+python3 scripts/build_newsgroups_class_balanced_confirmation_audit.py \
+  --output-json results/twenty_newsgroups_class_balanced_confirmation_audit.json \
+  --output-md results/twenty_newsgroups_class_balanced_confirmation_audit.md
+```
+
+This targeted confirmation reruns only the 80-label class-balanced vs random
+comparison on a 20-seed untouched block. It introduces no new policy and
+records that the small positive mean density edge does not pass the bootstrap
+or sign-test confirmation rule.
+
+Real-text break-even frontier certificate:
+
+```bash
+python3 scripts/build_real_text_break_even_certificate.py \
+  --output-json results/real_text_break_even_certificate.json \
+  --output-md results/real_text_break_even_certificate.md
+```
+
+This certificate introduces no new policy. It applies the same break-even
+inequality across committed SMS Spam and Twenty Newsgroups real-text audits, so
+quality wins, density wins, finite-reuse frontiers, and non-amortized
+impossibility cases are reported in one machine-readable artifact.
+
+Real-text break-even selector-cost audit:
+
+```bash
+python3 scripts/build_break_even_analysis.py \
+  --output-json results/sms_spam_break_even_analysis.json \
+  --output-md results/sms_spam_break_even_analysis.md
+```
+
+This audit introduces no new policy. It derives, for each non-random SMS policy,
+whether the observed spam-F1 gain is large enough to pay for the charged
+event-compute multiplier relative to random sampling. It also reports an
+amortized variant where selector construction and validation-tuning costs are
+spread across repeated downstream uses.
+
 Current canonical pilot:
 
 ```bash
@@ -614,6 +791,273 @@ keeps the compact 64-material signed LSD (`0.007887`) and improves density
 over compact at 104, 112, 120, and 128 materials. The tradeoff is explicit:
 at 128 materials it gives up gain (`0.132468` to `0.081818`) to improve signed
 LSD (`0.001860` to `0.003452`).
+
+16x8 1024-feature density-window compact transition probe:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_density_window_compact_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_density_window_compact_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 929 937 941 947 953 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_late_confidence_ramped_compact_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_support_ramped_compact_f1024.json \
+  --profile-label f1024_16x8_density_window_compact
+```
+
+The density-window compact policy is train-only. It uses compact induction
+below 320 train events, raw text from 320 to 400, support-ramped compact from
+400 to 432, and raw text again after 432. On seeds `929 937 941 947 953`, the
+fixed window improves the 112-material signed LSD over density-capped/raw
+fallback (`0.004269` versus `0.004001`) and keeps the 120-material raw density
+(`0.005648` versus support-ramped `0.004899`). It also misses the
+support-ramped 128-material row (`0.003726` versus `0.004290`), so the artifact
+is evidence for a local transition-window tradeoff, not a solved selector.
+
+16x8 1024-feature train-support-density selector-cost control:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_train_support_density_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_train_support_density_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1033 1039 1049 1051 1061 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction train_support_density_selector density_window_compact_induction density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_density_window_compact_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_density_window_compact_f1024.json \
+  --profile-label f1024_16x8_train_support_density
+```
+
+The train-support-density selector is train-only and chooses among raw text,
+compact train-size gated induction, and support-ramped compact induction by
+checking support kept per charged compute. Candidate inspection is charged. On
+seeds `1033 1039 1049 1051 1061`, it chooses support-ramped compact at 104 and
+112 materials, raw text at all 128-material runs, and a raw/support mix at 120.
+That is directionally sensible, but the overhead is too expensive: at 104
+materials it matches support-ramped gain while reducing signed LSD from
+`0.003994` to `0.003262`; at 120 materials it reaches `0.003844` while
+raw/density-window reaches `0.005515`; at 128 materials it reaches `0.004142`
+while raw reaches `0.005809`. This artifact is a selector-cost failure, not a
+frontier improvement.
+
+16x8 1024-feature reuse-aware support-probe window control:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_support_probe_window_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_support_probe_window_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1063 1069 1087 1091 1093 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction train_support_density_selector support_probe_window_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_train_support_density_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_train_support_density_f1024.json \
+  --profile-label f1024_16x8_support_probe_window
+```
+
+The support-probe window selector is train-only and reuse-aware. It uses compact
+induction below 320 train events, raw text outside the 360--432 support-probe
+window, and inside that window inspects only support-ramped compact induction.
+If support is selected, the candidate construction is reused rather than
+charged again. On seeds `1063 1069 1087 1091 1093`, this removes the 104-material
+selector overhead: signed LSD is `0.004655` versus `0.003805` for the full
+train-support-density selector. The result is still mixed. At 112 materials the
+selector chooses support, but raw/density-capped is denser (`0.007103` versus
+`0.005161`); at 120 materials the selector chooses raw, but support-ramped is
+denser (`0.004240` versus `0.003588`). The artifact isolates accounting reuse
+from the harder policy-selection problem.
+
+16x8 1024-feature validation support-precision selector:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_precision_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_precision_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1259 1277 1279 1283 1289 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_support_probe_window_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_support_probe_window_f1024.json \
+  --profile-label f1024_16x8_validation_support_precision
+```
+
+The validation support-precision selector keeps the compact floor below 320
+train events and the fixed 400--432 support transition, then uses validation
+labels only outside that fixed transition to estimate eligible induced-prediction
+precision before choosing support-ramped compact or raw text. On seeds `1259
+1277 1279 1283 1289`, it improves the raw/support boundary at 96 materials
+(`0.004198` signed LSD versus `0.002075` for support-probe/raw) and at 104
+materials (`0.004455` versus `0.004331` for support-probe/support-ramped). The
+average signed LSD across 64--128 materials is `0.006138`, above the
+support-probe window's `0.005941`, but the misses remain visible: at 120
+materials raw/support-probe reaches `0.006246` while the selector reaches
+`0.005723`, and at 128 raw reaches `0.005206` while the selector reaches
+`0.004866`.
+
+16x8 1024-feature no-window validation support-precision gate:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1381 1399 1409 1423 1427 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_support_precision_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_support_precision_f1024.json \
+  --profile-label f1024_16x8_validation_support_precision_gate
+```
+
+The no-window gate removes the fixed 400--432 train-event support prior and
+applies the same validation precision threshold everywhere above the compact
+floor. On seeds `1381 1399 1409 1423 1427`, it slightly improves over the
+support-probe average (`0.006104` versus `0.006074`) but falls below the
+fixed-transition validation selector (`0.006223`). The main miss is at 112
+materials: the gate reaches `0.005031` signed LSD while the fixed-transition
+selector and support-ramped compact reach `0.005864`. This is a negative control
+for removing the transition prior, not a promoted selector.
+
+16x8 1024-feature support-selector transfer stress:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_support_selector_transfer_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1459 1471 1481 1483 1487 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_validation_support_precision_gate_f1024.json \
+  --profile-label f1024_16x8_support_selector_transfer
+```
+
+The transfer stress reruns the latest support-selector family on fresh seeds
+`1459 1471 1481 1483 1487` after the fixed selector and no-window gate were
+developed. The no-window gate transfers better than the fixed-transition
+validation selector on average (`0.005936` versus `0.005601` signed LSD), mainly
+because it avoids the fixed 112-material support choice (`0.006517` versus
+`0.004175`). The result is still not a promoted selector: the simple train-only
+density-capped raw fallback has the strongest all-budget average in this block
+(`0.006115`), and raw/probe still beat the validation gate at 120 and 128
+materials.
+
+Build the post-hoc support-selector error audit:
+
+```bash
+python3 scripts/build_support_selector_error_audit.py
+```
+
+The audit reads the committed high-budget support-selector JSON artifacts and
+computes signed-LSD regret against the best simple comparator in each source
+seed block. It is explicitly non-deployable because completed heldout outcomes
+define the error ledger. The transfer block remains negative for promotion: the
+least-regret gate has `0.000496` average regret versus the best simple
+comparator and wins only `1/7` budgets.
+
+Run the validation support-utility selector follow-up:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_utility_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_utility_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1601 1607 1609 1613 1619 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector validation_support_utility_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/support_mechanism_audit_f1024.json \
+  --comparison-of results/tiny_neural_budget_sweep_support_selector_transfer_f1024.json \
+  --profile-label f1024_16x8_validation_support_utility
+```
+
+The utility follow-up uses a validation-precision prefilter before paying for a
+validation-label, validation-motif-coverage, and compute-penalized support
+score. The prefilter improves accounting versus the first utility attempt, but
+the fresh-seed result remains negative for promotion: `0.005473` average signed
+LSD versus `0.005746` for the no-window precision gate and `0.005721` for the
+density-capped fallback.
+
+Run the validation support-gain gate follow-up:
+
+```bash
+python3 -m learning_signal_density.neural_sweep \
+  --output-json results/tiny_neural_budget_sweep_validation_support_gain_gate_f1024.json \
+  --output-md results/tiny_neural_budget_sweep_validation_support_gain_gate_f1024.md \
+  --material-counts 64 80 96 104 112 120 128 \
+  --seeds 1667 1669 1693 1697 1699 \
+  --conditions raw_text compact_train_size_gated_induction support_ramped_compact_induction density_window_compact_induction support_probe_window_selector validation_support_precision_selector validation_support_precision_gate_selector validation_support_utility_selector validation_support_gain_gate_selector train_support_density_selector density_capped_compact_induction counterfactual_expansion \
+  --epochs 16 \
+  --hidden-units 8 \
+  --feature-dimension 1024 \
+  --learning-rate 0.03 \
+  --target-signed-gain 0.03 \
+  --fresh-seed-confirmation \
+  --confirmation-of results/tiny_neural_budget_sweep_validation_support_utility_f1024.json \
+  --comparison-of results/support_selector_error_audit_f1024.json \
+  --profile-label f1024_16x8_validation_support_gain_gate
+```
+
+The gain-gate follow-up tests direct expected-gain selection after the utility
+failure. It first runs the cheap validation support-precision prefilter, then
+trains two-epoch linear proxies for raw text and support-ramped compact only
+when support is eligible. The clean fresh-seed result is still negative for
+promotion: `0.004684` average signed LSD, below the utility selector
+(`0.004929`), no-window precision gate (`0.005303`), density-capped fallback
+(`0.005421`), and support-ramped compact (`0.005469`).
+
+Build the post-hoc support-ramp mechanism audit:
+
+```bash
+python3 scripts/build_support_mechanism_audit.py
+```
+
+The mechanism audit reconstructs the support-selector transfer candidates after
+the neural sweep and compares generated labels with the hidden rulebook and
+heldout motif distribution. It is non-deployable and should be read as a
+failure-mechanism diagnostic: support-ramped compact has zero precision
+improvements over compact induction, loses heldout motif coverage on all four
+transition budgets, and beats the density-capped fallback on signed LSD only at
+104 materials.
 
 Do not edit generated result JSON by hand. If the code changes, regenerate the
 artifact and rerun tests.

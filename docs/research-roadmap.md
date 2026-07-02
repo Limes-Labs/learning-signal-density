@@ -88,6 +88,24 @@ from `3` to `4` after the abundant-data tier.
 A late-confidence compact control then tests whether raising induced-label
 confidence from `0.55` to `0.60` after 432 train events repairs the remaining
 high-budget tradeoff.
+A density-window compact probe then tests a fixed train-only transition
+schedule: compact below 320 train events, raw from 320 to 400, support-ramped
+compact from 400 to 432, and raw again after 432.
+A train-support-density selector-cost control then tests whether a train-only
+support-kept-per-compute signal can choose the high-budget representation
+dynamically, with candidate inspection charged before final training.
+A reuse-aware support-probe window control then tests the value-of-information
+version: only inspect support-ramped compact inside a narrow train-event window
+and reuse the selected candidate construction rather than charging it twice.
+A validation support-precision selector then tests whether a cheap validation
+label calibration can override the raw/support choice outside the fixed
+transition band without training candidate neural models.
+A no-window validation support-precision gate then removes that fixed transition
+prior to test whether validation precision alone can carry the high-budget
+raw/support decision.
+A fresh support-selector transfer stress then reruns the fixed selector and
+no-window gate on a new seed block to distinguish local frontier progress from a
+robust adaptive policy.
 
 - Start with a dependency-light MLP or small transformer.
 - Add a nanoGPT-compatible backend only after the CPU smoke path is stable.
@@ -248,6 +266,74 @@ high-budget tradeoff.
   signed gain (`0.171098`) remains below plain compact (`0.196875`). The next
   useful selector needs a richer utility signal than confidence tightening
   alone.
+- Treat fixed density windows as a falsified simplification of that selector.
+  On fresh seeds `929 937 941 947 953`, density-window compact induction
+  improves the 112-material signed LSD over density-capped/raw fallback
+  (`0.004269` versus `0.004001`) and preserves the 120-material raw density
+  (`0.005648` versus support-ramped `0.004899`), but it misses the
+  support-ramped 128-material row (`0.003726` versus `0.004290`). The next
+  selector needs sample- or feature-aware utility, not just fixed train-event
+  breakpoints.
+- Treat charged selector inspection as its own bottleneck. On fresh seeds
+  `1033 1039 1049 1051 1061`, the train-support-density selector chooses
+  support-ramped compact at 104/112 materials and raw text mostly or always at
+  120/128, but the charged inspection cost lowers density below the best
+  comparator at those rows: `0.003262` versus support-ramped `0.003994` at 104,
+  `0.003844` versus raw/density-window `0.005515` at 120, and `0.004142`
+  versus raw `0.005809` at 128. Future selectors need cheaper proxy signals or
+  an explicit value-of-information gate before inspecting candidates.
+- Separate accounting reuse from policy quality. On fresh seeds `1063 1069
+  1087 1091 1093`, the support-probe window selector removes the duplicate
+  selected-candidate charge and recovers the 104-material support-ramped density
+  (`0.004655` versus the full selector's `0.003805`). It still misses the best
+  comparator at 112 and 120 materials, where raw reaches `0.007103` signed LSD
+  at 112 and support-ramped reaches `0.004240` at 120. The next useful selector
+  needs a train-only utility signal that can override the fixed window when the
+  local evidence changes.
+- Treat cheap validation calibration as partial boundary progress. On fresh
+  seeds `1259 1277 1279 1283 1289`, the validation support-precision selector
+  improves the 96-material row to `0.004198` signed LSD and the 104-material row
+  to `0.004455`, lifting average signed LSD across 64--128 materials to
+  `0.006138` versus `0.005941` for the support-probe window. It is still mixed:
+  validation false positives lower density at 120 and 128, so the result is a
+  useful boundary selector, not a solved adaptive policy.
+- Treat the fixed transition prior as useful, not arbitrary. On fresh seeds
+  `1381 1399 1409 1423 1427`, removing the unconditional 400--432 support
+  transition lowers average signed LSD from `0.006223` for the fixed-transition
+  validation selector to `0.006104` for the no-window gate. The main miss is at
+  112 materials (`0.005031` versus `0.005864`), so validation precision alone is
+  not yet a sufficient high-budget utility signal.
+- Treat support-selector gains as seed-block local until transfer says otherwise.
+  On fresh transfer seeds `1459 1471 1481 1483 1487`, the no-window gate beats
+  the fixed-transition validation selector on average (`0.005936` versus
+  `0.005601` signed LSD), but the simple density-capped raw fallback is still
+  stronger (`0.006115`). This points toward a future expected-utility selector,
+  not another unconditional support/raw threshold.
+- Use post-hoc selector-error audits as promotion gates, not as policies. The
+  support-selector audit finds that the least-regret transfer selector still
+  has positive average regret (`0.000496` signed LSD) against the best simple
+  comparator and wins only `1/7` budgets. The next selector needs explicit
+  expected-value-of-information accounting before another threshold search.
+- Treat the support ramp as a cost-reduction mechanism, not a reliability
+  mechanism. The transfer-block mechanism audit finds zero support-ramp
+  precision improvements over compact induction and heldout motif coverage
+  losses at every transition budget. Future selectors should estimate expected
+  utility across gain, coverage, reliability, and inspection cost instead of
+  searching another unconditional support threshold.
+- Do not assume validation coverage plus precision is a sufficient utility
+  model. The first validation support-utility selector beats raw on fresh seeds
+  (`0.005473` versus `0.004728` signed LSD), but still trails the no-window
+  precision gate (`0.005746`) and density-capped fallback (`0.005721`). The
+  next selector needs an explicit expected-gain predictor or a cheaper abstain
+  rule, not more proxy terms alone.
+- Do not assume a direct validation-gain proxy is sufficient either. The
+  prefiltered validation support-gain gate tests a two-epoch raw/support proxy
+  on fresh seeds `1667 1669 1693 1697 1699`. It beats raw on average
+  (`0.004684` versus `0.003941` signed LSD), but loses to the utility selector
+  (`0.004929`), precision gate (`0.005303`), density-capped fallback
+  (`0.005421`), and support-ramped compact (`0.005469`). The next useful
+  direction is cheaper evidence or a mechanism-level support representation
+  change, not a costlier validation selector.
 
 ## Phase 3: Continual-Learning Replay
 

@@ -28,6 +28,71 @@ rather than universal.
 - Xia et al., "LESS: Selecting Influential Data for Targeted Instruction
   Tuning", 2024. <https://arxiv.org/abs/2402.04333>
 
+MacKay's information-based active data selection is an early mathematical prior
+for choosing data by expected informativeness. It is useful here because it
+frames selection as a value problem rather than a generic preprocessing step.
+
+- MacKay, "Information-Based Objective Functions for Active Data Selection",
+  1992. <https://authors.library.caltech.edu/records/efefp-2j353>
+
+Settles' active-learning survey and later practice-oriented paper provide the
+right caution for this repo: active learning can reduce labeled examples, but
+real deployments may still fail to reduce total cost once practical overhead is
+included.
+
+- Settles, "Active Learning Literature Survey", 2009.
+  <https://research.cs.wisc.edu/techreports/2009/TR1648.pdf>
+- Settles, "From Theories to Queries: Active Learning in Practice", 2011.
+  <https://proceedings.mlr.press/v16/settles11a.html>
+
+Baldridge and Osborne make the reuse caveat concrete for language technology:
+training material selected actively for one model can be brittle when reused
+with other models, so total annotation cost and reusability have to be measured
+instead of assumed.
+
+- Baldridge and Osborne, "Active Learning and the Total Cost of Annotation",
+  2004. <https://aclanthology.org/W04-3202/>
+
+Howard's information value theory is the broader decision-analysis ancestor:
+information should be valued jointly with the decision it improves and the cost
+of acquiring it.
+
+- Howard, "Information Value Theory", 1966.
+  <https://ui.adsabs.harvard.edu/abs/1966ITSSC...2...22H/abstract>
+
+## Real-Text Dataset Probe
+
+UCI Twenty Newsgroups is the first broader NLP active-selection pilot in this
+repo. It is multi-class topic classification rather than binary filtering, and
+it supports active-learning, curriculum, retrieval/prototype, and selector-cost
+questions. The experiment strips headers, quote lines, and reply boilerplate
+before splitting because metadata leakage is a known practical issue for this
+dataset family. The follow-up break-even artifact treats the result as a
+mathematical cost audit, not a leaderboard: a retrieval or selector policy must
+beat random sampling on heldout-quality multiplier by more than it increases
+event-compute multiplier. A second retrieval-cost audit sweeps a length penalty
+inside prototype retrieval; it is useful because it shows that cheaper selected
+documents help some retrieval rows, but do not remove the dominant full-scan
+cost. A self-training audit then tests pseudo-label filtering as a small
+distillation analogue; the current teacher's pseudo-label agreement is too low
+for confidence-margin filtering to pay for itself.
+
+- "Twenty Newsgroups", UCI Machine Learning Repository.
+  <https://archive.ics.uci.edu/ml/datasets/Twenty+Newsgroups>
+- Rennie's 20 Newsgroups page records the common description of the corpus as
+  approximately 20,000 documents partitioned across 20 newsgroups.
+  <https://qwone.com/~jason/20Newsgroups/>
+
+UCI SMS Spam Collection is the first non-synthetic dataset used in this repo.
+It is small enough for stdlib-only CI-style experiments, public, licensed CC BY
+4.0, and directly aligned with class-imbalanced binary text classification. The
+current use is not the central NLP benchmark and not an SMS-filtering
+leaderboard; it is a selection-cost sanity check where spam-class F1 is
+measured against charged sampling and validation overhead.
+
+- Almeida and Hidalgo, "SMS Spam Collection", UCI Machine Learning Repository,
+  2011. <https://archive.ics.uci.edu/dataset/228/sms+spam+collection>
+
 ## Transformation And Synthetic Views
 
 The phi-1 work is a useful reference for the transformation axis because it

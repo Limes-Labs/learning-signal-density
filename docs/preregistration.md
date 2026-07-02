@@ -52,6 +52,28 @@ internal processing cost.
   below the scarcity floor and matches sample-aware induction before the
   compact tier; the diversity penalty is applied only after compact encoding is
   active.
+- `density_window_compact_induction`: a fixed train-only transition schedule
+  that uses compact induction below 320 train events, raw text from 320 to 400,
+  support-ramped compact induction from 400 to 432, and raw text again after
+  432.
+- `train_support_density_selector`: a train-only selector-cost control that
+  chooses among raw text, compact train-size gated induction, and
+  support-ramped compact induction using support kept per charged compute, then
+  charges candidate inspection before training the selected final tiny MLP.
+- `support_probe_window_selector`: a reuse-aware train-only selector-cost
+  control that uses compact induction below 320 train events, raw text outside
+  the 360--432 train-event support-probe window, and inside the window inspects
+  only support-ramped compact induction before training the selected final tiny
+  MLP.
+- `validation_support_precision_selector`: a validation-calibrated high-budget
+  support/raw selector. It keeps compact induction below 320 train events, keeps
+  support-ramped compact in the fixed 400--432 train-event transition, and
+  otherwise uses validation labels only to estimate eligible induced-prediction
+  precision before selecting support-ramped compact or raw text.
+- `validation_support_precision_gate_selector`: the no-window control for the
+  validation support-precision selector. It removes the fixed support transition
+  prior and applies the same validation precision threshold everywhere above 320
+  train events.
 - `mdl_rule_expansion`: train-only empirical rules are scored on validation
   with a description-length penalty, then only selected compact rules are used
   for counterfactual generation.
@@ -113,6 +135,27 @@ is allowed only for train pairs.
 - Negative or mixed results remain publishable.
 - Any post-hoc frontier improvement should receive a fresh-seed confirmation
   sweep before being promoted beyond exploratory status.
+- Post-hoc selector-error audits may use completed heldout outcomes only to
+  diagnose regret and define future promotion gates; they must be marked
+  non-deployable and cannot be used as policy selection results.
+- Post-hoc mechanism audits may compare generated labels with the hidden
+  rulebook or heldout motif distribution only after the source sweep has been
+  committed; they must be marked non-deployable and cannot be used to select or
+  tune policies.
+- Train-only selector controls must charge candidate construction or inspection
+  even when the final selected condition is cheap raw text.
+- Reuse-aware selector controls may avoid double-charging selected candidate
+  construction only when the artifact explicitly marks that reuse policy and
+  still charges unselected candidate inspection.
+- Validation utility selectors must disclose their utility weights, validation
+  label use, validation motif-distribution use, prefilter behavior, and
+  candidate-construction reuse; any validation scan or rejected support
+  candidate must be charged before the final heldout evaluation.
+- Validation gain-gate selectors must disclose their precision prefilter,
+  validation-label use, proxy model class/epochs, gain threshold, compute
+  penalty, and selected-candidate reuse. They must charge cheap rejected
+  prefilter scans and any raw/support proxy training before final heldout
+  evaluation.
 - The current pilot must mark `neural_model=false`.
 - Tiny neural replication artifacts must mark `neural_model=true`, keep the
   same heldout isolation rules, and report neural parameter count, training
@@ -123,6 +166,9 @@ is allowed only for train pairs.
 - Neural confirmation artifacts must mark `fresh_seed_confirmation=true`,
   record the artifact being confirmed, and report whether each condition reaches
   the target signed gain.
+- Selector policies are not promoted from their development seed block alone;
+  they need a later transfer seed block that compares them against the simplest
+  fixed schedule or no-scan fallback they aim to replace.
 - The current pilot must mark `oracle_transform=true` because the synthetic
   world supplies ground-truth counterfactual labels for at least one condition.
 - Condition-level scope must identify which transforms use oracle-generated
@@ -139,3 +185,31 @@ This first slice is promoted only if:
 3. The artifact reports scope flags.
 4. At least one non-raw condition differs in cost from the raw condition.
 5. Documentation states the limitations plainly.
+
+## Addendum: Real-Text SMS Spam Probe
+
+Date: 2026-07-01
+
+The first non-synthetic sanity check uses UCI SMS Spam Collection as a small
+public binary text-classification dataset. This addendum does not retroactively
+change the synthetic-domain preregistration above. It adds a separate artifact
+class with these rules:
+
+- The dataset archive must be downloaded from UCI, cached outside git, and
+  verified by SHA-256 before parsing.
+- The split must be train-pool/validation/heldout with stratification and
+  disjoint record IDs.
+- The primary quality metric is spam-class F1, not accuracy, because the task
+  is class-imbalanced.
+- Random sampling, full-pool class-balanced sampling, label-index balanced
+  sampling, and validation selectors must report their selection-cost model.
+- Validation selectors may use validation labels for policy selection only when
+  the condition scope discloses that use and charges proxy/scoring overhead.
+- Heldout examples may not be used for sampling-policy selection.
+- Break-even analysis may be run after the SMS artifacts are committed. It is a
+  mathematical diagnostic, not a new policy, and must use random sampling as the
+  reference unless a later addendum states otherwise.
+- Amortized selector-cost analysis may treat selector construction and
+  validation-tuning cost as reusable only when the artifact explicitly records
+  the reusable keys and reports the required reuse count.
+- The artifact remains exploratory and must mark `paper_ready_claim=false`.

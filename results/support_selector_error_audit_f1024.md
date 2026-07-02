@@ -1,0 +1,73 @@
+# Learning Signal Density Support-selector Error Audit
+
+This is a post-hoc support-selector error audit. It reads committed fresh-seed
+neural sweeps and asks whether extra selector information has positive
+expected value after charged inspection or validation cost.
+
+## Source Summary
+
+| Source | Best simple | Best simple LSD | Least-regret selector | Selector LSD | Avg. regret | Wins | Avg. selector cost |
+| --- | --- | ---: | --- | ---: | ---: | ---: | ---: |
+| Train support-density selector | density_window_compact_induction | 0.005255 | train_support_density_selector | 0.004274 | 0.001099 | 0/7 | 17904.9 |
+| Support-probe window selector | density_capped_compact_induction | 0.005357 | support_probe_window_selector | 0.005079 | 0.000555 | 0/7 | 1941.0 |
+| Validation support-precision selector | density_capped_compact_induction | 0.006102 | validation_support_precision_selector | 0.006138 | 0.000042 | 2/7 | 1309.2 |
+| Validation support-precision gate | density_window_compact_induction | 0.006090 | validation_support_precision_selector | 0.006223 | -0.000110 | 2/7 | 1620.0 |
+| Support-selector transfer stress | density_capped_compact_induction | 0.006115 | validation_support_precision_gate_selector | 0.005936 | 0.000496 | 1/7 | 2082.8 |
+| Validation support-utility selector | density_capped_compact_induction | 0.005721 | validation_support_precision_gate_selector | 0.005746 | 0.000119 | 1/7 | 1910.0 |
+| Validation support-gain gate | support_ramped_compact_induction | 0.005469 | validation_support_precision_gate_selector | 0.005303 | 0.000398 | 0/7 | 1668.4 |
+
+## Selector Details
+
+| Source | Selector | Avg. LSD | Avg. regret | Worst budget | Worst regret | Avg. selector cost |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Train support-density selector | train_support_density_selector | 0.004274 | 0.001099 | 120 | 0.001671 | 17904.9 |
+| Support-probe window selector | train_support_density_selector | 0.004354 | 0.001280 | 112 | 0.002931 | 17948.8 |
+| Support-probe window selector | support_probe_window_selector | 0.005079 | 0.000555 | 112 | 0.001942 | 1941.0 |
+| Validation support-precision selector | train_support_density_selector | 0.004815 | 0.001365 | 120 | 0.002542 | 17928.2 |
+| Validation support-precision selector | support_probe_window_selector | 0.005941 | 0.000240 | 96 | 0.001361 | 1930.0 |
+| Validation support-precision selector | validation_support_precision_selector | 0.006138 | 0.000042 | 120 | 0.000523 | 1309.2 |
+| Validation support-precision gate | train_support_density_selector | 0.004967 | 0.001145 | 128 | 0.001670 | 17915.9 |
+| Validation support-precision gate | support_probe_window_selector | 0.006074 | 0.000039 | 120 | 0.000159 | 1935.5 |
+| Validation support-precision gate | validation_support_precision_selector | 0.006223 | -0.000110 | 128 | 0.000448 | 1620.0 |
+| Validation support-precision gate | validation_support_precision_gate_selector | 0.006104 | 0.000009 | 112 | 0.000833 | 1915.6 |
+| Support-selector transfer stress | train_support_density_selector | 0.004345 | 0.002087 | 112 | 0.004382 | 17936.5 |
+| Support-selector transfer stress | support_probe_window_selector | 0.005920 | 0.000512 | 112 | 0.003582 | 1927.3 |
+| Support-selector transfer stress | validation_support_precision_selector | 0.005601 | 0.000831 | 112 | 0.003582 | 1706.4 |
+| Support-selector transfer stress | validation_support_precision_gate_selector | 0.005936 | 0.000496 | 112 | 0.001240 | 2082.8 |
+| Validation support-utility selector | train_support_density_selector | 0.004392 | 0.001473 | 112 | 0.001894 | 17911.8 |
+| Validation support-utility selector | support_probe_window_selector | 0.005646 | 0.000220 | 112 | 0.001085 | 1927.3 |
+| Validation support-utility selector | validation_support_precision_selector | 0.005657 | 0.000209 | 112 | 0.001085 | 1533.6 |
+| Validation support-utility selector | validation_support_precision_gate_selector | 0.005746 | 0.000119 | 112 | 0.000461 | 1910.0 |
+| Validation support-utility selector | validation_support_utility_selector | 0.005473 | 0.000392 | 96 | 0.000736 | 4384.1 |
+| Validation support-gain gate | train_support_density_selector | 0.004328 | 0.001373 | 128 | 0.002541 | 17937.1 |
+| Validation support-gain gate | support_probe_window_selector | 0.004894 | 0.000806 | 96 | 0.002406 | 1935.5 |
+| Validation support-gain gate | validation_support_precision_selector | 0.005221 | 0.000479 | 128 | 0.001751 | 1211.2 |
+| Validation support-gain gate | validation_support_precision_gate_selector | 0.005303 | 0.000398 | 128 | 0.001751 | 1668.4 |
+| Validation support-gain gate | validation_support_utility_selector | 0.004929 | 0.000772 | 128 | 0.002162 | 4914.9 |
+| Validation support-gain gate | validation_support_gain_gate_selector | 0.004684 | 0.001017 | 96 | 0.002386 | 10880.3 |
+
+## Recommendation
+
+- Promote support selector: `false`.
+- Strongest transfer selector: `validation_support_precision_gate_selector`.
+- Transfer best simple comparator: `density_capped_compact_induction`.
+- Reason: Do not promote a support selector yet: the least-regret transfer selector still loses to the best simple comparator after charged selection cost.
+
+## Scope
+
+- This audit uses completed heldout outcomes after the source sweeps have run.
+- The heldout outcomes are not available to any deployable policy.
+- Treat this as mechanism evidence and a promotion gate, not as a new selector.
+
+```json
+{
+  "deployable_policy": false,
+  "heldout_available_to_policies": false,
+  "heldout_used_for_error_analysis": true,
+  "neural_model": true,
+  "paper_ready_claim": false,
+  "post_hoc_diagnostic": true,
+  "synthetic_domain": true,
+  "uses_committed_fresh_seed_artifacts": true
+}
+```

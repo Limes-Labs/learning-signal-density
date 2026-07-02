@@ -1,0 +1,175 @@
+import io
+import tarfile
+import unittest
+
+from learning_signal_density.newsgroups_experiment import (
+    NewsRecord,
+    parse_twenty_newsgroups_tar_gz,
+    run_newsgroups_condition,
+    run_newsgroups_seedset,
+)
+from scripts.build_newsgroups_retrieval_cost_audit import length_penalized_prototype_sample
+from scripts.build_newsgroups_active_acquisition_audit import _select_acquisition_rows
+from scripts.build_newsgroups_budgeted_acquisition_audit import _select_budgeted_rows
+from scripts.build_newsgroups_length_window_confirmation_audit import _select_length_window_records
+from scripts.build_newsgroups_self_training_audit import _select_pseudo_rows
+
+
+def _tiny_newsgroups_payload() -> bytes:
+    docs = {
+        "mini_newsgroups/sci.space/1": "Subject: Launch\nFrom: a@example.com\n\nOrbit rocket mission shuttle\n> quoted leak\nNASA orbit",
+        "mini_newsgroups/sci.space/2": "Subject: Mars\n\nMars rover orbit space mission",
+        "mini_newsgroups/sci.space/3": "Subject: Telescope\n\nTelescope galaxy orbit star",
+        "mini_newsgroups/rec.autos/1": "Subject: Engine\n\nEngine wheel torque car",
+        "mini_newsgroups/rec.autos/2": "Subject: Tire\n\nCar tire road engine",
+        "mini_newsgroups/rec.autos/3": "Subject: Brakes\n\nBrake engine wheel road",
+        "mini_newsgroups/talk.politics/1": "Subject: Vote\n\nElection policy senate vote",
+        "mini_newsgroups/talk.politics/2": "Subject: Law\n\nPolicy court election law",
+        "mini_newsgroups/talk.politics/3": "Subject: Debate\n\nDebate vote policy party",
+    }
+    payload = io.BytesIO()
+    with tarfile.open(fileobj=payload, mode="w:gz") as archive:
+        for name, text in docs.items():
+            encoded = text.encode("latin-1")
+            info = tarfile.TarInfo(name)
+            info.size = len(encoded)
+            archive.addfile(info, io.BytesIO(encoded))
+    return payload.getvalue()
+
+
+class NewsgroupsExperimentTests(unittest.TestCase):
+    def test_parse_twenty_newsgroups_tar_gz_strips_headers_and_quotes(self) -> None:
+        records = parse_twenty_newsgroups_tar_gz(_tiny_newsgroups_payload(), corpus_root="mini_newsgroups")
+
+        self.assertEqual(len(records), 9)
+        self.assertEqual(sorted({record.label for record in records}), ["rec.autos", "sci.space", "talk.politics"])
+        first = next(record for record in records if record.record_id == "sci.space/1")
+        self.assertNotIn("Subject:", first.text)
+        self.assertNotIn("From:", first.text)
+        self.assertNotIn("quoted leak", first.text)
+        self.assertIn("Orbit rocket mission", first.text)
+
+    def test_run_newsgroups_condition_records_curriculum_cost_without_heldout_selection(self) -> None:
+        records = parse_twenty_newsgroups_tar_gz(_tiny_newsgroups_payload(), corpus_root="mini_newsgroups")
+
+        row = run_newsgroups_condition(
+            records=records,
+            seed=17,
+            condition="length_curriculum_sample",
+            train_budget=3,
+            validation_per_class=1,
+            heldout_per_class=1,
+            epochs=2,
+        )
+
+        self.assertEqual(row["dataset_name"], "Twenty Newsgroups")
+        self.assertEqual(row["condition"], "length_curriculum_sample")
+        self.assertEqual(row["external_events"], 3)
+        self.assertEqual(row["heldout_used_for_selection"], False)
+        self.assertGreater(row["selection_cost_tokens"], 0)
+        self.assertGreater(row["charged_compute_units"], row["internal_tokens"])
+
+    def test_seedset_artifact_compares_random_curriculum_retrieval_and_selector(self) -> None:
+        records = parse_twenty_newsgroups_tar_gz(_tiny_newsgroups_payload(), corpus_root="mini_newsgroups")
+
+        artifact = run_newsgroups_seedset(
+            records=records,
+            seeds=(17, 19),
+            train_budgets=(3,),
+            conditions=(
+                "random_sample",
+                "class_balanced_sample",
+                "length_curriculum_sample",
+                "prototype_retrieval_sample",
+                "validation_selector",
+            ),
+            validation_per_class=1,
+            heldout_per_class=1,
+            epochs=2,
+            proxy_epochs=1,
+        )
+
+        self.assertEqual(artifact["dataset"]["name"], "Twenty Newsgroups")
+        self.assertEqual(artifact["claim_scope"]["real_dataset"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        budget = artifact["budgets"]["3"]["conditions"]
+        self.assertEqual(set(budget), set(artifact["condition_scope"]))
+        self.assertGreater(
+            budget["validation_selector"]["validation_tuning_cost_tokens_mean"],
+            budget["random_sample"]["validation_tuning_cost_tokens_mean"],
+        )
+        self.assertIn("prototype_retrieval_sample", artifact["condition_scope"])
+
+    def test_length_penalized_prototype_sample_records_full_prototype_scan_cost(self) -> None:
+        records = parse_twenty_newsgroups_tar_gz(_tiny_newsgroups_payload(), corpus_root="mini_newsgroups")
+
+        candidate = length_penalized_prototype_sample(records, budget=6, alpha=0.5)
+
+        self.assertEqual(candidate.policy, "length_penalized_prototype_alpha_0.5")
+        self.assertEqual(len(candidate.records), 6)
+        self.assertEqual(
+            sorted({record.label for record in candidate.records}),
+            ["rec.autos", "sci.space", "talk.politics"],
+        )
+        self.assertEqual(candidate.selection_cost_tokens, sum(record.token_count for record in records) * 2)
+
+    def test_balanced_pseudo_row_selection_uses_teacher_predictions_not_true_labels(self) -> None:
+        rows = [
+            (NewsRecord("a", "true-a", "short"), "pred-a", 0.1),
+            (NewsRecord("b", "true-b", "short"), "pred-a", 0.9),
+            (NewsRecord("c", "true-c", "short"), "pred-b", 0.2),
+            (NewsRecord("d", "true-d", "short"), "pred-b", 0.8),
+        ]
+
+        selected = _select_pseudo_rows(rows, pseudo_count=2, filter_mode="balanced_margin")
+
+        self.assertEqual([row[0].record_id for row in selected], ["b", "d"])
+        self.assertEqual([row[1] for row in selected], ["pred-a", "pred-b"])
+
+    def test_active_acquisition_balancing_uses_teacher_predictions_not_true_labels(self) -> None:
+        rows = [
+            (NewsRecord("a", "true-a", "tiny"), "pred-a", 0.4),
+            (NewsRecord("b", "true-b", "tiny"), "pred-a", 0.1),
+            (NewsRecord("c", "true-c", "tiny"), "pred-b", 0.3),
+            (NewsRecord("d", "true-d", "tiny"), "pred-b", 0.2),
+        ]
+
+        selected = _select_acquisition_rows(rows, acquire_count=2, mode="balanced_margin_uncertainty")
+
+        self.assertEqual([row[0].record_id for row in selected], ["b", "d"])
+        self.assertEqual([row[1] for row in selected], ["pred-a", "pred-b"])
+
+    def test_budgeted_acquisition_backfill_preserves_full_label_budget_without_true_labels(self) -> None:
+        rows = [
+            (NewsRecord("a", "true-a", "tiny"), "pred-a", 0.1),
+            (NewsRecord("b", "true-b", "tiny"), "pred-b", 0.2),
+            (NewsRecord("c", "true-c", "tiny"), "pred-c", 0.3),
+            (NewsRecord("d", "true-d", "tiny"), "pred-c", 0.4),
+            (NewsRecord("e", "true-e", "tiny"), "pred-c", 0.5),
+        ]
+
+        selected = _select_budgeted_rows(rows, acquire_count=5, mode="balanced_margin_uncertainty")
+
+        self.assertEqual([row[0].record_id for row in selected], ["a", "b", "c", "d", "e"])
+        self.assertEqual([row[1] for row in selected], ["pred-a", "pred-b", "pred-c", "pred-c", "pred-c"])
+
+    def test_length_window_diverse_signature_uses_text_signatures_not_labels(self) -> None:
+        rows = (
+            NewsRecord("a", "true-a", "alpha tiny"),
+            NewsRecord("b", "true-b", "alpha small words"),
+            NewsRecord("c", "true-a", "beta tiny"),
+            NewsRecord("d", "true-c", "gamma tiny"),
+        )
+
+        selected = _select_length_window_records(
+            rows,
+            train_budget=3,
+            config={"mode": "shortest_diverse_signature"},
+            seed=17,
+        )
+
+        self.assertEqual([record.record_id for record in selected], ["a", "c", "d"])
+
+
+if __name__ == "__main__":
+    unittest.main()

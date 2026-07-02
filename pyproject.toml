@@ -21,6 +21,8 @@ learning-signal-density-neural = "learning_signal_density.neural_experiment:main
 learning-signal-density-neural-sweep = "learning_signal_density.neural_sweep:main"
 learning-signal-density-neural-profile-sweep = "learning_signal_density.neural_profile_sweep:main"
 learning-signal-density-neural-feature-sweep = "learning_signal_density.neural_feature_sweep:main"
+learning-signal-density-real-text = "learning_signal_density.real_text_experiment:main"
+learning-signal-density-newsgroups = "learning_signal_density.newsgroups_experiment:main"
 
 [tool.setuptools]
 packages = ["learning_signal_density"]
