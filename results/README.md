@@ -114,6 +114,19 @@ using token length as the selection signal. It separates development seeds from
 fresh confirmation seeds and reports the mixed result rather than treating
 phase-specific wins as a deployable policy.
 
+Twenty Newsgroups paired-seed frontier robustness audit:
+
+```bash
+python3 scripts/build_newsgroups_frontier_robustness_audit.py \
+  --output-json results/twenty_newsgroups_frontier_robustness_audit.json \
+  --output-md results/twenty_newsgroups_frontier_robustness_audit.md
+```
+
+This post-hoc diagnostic introduces no new policy. It compares current
+Newsgroups frontier candidates against their references on paired seeds and
+uses exact seed bootstrap intervals to separate fragile mean wins from robust
+density losses.
+
 Real-text break-even frontier certificate:
 
 ```bash

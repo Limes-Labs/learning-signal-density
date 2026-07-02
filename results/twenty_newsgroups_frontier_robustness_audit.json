@@ -1,0 +1,486 @@
+{
+  "claim_scope": {
+    "exact_seed_bootstrap": true,
+    "heldout_used_for_selection": false,
+    "introduces_new_policy": false,
+    "metadata_stripped": true,
+    "paired_seed_audit": true,
+    "paper_ready_claim": false,
+    "post_hoc_diagnostic": true,
+    "real_dataset": true,
+    "synthetic_domain": false
+  },
+  "comparisons": [
+    {
+      "all_paired_wins": false,
+      "bootstrap": {
+        "bootstrap_sample_count": 27,
+        "density_delta_ci95": [
+          -0.00144,
+          0.008371
+        ],
+        "density_ratio_ci95": [
+          0.88146,
+          1.569805
+        ],
+        "quality_delta_ci95": [
+          -0.01,
+          0.01
+        ]
+      },
+      "budget": 80,
+      "candidate_artifact": "active_selection",
+      "candidate_condition": "class_balanced_sample",
+      "comparison": "class_balanced_80_vs_random",
+      "family": "active_selection",
+      "mean_candidate_lsd": 0.016884,
+      "mean_density_delta": 0.003466,
+      "mean_density_ratio": 1.258285,
+      "mean_density_win": true,
+      "mean_reference_lsd": 0.013418,
+      "paired_rows": [
+        {
+          "candidate_density_wins": true,
+          "candidate_lsd": 0.026988,
+          "candidate_quality": 0.0725,
+          "density_delta": 0.010912,
+          "density_ratio": 1.678776,
+          "quality_delta": 0.0125,
+          "reference_lsd": 0.016076,
+          "reference_quality": 0.06,
+          "seed": 311
+        },
+        {
+          "candidate_density_wins": true,
+          "candidate_lsd": 0.01521,
+          "candidate_quality": 0.05,
+          "density_delta": 0.003289,
+          "density_ratio": 1.2759,
+          "quality_delta": 0.005,
+          "reference_lsd": 0.011921,
+          "reference_quality": 0.045,
+          "seed": 313
+        },
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.008453,
+          "candidate_quality": 0.0325,
+          "density_delta": -0.003804,
+          "density_ratio": 0.689647,
+          "quality_delta": -0.0175,
+          "reference_lsd": 0.012257,
+          "reference_quality": 0.05,
+          "seed": 317
+        }
+      ],
+      "paired_win_count": 2,
+      "reading": "base-grid mean density win",
+      "reference_artifact": "active_selection",
+      "reference_condition": "random_sample",
+      "robust_density_loss": false,
+      "robust_density_win": false,
+      "seed_count": 3
+    },
+    {
+      "all_paired_wins": false,
+      "bootstrap": {
+        "bootstrap_sample_count": 27,
+        "density_delta_ci95": [
+          -0.073751,
+          -0.042834
+        ],
+        "density_ratio_ci95": [
+          0.021215,
+          0.04168
+        ],
+        "quality_delta_ci95": [
+          -0.0075,
+          0.024167
+        ]
+      },
+      "budget": 40,
+      "candidate_artifact": "active_selection",
+      "candidate_condition": "prototype_retrieval_sample",
+      "comparison": "prototype_40_vs_random",
+      "family": "active_selection",
+      "mean_candidate_lsd": 0.001772,
+      "mean_density_delta": -0.058293,
+      "mean_density_ratio": 0.029507,
+      "mean_density_win": false,
+      "mean_reference_lsd": 0.060065,
+      "paired_rows": [
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.001551,
+          "candidate_quality": 0.04,
+          "density_delta": -0.032274,
+          "density_ratio": 0.045854,
+          "quality_delta": 0.0125,
+          "reference_lsd": 0.033825,
+          "reference_quality": 0.0275,
+          "seed": 311
+        },
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.002487,
+          "candidate_quality": 0.075,
+          "density_delta": -0.063955,
+          "density_ratio": 0.037431,
+          "quality_delta": 0.03,
+          "reference_lsd": 0.066442,
+          "reference_quality": 0.045,
+          "seed": 313
+        },
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.001279,
+          "candidate_quality": 0.04,
+          "density_delta": -0.078649,
+          "density_ratio": 0.016002,
+          "quality_delta": -0.0175,
+          "reference_lsd": 0.079928,
+          "reference_quality": 0.0575,
+          "seed": 317
+        }
+      ],
+      "paired_win_count": 0,
+      "reading": "quality win but density loss",
+      "reference_artifact": "active_selection",
+      "reference_condition": "random_sample",
+      "robust_density_loss": true,
+      "robust_density_win": false,
+      "seed_count": 3
+    },
+    {
+      "all_paired_wins": false,
+      "bootstrap": {
+        "bootstrap_sample_count": 27,
+        "density_delta_ci95": [
+          -0.00579,
+          -0.004871
+        ],
+        "density_ratio_ci95": [
+          0.092476,
+          0.134975
+        ],
+        "quality_delta_ci95": [
+          -0.014167,
+          0.0225
+        ]
+      },
+      "budget": 160,
+      "candidate_artifact": "active_selection",
+      "candidate_condition": "prototype_retrieval_sample",
+      "comparison": "prototype_160_vs_random",
+      "family": "active_selection",
+      "mean_candidate_lsd": 0.000675,
+      "mean_density_delta": -0.00533,
+      "mean_density_ratio": 0.1124,
+      "mean_density_win": false,
+      "mean_reference_lsd": 0.006005,
+      "paired_rows": [
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.00081,
+          "candidate_quality": 0.105,
+          "density_delta": -0.004486,
+          "density_ratio": 0.152946,
+          "quality_delta": 0.0275,
+          "reference_lsd": 0.005296,
+          "reference_quality": 0.0775,
+          "seed": 311
+        },
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.000555,
+          "candidate_quality": 0.08,
+          "density_delta": -0.005865,
+          "density_ratio": 0.086449,
+          "quality_delta": -0.0275,
+          "reference_lsd": 0.00642,
+          "reference_quality": 0.1075,
+          "seed": 313
+        },
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.00066,
+          "candidate_quality": 0.1,
+          "density_delta": -0.00564,
+          "density_ratio": 0.104762,
+          "quality_delta": 0.0125,
+          "reference_lsd": 0.0063,
+          "reference_quality": 0.0875,
+          "seed": 317
+        }
+      ],
+      "paired_win_count": 0,
+      "reading": "quality win but density loss",
+      "reference_artifact": "active_selection",
+      "reference_condition": "random_sample",
+      "robust_density_loss": true,
+      "robust_density_win": false,
+      "seed_count": 3
+    },
+    {
+      "all_paired_wins": false,
+      "bootstrap": {
+        "bootstrap_sample_count": 27,
+        "density_delta_ci95": [
+          -0.001785,
+          0.002073
+        ],
+        "density_ratio_ci95": [
+          0.63142,
+          1.55867
+        ],
+        "quality_delta_ci95": [
+          -0.014167,
+          0.0425
+        ]
+      },
+      "budget": 160,
+      "candidate_artifact": "budgeted_acquisition",
+      "candidate_condition": "budgeted_active_margin_uncertainty_1x",
+      "comparison": "budgeted_margin_1x_160_vs_class_balanced",
+      "family": "budgeted_active_acquisition",
+      "mean_candidate_lsd": 0.00442,
+      "mean_density_delta": 0.000144,
+      "mean_density_ratio": 1.033676,
+      "mean_density_win": true,
+      "mean_reference_lsd": 0.004276,
+      "paired_rows": [
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.003095,
+          "candidate_quality": 0.05,
+          "density_delta": -0.002139,
+          "density_ratio": 0.591326,
+          "quality_delta": -0.0225,
+          "reference_lsd": 0.005234,
+          "reference_quality": 0.0725,
+          "seed": 311
+        },
+        {
+          "candidate_density_wins": true,
+          "candidate_lsd": 0.007183,
+          "candidate_quality": 0.1325,
+          "density_delta": 0.003647,
+          "density_ratio": 2.031391,
+          "quality_delta": 0.0625,
+          "reference_lsd": 0.003536,
+          "reference_quality": 0.07,
+          "seed": 313
+        },
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.002982,
+          "candidate_quality": 0.0825,
+          "density_delta": -0.001076,
+          "density_ratio": 0.734845,
+          "quality_delta": 0.0025,
+          "reference_lsd": 0.004058,
+          "reference_quality": 0.08,
+          "seed": 317
+        }
+      ],
+      "paired_win_count": 1,
+      "reading": "budgeted mean density win against class-balanced",
+      "reference_artifact": "active_selection",
+      "reference_condition": "class_balanced_sample",
+      "robust_density_loss": false,
+      "robust_density_win": false,
+      "seed_count": 3
+    },
+    {
+      "all_paired_wins": false,
+      "bootstrap": {
+        "bootstrap_sample_count": 27,
+        "density_delta_ci95": [
+          -0.000269,
+          0.000652
+        ],
+        "density_ratio_ci95": [
+          0.944444,
+          1.175651
+        ],
+        "quality_delta_ci95": [
+          0.005,
+          0.011667
+        ]
+      },
+      "budget": 160,
+      "candidate_artifact": "budgeted_acquisition",
+      "candidate_condition": "budgeted_active_margin_uncertainty_2x",
+      "comparison": "budgeted_margin_2x_160_vs_class_balanced",
+      "family": "budgeted_active_acquisition",
+      "mean_candidate_lsd": 0.004467,
+      "mean_density_delta": 0.000191,
+      "mean_density_ratio": 1.044746,
+      "mean_density_win": true,
+      "mean_reference_lsd": 0.004276,
+      "paired_rows": [
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.004809,
+          "candidate_quality": 0.0775,
+          "density_delta": -0.000425,
+          "density_ratio": 0.9188,
+          "quality_delta": 0.005,
+          "reference_lsd": 0.005234,
+          "reference_quality": 0.0725,
+          "seed": 311
+        },
+        {
+          "candidate_density_wins": true,
+          "candidate_lsd": 0.004492,
+          "candidate_quality": 0.085,
+          "density_delta": 0.000956,
+          "density_ratio": 1.270362,
+          "quality_delta": 0.015,
+          "reference_lsd": 0.003536,
+          "reference_quality": 0.07,
+          "seed": 313
+        },
+        {
+          "candidate_density_wins": true,
+          "candidate_lsd": 0.004101,
+          "candidate_quality": 0.085,
+          "density_delta": 4.3e-05,
+          "density_ratio": 1.010596,
+          "quality_delta": 0.005,
+          "reference_lsd": 0.004058,
+          "reference_quality": 0.08,
+          "seed": 317
+        }
+      ],
+      "paired_win_count": 2,
+      "reading": "budgeted mean density win against class-balanced",
+      "reference_artifact": "active_selection",
+      "reference_condition": "class_balanced_sample",
+      "robust_density_loss": false,
+      "robust_density_win": false,
+      "seed_count": 3
+    },
+    {
+      "all_paired_wins": false,
+      "bootstrap": {
+        "bootstrap_sample_count": 27,
+        "density_delta_ci95": [
+          -0.002109,
+          -0.000967
+        ],
+        "density_ratio_ci95": [
+          0.667403,
+          0.829415
+        ],
+        "quality_delta_ci95": [
+          -0.015833,
+          -0.000833
+        ]
+      },
+      "budget": 160,
+      "candidate_artifact": "budgeted_acquisition",
+      "candidate_condition": "budgeted_active_margin_uncertainty_2x",
+      "comparison": "budgeted_margin_2x_160_vs_random",
+      "family": "budgeted_active_acquisition",
+      "mean_candidate_lsd": 0.004467,
+      "mean_density_delta": -0.001538,
+      "mean_density_ratio": 0.743894,
+      "mean_density_win": false,
+      "mean_reference_lsd": 0.006005,
+      "paired_rows": [
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.004809,
+          "candidate_quality": 0.0775,
+          "density_delta": -0.000487,
+          "density_ratio": 0.908044,
+          "quality_delta": 0.0,
+          "reference_lsd": 0.005296,
+          "reference_quality": 0.0775,
+          "seed": 311
+        },
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.004492,
+          "candidate_quality": 0.085,
+          "density_delta": -0.001928,
+          "density_ratio": 0.699688,
+          "quality_delta": -0.0225,
+          "reference_lsd": 0.00642,
+          "reference_quality": 0.1075,
+          "seed": 313
+        },
+        {
+          "candidate_density_wins": false,
+          "candidate_lsd": 0.004101,
+          "candidate_quality": 0.085,
+          "density_delta": -0.002199,
+          "density_ratio": 0.650952,
+          "quality_delta": -0.0025,
+          "reference_lsd": 0.0063,
+          "reference_quality": 0.0875,
+          "seed": 317
+        }
+      ],
+      "paired_win_count": 0,
+      "reading": "budgeted density loss against random",
+      "reference_artifact": "active_selection",
+      "reference_condition": "random_sample",
+      "robust_density_loss": true,
+      "robust_density_win": false,
+      "seed_count": 3
+    }
+  ],
+  "dataset": {
+    "label_count": 20,
+    "label_counts": {
+      "alt.atheism": 100,
+      "comp.graphics": 100,
+      "comp.os.ms-windows.misc": 100,
+      "comp.sys.ibm.pc.hardware": 100,
+      "comp.sys.mac.hardware": 100,
+      "comp.windows.x": 100,
+      "misc.forsale": 100,
+      "rec.autos": 99,
+      "rec.motorcycles": 100,
+      "rec.sport.baseball": 100,
+      "rec.sport.hockey": 100,
+      "sci.crypt": 100,
+      "sci.electronics": 100,
+      "sci.med": 100,
+      "sci.space": 100,
+      "soc.religion.christian": 100,
+      "talk.politics.guns": 100,
+      "talk.politics.mideast": 99,
+      "talk.politics.misc": 100,
+      "talk.religion.misc": 100
+    },
+    "license": "CC BY 4.0",
+    "name": "Twenty Newsgroups",
+    "record_count": 1998,
+    "sha256": "cfbb360d6c1e55c06d33a4c5da0789a93b78db74833a70be8ff2e133cc4e6a6e",
+    "tar_member": "mini_newsgroups.tar.gz",
+    "task": "20-way topic classification",
+    "uci_id": 113,
+    "url": "https://archive.ics.uci.edu/static/public/113/twenty+newsgroups.zip"
+  },
+  "generated_at": "2026-07-02T01:01:02Z",
+  "robustness_rule": {
+    "interpretation": "With only three paired seeds this is intentionally conservative; fragile mean wins remain useful hypotheses but should not be promoted as stable frontiers.",
+    "name": "paired bootstrap density frontier rule",
+    "robust_density_win": "mean density delta is positive, every paired seed wins, and the exact seed-bootstrap 95% interval for mean density delta is strictly positive"
+  },
+  "source_artifacts": [
+    "results/twenty_newsgroups_active_selection.json",
+    "results/twenty_newsgroups_budgeted_acquisition_audit.json"
+  ],
+  "summary": {
+    "comparisons": 6,
+    "fragile_mean_density_wins": 3,
+    "mean_density_wins": 3,
+    "robust_density_losses": 3,
+    "robust_density_wins": 0
+  },
+  "title": "Twenty Newsgroups Frontier Robustness Audit"
+}

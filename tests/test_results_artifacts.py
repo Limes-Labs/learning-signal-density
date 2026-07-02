@@ -252,6 +252,41 @@ class CommittedResultArtifactTests(unittest.TestCase):
             confirm_80["random_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
         )
 
+    def test_twenty_newsgroups_frontier_robustness_audit_demotes_fragile_mean_wins(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_frontier_robustness_audit.json").read_text())
+
+        self.assertEqual(
+            artifact["source_artifacts"],
+            [
+                "results/twenty_newsgroups_active_selection.json",
+                "results/twenty_newsgroups_budgeted_acquisition_audit.json",
+            ],
+        )
+        self.assertEqual(artifact["claim_scope"]["paired_seed_audit"], True)
+        self.assertEqual(artifact["claim_scope"]["exact_seed_bootstrap"], True)
+        self.assertEqual(artifact["claim_scope"]["introduces_new_policy"], False)
+
+        summary = artifact["summary"]
+        self.assertEqual(summary["comparisons"], 6)
+        self.assertEqual(summary["mean_density_wins"], 3)
+        self.assertEqual(summary["robust_density_wins"], 0)
+        self.assertEqual(summary["robust_density_losses"], 3)
+
+        by_name = {row["comparison"]: row for row in artifact["comparisons"]}
+        class_80 = by_name["class_balanced_80_vs_random"]
+        self.assertEqual(class_80["paired_win_count"], 2)
+        self.assertGreater(class_80["mean_density_ratio"], 1.0)
+        self.assertLess(class_80["bootstrap"]["density_delta_ci95"][0], 0.0)
+        self.assertFalse(class_80["robust_density_win"])
+
+        budgeted_2x = by_name["budgeted_margin_2x_160_vs_class_balanced"]
+        self.assertGreater(budgeted_2x["mean_density_ratio"], 1.0)
+        self.assertFalse(budgeted_2x["robust_density_win"])
+
+        prototype_160 = by_name["prototype_160_vs_random"]
+        self.assertTrue(prototype_160["robust_density_loss"])
+        self.assertEqual(prototype_160["paired_win_count"], 0)
+
     def test_real_text_break_even_certificate_records_global_frontier(self) -> None:
         artifact = json.loads(Path("results/real_text_break_even_certificate.json").read_text())
 

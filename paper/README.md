@@ -24,6 +24,7 @@ The generator currently reads:
 - `results/twenty_newsgroups_active_acquisition_audit.json`
 - `results/twenty_newsgroups_budgeted_acquisition_audit.json`
 - `results/twenty_newsgroups_length_window_confirmation_audit.json`
+- `results/twenty_newsgroups_frontier_robustness_audit.json`
 - `results/real_text_break_even_certificate.json`
 - `results/tiny_neural_feature_sweep_wide.json`
 - `results/tiny_neural_profile_sweep_f1024.json`
@@ -174,6 +175,10 @@ The Twenty Newsgroups sampled length-window audit must use disjoint development
 and confirmation seeds, keep selection label-free and teacher-free, preserve
 the no-development-density-win result, and preserve the 80-label confirmation
 failure for the development-selected policy.
+The Twenty Newsgroups frontier robustness audit must introduce no new policy,
+use paired seed rows from the committed Newsgroups artifacts, preserve three
+fragile mean density wins, zero robust density wins, and three robust density
+losses under the exact seed-bootstrap rule.
 The real-text break-even certificate must introduce no new policy, certify the
 committed SMS Spam and Twenty Newsgroups break-even artifacts, preserve the
 172-row comparison set, and keep the current separation between 38 observed

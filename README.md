@@ -224,6 +224,10 @@ using the same split and accounting discipline.
   length-window stress audit. It tests cheap label-free token-length selectors
   on development and disjoint confirmation seeds; the development grid has no
   random-density win, and the 80-label near-frontier does not confirm.
+- `results/twenty_newsgroups_frontier_robustness_audit.*` - paired-seed
+  robustness audit for the current Newsgroups density frontiers. It records
+  that all three mean density wins are fragile under exact seed bootstrap, while
+  three density losses are robust.
 - `results/real_text_break_even_certificate.*` - cross-artifact mathematical
   certificate over the real-text audits. It records that 38 observed quality
   wins collapse to three density wins after event-compute is charged, with 13

@@ -86,7 +86,10 @@ themselves after enough independent reuse from selectors whose nonreusable cost
 is already too high. A final real-text certificate applies that inequality
 across the committed SMS Spam and Twenty Newsgroups artifacts: many rows improve
 heldout quality, but only three currently improve learning-signal density
-without an explicit reuse assumption.
+without an explicit reuse assumption. A paired-seed robustness audit then
+checks those positive frontiers with exact seed bootstrap intervals and finds
+that the current mean wins should be treated as hypotheses, while several
+retrieval-density losses are already robust under the same test.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -340,6 +343,7 @@ Table~\ref{tab:twenty-newsgroups-active-acquisition-audit},
 Table~\ref{tab:twenty-newsgroups-budgeted-acquisition-audit},
 Table~\ref{tab:twenty-newsgroups-length-window-audit},
 Table~\ref{tab:real-text-break-even-certificate},
+Table~\ref{tab:twenty-newsgroups-frontier-robustness},
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
 Table~\ref{tab:sms-spam-break-even},
@@ -492,6 +496,22 @@ no quality or density wins. This
 certificate is a compact mathematical summary of the paper's practical warning:
 better heldout scores are common, but density improvements are rare unless the
 selection bill is small, reusable, or both.
+
+Table~\ref{tab:twenty-newsgroups-frontier-robustness} adds a seed-level
+uncertainty check to that certificate. For each current Newsgroups frontier
+claim, it pairs candidate and reference rows by seed and applies an exact
+bootstrap over the paired seeds. This is intentionally conservative because the
+current Newsgroups artifacts have only three development seeds. The result is a
+useful demotion of claim strength: the three mean density wins have bootstrap
+intervals that cross zero and are therefore fragile, not robust frontiers. The
+80-document class-balanced win has mean density ratio 1.258 but wins only two of
+three paired seeds, with density-delta interval [-0.001440, 0.008371]. The
+160-document budgeted margin-2x row against class-balanced has mean ratio 1.045
+but interval [-0.000269, 0.000652]. In contrast, prototype retrieval's density
+losses against random at 40 and 160 documents are robust under this audit, and
+the budgeted margin-2x row remains a robust loss against random. This is the
+right current reading: quality and density frontiers are promising enough to
+study further, but not yet stable enough for a strong policy claim.
 
 The SMS Spam pilot is useful precisely because it does not produce an easy
 selector win. At 32 training messages with 800 validation examples, the
