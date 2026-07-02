@@ -142,6 +142,35 @@ class CommittedResultArtifactTests(unittest.TestCase):
                     budget_row["random_reference"]["signed_learning_signal_density_per_1m_event_compute_mean"],
                 )
 
+    def test_real_text_break_even_certificate_records_global_frontier(self) -> None:
+        artifact = json.loads(Path("results/real_text_break_even_certificate.json").read_text())
+
+        self.assertEqual(artifact["title"], "Real-Text Break-Even Frontier Certificate")
+        self.assertEqual(artifact["claim_scope"]["mathematical_certificate"], True)
+        self.assertEqual(artifact["claim_scope"]["introduces_new_policy"], False)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+        self.assertIn("G_candidate / G_reference", artifact["theorem"]["density_condition"])
+
+        summary = artifact["summary"]
+        self.assertEqual(summary["rows"], 94)
+        self.assertEqual(summary["observed_quality_wins"], 32)
+        self.assertEqual(summary["density_wins"], 1)
+        self.assertEqual(summary["quality_win_density_losses"], 32)
+        self.assertEqual(summary["finite_reuse_needed"], 9)
+        self.assertEqual(summary["bounded_quality_impossible_at_k1"], 52)
+
+        strongest = summary["strongest_observed_density_win"]
+        self.assertEqual(strongest["artifact_label"], "Twenty Newsgroups active")
+        self.assertEqual(strongest["budget"], "80")
+        self.assertEqual(strongest["candidate_condition"], "class_balanced_sample")
+        self.assertEqual(strongest["density_ratio"], 1.180025)
+
+        self.assertEqual(
+            summary["cheapest_finite_reuse_frontier"]["amortized_reuses_to_density_win"],
+            9,
+        )
+        self.assertEqual(summary["families"]["twenty_newsgroups_self_training"]["density_wins"], 0)
+
     def test_sms_spam_real_text_artifacts_record_dataset_scope_and_cost_tradeoff(self) -> None:
         default = json.loads(Path("results/sms_spam_real_text_selection_cost.json").read_text())
         v200 = json.loads(Path("results/sms_spam_real_text_selection_cost_v200.json").read_text())

@@ -21,6 +21,7 @@ The generator currently reads:
 - `results/twenty_newsgroups_break_even_analysis.json`
 - `results/twenty_newsgroups_retrieval_cost_audit.json`
 - `results/twenty_newsgroups_self_training_audit.json`
+- `results/real_text_break_even_certificate.json`
 - `results/tiny_neural_feature_sweep_wide.json`
 - `results/tiny_neural_profile_sweep_f1024.json`
 - `results/tiny_neural_budget_sweep_32x8_f1024.json`
@@ -157,6 +158,10 @@ The Twenty Newsgroups self-training audit must use teacher predictions as
 pseudo-labels, keep oracle train labels diagnostic-only, keep heldout closed,
 and preserve the finding that pseudo-label agreement is too low for the tested
 margin filters to beat random or class-balanced density.
+The real-text break-even certificate must introduce no new policy, certify the
+committed SMS Spam and Twenty Newsgroups break-even artifacts, preserve the
+94-row comparison set, and keep the current separation between 32 observed
+quality wins, one observed density win, and nine finite-reuse frontiers.
 
 ## Release Checklist
 

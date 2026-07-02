@@ -75,6 +75,19 @@ analogue. Teacher predictions are used as pseudo-labels; oracle train labels are
 recorded only to diagnose pseudo-label agreement and are not used for filtering
 or student labels.
 
+Real-text break-even frontier certificate:
+
+```bash
+python3 scripts/build_real_text_break_even_certificate.py \
+  --output-json results/real_text_break_even_certificate.json \
+  --output-md results/real_text_break_even_certificate.md
+```
+
+This certificate introduces no new policy. It applies the same break-even
+inequality across committed SMS Spam and Twenty Newsgroups real-text audits, so
+quality wins, density wins, finite-reuse frontiers, and non-amortized
+impossibility cases are reported in one machine-readable artifact.
+
 Real-text break-even selector-cost audit:
 
 ```bash

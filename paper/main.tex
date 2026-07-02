@@ -74,7 +74,10 @@ labels are too noisy in this scarce-label regime and do not pay for their
 scoring and student-training cost. We extend the audit with an amortized-cost
 corollary that distinguishes selectors that could pay for themselves after
 enough independent reuse from selectors whose nonreusable cost is already too
-high.
+high. A final real-text certificate applies that inequality across the committed
+SMS Spam and Twenty Newsgroups artifacts: many rows improve heldout quality, but
+only one currently improves learning-signal density without an explicit reuse
+assumption.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -107,7 +110,7 @@ because the hidden rulebook, train/validation/heldout split, and generated-label
 provenance can be controlled exactly.
 
 \paragraph{Contributions in the current repository.}
-The repository currently provides seven pieces of evidence. First, it defines a
+The repository currently provides nine pieces of evidence. First, it defines a
 costed artifact schema for external events, internal examples, internal tokens,
 charged transform cost, neural step count, estimated neural operations, and
 claim scope. Second, it implements train-only and oracle transformation
@@ -123,7 +126,10 @@ are enough. Sixth, it adds a self-training pseudo-label audit that tests a
 distillation/filtering failure mode on the same real-text split. Seventh, it
 keeps a smaller SMS Spam binary sanity check for selector-cost algebra. Eighth,
 it adds selector break-even and amortization audits that turn selection overhead
-into explicit inequalities rather than qualitative caveats.
+into explicit inequalities rather than qualitative caveats. Ninth, it adds a
+cross-artifact real-text certificate that classifies observed quality wins,
+density wins, finite-reuse frontiers, and non-amortized impossibility cases
+under the same inequality.
 
 \paragraph{Non-claims.}
 This is not a transformer-scale result, not a language-model leaderboard, and
@@ -319,6 +325,7 @@ Table~\ref{tab:twenty-newsgroups-active-selection},
 Table~\ref{tab:twenty-newsgroups-break-even},
 Table~\ref{tab:twenty-newsgroups-retrieval-cost-audit},
 Table~\ref{tab:twenty-newsgroups-self-training-audit},
+Table~\ref{tab:real-text-break-even-certificate},
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
 Table~\ref{tab:sms-spam-break-even},
@@ -409,6 +416,21 @@ At 160 documents, agreement rises only to 0.226 and density remains 0.000583.
 This says the current bottleneck is not merely filtering threshold choice; the
 teacher signal itself is too weak for pseudo-label expansion to be useful under
 charged scoring and student-training cost.
+
+Table~\ref{tab:real-text-break-even-certificate} collects the real-text
+break-even rows into one certificate. Across 94 SMS Spam and Twenty Newsgroups
+comparisons, 32 rows improve heldout quality relative to their reference, but
+only one row improves learning-signal density without a reuse assumption: the
+80-document Newsgroups class-balanced sample, with density ratio 1.180. Another
+nine rows can cross the frontier only if explicitly reusable selector work is
+amortized across enough independent downstream uses. The cheapest such frontier
+is the 32-message SMS label-index sample, which needs 9 uses; the largest
+quality win without a density win is the 32-message SMS validation label-index
+selector, with quality multiplier 1.426 but density ratio 0.107. The
+self-training family contributes 24 rows and no quality or density wins. This
+certificate is a compact mathematical summary of the paper's practical warning:
+better heldout scores are common, but density improvements are rare unless the
+selection bill is small, reusable, or both.
 
 The SMS Spam pilot is useful precisely because it does not produce an easy
 selector win. At 32 training messages with 800 validation examples, the

@@ -206,6 +206,10 @@ using the same split and accounting discipline.
   pseudo-label agreement is too low in the scarce-label regime and no tested
   margin filter beats random or class-balanced density once scoring and student
   training costs are charged.
+- `results/real_text_break_even_certificate.*` - cross-artifact mathematical
+  certificate over the real-text audits. It records that 32 observed quality
+  wins collapse to one density win after event-compute is charged, with nine
+  rows needing explicit finite reuse to cross the break-even frontier.
 - `results/tiny_neural_replication.*` - first deterministic tiny-MLP
   replication artifact with neural parameter, step, and estimated operation
   accounting.
