@@ -287,6 +287,40 @@ class CommittedResultArtifactTests(unittest.TestCase):
         self.assertTrue(prototype_160["robust_density_loss"])
         self.assertEqual(prototype_160["paired_win_count"], 0)
 
+    def test_twenty_newsgroups_frontier_fresh_seed_audit_finds_no_robust_positive_win(self) -> None:
+        artifact = json.loads(Path("results/twenty_newsgroups_frontier_fresh_seed_audit.json").read_text())
+
+        self.assertEqual(artifact["fresh_seeds"], [439, 443, 449, 457, 461])
+        self.assertEqual(artifact["claim_scope"]["fresh_seed_replication"], True)
+        self.assertEqual(artifact["claim_scope"]["preregistered_seed_list"], True)
+        self.assertEqual(artifact["claim_scope"]["exact_seed_bootstrap"], True)
+        self.assertEqual(artifact["claim_scope"]["heldout_used_for_selection"], False)
+
+        summary = artifact["summary"]
+        self.assertEqual(summary["comparisons"], 6)
+        self.assertEqual(summary["fresh_seed_count"], 5)
+        self.assertEqual(summary["mean_density_wins"], 1)
+        self.assertEqual(summary["robust_density_wins"], 0)
+        self.assertEqual(summary["robust_density_losses"], 2)
+        self.assertEqual(summary["fragile_mean_density_wins"], 1)
+
+        by_name = {row["comparison"]: row for row in artifact["comparisons"]}
+        class_80 = by_name["class_balanced_80_vs_random"]
+        self.assertEqual(class_80["paired_win_count"], 4)
+        self.assertFalse(class_80["robust_density_win"])
+        self.assertEqual(class_80["sign_test_one_sided_win_p"], 0.1875)
+        self.assertLess(class_80["bootstrap"]["density_delta_ci95"][0], 0.0)
+
+        budgeted_2x = by_name["budgeted_margin_2x_160_vs_class_balanced"]
+        self.assertLess(budgeted_2x["mean_density_ratio"], 1.0)
+        self.assertEqual(budgeted_2x["paired_win_count"], 1)
+        self.assertFalse(budgeted_2x["robust_density_win"])
+        self.assertLess(budgeted_2x["bootstrap"]["density_delta_ci95"][0], 0.0)
+
+        prototype_160 = by_name["prototype_160_vs_random"]
+        self.assertEqual(prototype_160["paired_win_count"], 0)
+        self.assertTrue(prototype_160["robust_density_loss"])
+
     def test_real_text_break_even_certificate_records_global_frontier(self) -> None:
         artifact = json.loads(Path("results/real_text_break_even_certificate.json").read_text())
 

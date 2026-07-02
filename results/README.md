@@ -127,6 +127,19 @@ Newsgroups frontier candidates against their references on paired seeds and
 uses exact seed bootstrap intervals to separate fragile mean wins from robust
 density losses.
 
+Twenty Newsgroups fresh-seed frontier audit:
+
+```bash
+python3 scripts/build_newsgroups_frontier_fresh_seed_audit.py \
+  --output-json results/twenty_newsgroups_frontier_fresh_seed_audit.json \
+  --output-md results/twenty_newsgroups_frontier_fresh_seed_audit.md
+```
+
+This replication audit reruns only the frontier comparisons on untouched fresh
+seeds 439, 443, 449, 457, and 461. It preserves the anti-cheat split discipline
+and uses exact seed bootstrap plus sign-test diagnostics to show that no
+positive frontier clears the conservative robust-win rule on this seed set.
+
 Real-text break-even frontier certificate:
 
 ```bash

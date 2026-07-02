@@ -228,6 +228,11 @@ using the same split and accounting discipline.
   robustness audit for the current Newsgroups density frontiers. It records
   that all three mean density wins are fragile under exact seed bootstrap, while
   three density losses are robust.
+- `results/twenty_newsgroups_frontier_fresh_seed_audit.*` - fresh-seed
+  replication audit for the same Newsgroups frontier comparisons. It finds that
+  no positive frontier clears the robust-win rule on untouched seeds; the
+  80-document class-balanced row remains a fragile mean win, while the
+  prototype-160 and budgeted margin-2x losses against random remain robust.
 - `results/real_text_break_even_certificate.*` - cross-artifact mathematical
   certificate over the real-text audits. It records that 38 observed quality
   wins collapse to three density wins after event-compute is charged, with 13

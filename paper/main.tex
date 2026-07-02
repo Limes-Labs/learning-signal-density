@@ -89,7 +89,10 @@ heldout quality, but only three currently improve learning-signal density
 without an explicit reuse assumption. A paired-seed robustness audit then
 checks those positive frontiers with exact seed bootstrap intervals and finds
 that the current mean wins should be treated as hypotheses, while several
-retrieval-density losses are already robust under the same test.
+retrieval-density losses are already robust under the same test. A fresh-seed
+replication audit reruns the same frontier comparisons on five untouched seeds:
+no positive frontier clears the conservative robust-win rule, while two
+negative density results remain robust.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -344,6 +347,7 @@ Table~\ref{tab:twenty-newsgroups-budgeted-acquisition-audit},
 Table~\ref{tab:twenty-newsgroups-length-window-audit},
 Table~\ref{tab:real-text-break-even-certificate},
 Table~\ref{tab:twenty-newsgroups-frontier-robustness},
+Table~\ref{tab:twenty-newsgroups-frontier-fresh-seed},
 Table~\ref{tab:sms-spam-real-text-selection-cost},
 Table~\ref{tab:sms-spam-validation-size},
 Table~\ref{tab:sms-spam-break-even},
@@ -512,6 +516,19 @@ losses against random at 40 and 160 documents are robust under this audit, and
 the budgeted margin-2x row remains a robust loss against random. This is the
 right current reading: quality and density frontiers are promising enough to
 study further, but not yet stable enough for a strong policy claim.
+
+Table~\ref{tab:twenty-newsgroups-frontier-fresh-seed} follows that demotion
+with a stricter replication check on untouched fresh seeds 439, 443, 449, 457,
+and 461. It reruns only the frontier comparisons, not a new search grid. This
+is a useful falsification pressure: the 80-document class-balanced row still
+has a positive mean density ratio, 1.326, but wins only four of five paired
+seeds and has density-delta interval [-0.000911, 0.007691], with one-sided
+exact sign-test \(p=0.187500\). The budgeted active-acquisition rows do not
+replicate as density wins; the 160-document budgeted margin-2x row has mean
+ratio 0.713 against class-balanced. Prototype retrieval at 160 documents and
+budgeted margin-2x against random remain robust density losses. The current
+paper therefore has no replicated positive real-text density frontier under
+this conservative fresh-seed rule.
 
 The SMS Spam pilot is useful precisely because it does not produce an easy
 selector win. At 32 training messages with 800 validation examples, the
